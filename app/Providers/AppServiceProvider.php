@@ -50,5 +50,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::define("access-websites", function () {
             return Auth::id() === 1;
         });
+
+        Gate::define("access-pages", function () {
+            return Auth::id() === 1;
+        });
     }
 }

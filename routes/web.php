@@ -8,18 +8,20 @@ use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ShippingCompanyController;
 use App\Http\Controllers\StatisticController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WebsiteController;
-use App\Models\Permission; // For Migration To Add Permissions 
+use App\Models\Permission; // For Migration To Add Permissions
 use App\Models\User; // For Migrations To Add First Admin
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::fallback(function () {
-    if (Auth::check()) return to_route("home");
+    if (Auth::check())
+        return to_route("home");
     return to_route("login");
 });
 
@@ -78,7 +80,19 @@ Route::middleware("auth")->group(function () {
         Route::resource('/websites', WebsiteController::class)
             ->only(['index', 'store', 'edit', 'update', 'destroy']);
     });
+
+    Route::middleware("ٌRedirectIfCannot:access-pages")->group(function () {
+        Route::resource('/pages', PageController::class);
+        Route::delete('/pages/{page}/image', [PageController::class, 'deleteImage'])->name('pages.image.delete');
+        Route::patch('/pages/{page}/toggle-active', [PageController::class, 'toggleActive'])->name('pages.toggleActive');
+    });
+
 });
+
+Route::get('/buy/{page:slug}', [PageController::class, 'showBuyPage']);
+Route::get('/upsell/{slug}/{orderId}', [PageController::class, 'showUpsellPage'])->name('pages.showUpsellPage');
+Route::post('/buy/{page:slug}', [PageController::class, 'submitOrder'])->name('pages.submitOrder');
+Route::post('/buy/upsell/{product}', [PageController::class, 'submitOrderFromUpsellPage'])->name('pages.submitOrderFromUpsellPage');
 
 // Necessary Data To Migrate
 // User::create(['id' => 1, 'name' => "admin", 'email' => "admin@admin.com", 'password' => bcrypt("123456")]);
@@ -88,3 +102,4 @@ Route::middleware("auth")->group(function () {
 // Permission::create(['name' => 'صلاحية ادارة المدراء']);
 // Permission::create(['name' => "صلاحية شركات الشحن"]);
 // Permission::create(['name' => "صلاحية الاحصائيات"]);
+// Permission::create(['name' => "صلاحية الصفحات"]);

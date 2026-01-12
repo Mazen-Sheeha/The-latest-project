@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Campaign;
 use App\Models\Order;
+use App\Models\Page;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\Website;
@@ -71,7 +72,8 @@ class EasyOrderService
                 $qty = $item['quantity'] ?? 1;
                 $product = Product::where('code', $sku)->first();
 
-                if (!$product) continue;
+                if (!$product)
+                    continue;
 
                 $salePrice = $item['price'] && $item['price'] !== 0
                     ? $item['price'] : $product->price;
@@ -117,4 +119,66 @@ class EasyOrderService
 
         return $storesList[$storeId] ?? null;
     }
+
+    public function createFromPage(Request $request, Product $product): Order
+    {
+        DB::beginTransaction();
+
+        try {
+            if (!$product) {
+                throw new \Exception('Product not found');
+            }
+
+            $source = $request->utm_source;
+            $campaignName = $request->utm_campaign;
+
+            $campaign = null;
+            if ($source && $campaignName) {
+                $campaign = Campaign::where('source', $source)
+                    ->where('campaign', $campaignName)
+                    ->first();
+            }
+
+            $shippingPrice = $product->shipping_company?->price ?? 0;
+
+            $order = Order::create([
+                'name' => $request->full_name,
+                'phone' => $request->phone,
+                'city' => $request->government,
+                'address' => $request->address,
+                'order_status' => 'waiting_for_confirmation',
+                'shipping_price' => $shippingPrice,
+                'url' => url()->full(),
+                'campaign_id' => $campaign?->id,
+            ]);
+            $order->products()->sync([
+                $product->id => [
+                    'price' => $product->price,
+                    'quantity' => 1,
+                    'real_price' => $product->price,
+                ]
+            ]);
+
+            $product->increment('sales_number');
+
+            $users = User::where('id', 1)
+                ->orWhereHas(
+                    'permissions',
+                    fn($q) =>
+                    $q->where('name', 'صلاحية الطلبات')
+                )->get();
+
+            foreach ($users as $user) {
+                $user->notify(new NewOrderNotification($order));
+            }
+
+            DB::commit();
+
+            return $order;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
 }

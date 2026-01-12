@@ -26,12 +26,13 @@ class CreateCampaignRequest extends FormRequest
             'adset_id' => ['required', 'exists:adsets,id'],
             'campaign' => ['required', 'min:3', 'max:50', 'unique:campaigns,campaign'],
             'source' => ['required', 'min:2', 'max:50'],
-            'url' => ['required', 'url']
+            'url' => ['sometimes', 'url'],
+            'page_id' => ['required', 'exists:pages,id'],
         ];
     }
 
     /**
-     * 
+     *
      * @return messages[]
      */
     public function messages(): array
