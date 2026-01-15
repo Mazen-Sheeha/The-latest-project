@@ -38,6 +38,18 @@
                         </div>
 
                         <div>
+                            <label class="form-label">الموقع / الدومين *</label>
+                            <select name="website_id" class="input w-full" required>
+                                <option value="{{ old('website', $page?->website?->domain) }}">اختر الدومين</option>
+                                @foreach ($websites as $website)
+                                    <option value="{{ $website->id }}">
+                                        {{ $website->domain }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
                             <label class="form-label">لون الصفحة</label>
                             <input type="color" name="theme_color" class="input w-24 h-10 p-0 border rounded"
                                 value="{{ old('theme_color', $page->theme_color ?? '#0d6efd') }}">

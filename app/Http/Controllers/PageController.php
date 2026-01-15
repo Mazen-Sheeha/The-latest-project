@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\Page;
 use App\Models\Product;
+use App\Models\Website;
 use App\Services\EasyOrderService;
 use App\Services\PageService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
@@ -21,24 +23,35 @@ class PageController extends Controller
         $this->pageService = $pageService;
     }
 
+    // -----------------------------------
+    // Display Buy Page
+    // -----------------------------------
     public function showBuyPage(string $slug): View
     {
-        $page = Page::with('product', 'reviews')->where(['slug' => $slug])->first();
+        $host = $this->normalizeDomain(request()->getHost());
+
+        $page = Page::with('product', 'reviews', 'website')
+            ->where('slug', $slug)
+            ->whereHas('website', fn($q) => $q->whereRaw("LOWER(domain) = ?", [$host]))
+            ->first();
 
         if (!$page || !$page->is_active) {
             return view('pages.inactive_page');
         }
 
-
         return view('pages.buy', [
             'page' => $page,
             'product' => $page->product,
+            'success' => request()->query('success')
         ]);
     }
 
+    // -----------------------------------
+    // Display Upsell Page
+    // -----------------------------------
     public function showUpsellPage(string $slug, int $orderId): View
     {
-        $page = Page::with('product', 'reviews')->where(['slug' => $slug])->first();
+        $page = Page::with('product', 'reviews')->where('slug', $slug)->first();
 
         if (!$page || !$page->is_active) {
             return view('pages.inactive_page');
@@ -52,25 +65,9 @@ class PageController extends Controller
         ]);
     }
 
-    public function submitOrderFromUpsellPage(
-        Request $request,
-        Product $product,
-        EasyOrderService $easyOrderService
-    ): RedirectResponse {
-        $request->validate([
-            'full_name' => 'required|string',
-            'phone' => 'required|string',
-            'government' => 'required|string',
-            'address' => 'required|string',
-        ]);
-
-        Log::info('Submitting order from upsell page', $request->all());
-
-        $easyOrderService->createFromPage($request, $product);
-
-        return redirect()->back()->with('success', 'تم إرسال الطلب بنجاح');
-    }
-
+    // -----------------------------------
+    // Submit Order from Buy Page
+    // -----------------------------------
     public function submitOrder(
         Request $request,
         Page $page,
@@ -85,7 +82,7 @@ class PageController extends Controller
 
         Log::info('Submitting order', $request->all());
 
-        $order = $easyOrderService->createFromPage($request, $page->product);
+        $order = $easyOrderService->createFromPage($request, $page);
 
         if ($page->upsellProducts->count() > 0) {
             return redirect()->route('pages.showUpsellPage', [
@@ -94,75 +91,90 @@ class PageController extends Controller
             ]);
         }
 
-        return redirect()->back()->with('success', 'تم إرسال الطلب بنجاح');
+        return redirect()->route('pages.buy', [
+            'slug' => $page->slug,
+            'success' => 1,
+        ]);
     }
 
-    /**
-     * Display a listing of the resource.
-     */
+    // -----------------------------------
+    // Submit Order from Upsell Page
+    // -----------------------------------
+    public function submitOrderFromUpsellPage(
+        Request $request,
+        Product $product,
+        EasyOrderService $easyOrderService
+    ): RedirectResponse {
+        $request->validate([
+            'full_name' => 'required|string',
+            'phone' => 'required|string',
+            'government' => 'required|string',
+            'address' => 'required|string',
+        ]);
+
+        Log::info('Submitting order from upsell page', $request->all());
+
+        $page = Page::find($request->page_id);
+        $order = $easyOrderService->createFromPage($request, $page);
+
+        return redirect()->route('pages.showUpsellPage', [
+            'slug' => $page->slug,
+            'orderId' => $order->id,
+            'success' => 1,
+        ]);
+    }
+
+    // -----------------------------------
+    // Admin CRUD
+    // -----------------------------------
     public function index(): View
     {
         return $this->pageService->index();
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create(): View
     {
         $products = Product::all();
-        return view('pages.create', compact('products'));
+        $websites = Website::all();
+        return view('pages.create', compact('products', 'websites'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request): RedirectResponse
     {
         return $this->pageService->store($request);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Page $page): View
     {
         return $this->pageService->show($page);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Page $page): View
     {
         $products = Product::all();
-        return $this->pageService->edit($page, $products);
+        $websites = Website::all();
+        return $this->pageService->edit($page, $products, $websites);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Page $page): RedirectResponse
     {
         return $this->pageService->update($request, $page);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Page $page): RedirectResponse
+    public function destroy(Page $page): JsonResponse|RedirectResponse
     {
         return $this->pageService->destroy($page);
     }
 
+    // -----------------------------------
+    // Helper: Delete image
+    // -----------------------------------
     public function deleteImage(Page $page, Request $request)
     {
-        $request->validate([
-            'index' => 'required|integer|min:0'
-        ]);
+        $request->validate(['index' => 'required|integer|min:0']);
 
-        $index = $request->input('index');
         $images = $page->images ?? [];
+        $index = $request->input('index');
 
         if (!isset($images[$index])) {
             return response()->json([
@@ -172,10 +184,8 @@ class PageController extends Controller
         }
 
         $imagePath = $images[$index];
-
-        if (file_exists(public_path($imagePath))) {
-            unlink(public_path($imagePath));
-        }
+        if (file_exists($imagePath))
+            unlink($imagePath);
 
         array_splice($images, $index, 1);
         $page->images = $images;
@@ -188,6 +198,9 @@ class PageController extends Controller
         ]);
     }
 
+    // -----------------------------------
+    // Toggle Page Active
+    // -----------------------------------
     public function toggleActive(Page $page): RedirectResponse
     {
         $page->is_active = !$page->is_active;
@@ -196,4 +209,24 @@ class PageController extends Controller
         return redirect()->back()->with('success', 'تم تحديث حالة الصفحة بنجاح');
     }
 
+    // -----------------------------------
+    // Helpers
+    // -----------------------------------
+    private function normalizeDomain(?string $domain): string
+    {
+        if (!$domain)
+            return '';
+
+        $domain = strtolower(trim($domain));
+        $domain = preg_replace('#^https?://#', '', $domain);
+        $domain = preg_replace('#^www\.#', '', $domain);
+        return rtrim($domain, '/');
+    }
+
+    public function pageUrl(Page $page, string $path = ''): string
+    {
+        $domain = rtrim($page->website->domain, '/');
+        $path = ltrim($path, '/');
+        return "https://{$domain}/buy/{$page->slug}" . ($path ? "/{$path}" : '');
+    }
 }

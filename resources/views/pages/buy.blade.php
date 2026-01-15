@@ -38,6 +38,22 @@
         .hide-sticky {
             transform: translateY(120%);
         }
+
+        @keyframes scaleIn {
+            0% {
+                transform: scale(.8);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .animate-scale-in {
+            animation: scaleIn .35s ease-out forwards;
+        }
     </style>
 
 </head>
@@ -391,8 +407,8 @@
                         <textarea name="address" placeholder="العنوان بالتفصيل" required rows="3"
                             class="w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg resize-none text-sm sm:text-base"></textarea>
 
-                        <button type="submit"
-                            class="w-full text-white font-bold py-3 sm:py-4 rounded-lg text-base sm:text-lg"
+                        <button type="submit" id="submitBtn"
+                            class="w-full text-white font-bold py-3 rounded-lg text-lg"
                             style="background-color: {{ $page->theme_color }}">
                             تأكيد الطلب
                         </button>
@@ -402,6 +418,37 @@
             </div>
         </div>
     </div>
+
+    @if (request()->query('success'))
+        <div id="successOverlay" class="fixed inset-0 bg-black/80 z-[999] flex items-center justify-center">
+
+            <div class="bg-white rounded-2xl p-8 text-center max-w-sm w-full mx-4 animate-scale-in">
+
+                {{-- Check Icon --}}
+                <div class="mx-auto mb-4 w-20 h-20 rounded-full bg-green-100 flex items-center justify-center">
+                    <svg class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" stroke-width="3"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+
+                <h2 class="text-2xl font-extrabold text-gray-900 mb-2">
+                    تم استلام طلبك
+                </h2>
+
+                <p class="text-gray-600 mb-6">
+                    سيتم التواصل معك في أقرب وقت لتأكيد الطلب
+                </p>
+
+                <button onclick="closeSuccessOverlay()"
+                    class="w-full bg-green-600 hover:bg-green-700 transition
+                       text-white font-bold py-3 rounded-xl text-lg">
+                    تمام
+                </button>
+            </div>
+        </div>
+    @endif
+
 </body>
 
 <script>
@@ -503,5 +550,32 @@
         }, 200); // وقت التوقف (ms)
     });
 </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.querySelector('form[action*="submitOrder"]');
+        const btn = document.getElementById('submitBtn');
+
+        if (!form || !btn) return;
+
+        form.addEventListener('submit', () => {
+            btn.disabled = true;
+            btn.innerHTML = 'جاري تأكيد الطلب...';
+        });
+    });
+</script>
+
+<script>
+    if (window.location.search.includes('success=1')) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('success');
+        window.history.replaceState({}, document.title, url.pathname);
+    }
+
+    function closeSuccessOverlay() {
+        document.getElementById('successOverlay')?.remove();
+    }
+</script>
+
 
 </html>

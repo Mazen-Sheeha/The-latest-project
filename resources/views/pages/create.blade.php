@@ -25,7 +25,7 @@
                 </div>
 
                 <div class="card-body p-6 space-y-4">
-                    <div class="grid md:grid-cols-2 gap-4">
+                    <div class="grid md:grid-cols-2 gap-4 mb-2">
                         <div>
                             <label class="form-label">الاسم *</label>
                             <input name="name" class="input w-full" required>
@@ -35,10 +35,17 @@
                             <label class="form-label">عنوان الصفحة *</label>
                             <input name="title" class="input w-full" required>
                         </div>
+
                         <div>
-                            <label class="form-label">لون الصفحة *</label>
-                            <input type="color" name="theme_color" class="input w-24 h-10 p-0 border rounded"
-                                value="#0d6efd">
+                            <label class="form-label">الموقع / الدومين *</label>
+                            <select name="website_id" class="input w-full" required>
+                                <option value="">اختر الدومين</option>
+                                @foreach ($websites as $website)
+                                    <option value="{{ $website->id }}">
+                                        {{ $website->domain }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
 
                         <div>
@@ -53,6 +60,13 @@
                                     </option>
                                 @endforeach
                             </select>
+                        </div>
+
+
+                        <div>
+                            <label class="form-label">لون الصفحة *</label>
+                            <input type="color" name="theme_color" class="input w-24 h-10 p-0 border rounded"
+                                value="#0d6efd">
                         </div>
                     </div>
 

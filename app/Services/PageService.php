@@ -6,6 +6,7 @@ use App\Models\Page;
 use App\Models\PageReview;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -40,19 +41,21 @@ class PageService
         $images = [];
 
         if ($request->hasFile('images')) {
-            $order = $request->input('images_order');
-            $order = $order ? json_decode($order, true) : [];
+            $order = json_decode($request->input('images_order'), true) ?? [];
 
             foreach ($request->file('images') as $index => $image) {
-                $filename = time() . '_' . $image->getClientOriginalName();
-                $image->move(public_path('pages_assets'), $filename);
+                $filename = time() . '_' . Str::random(8) . '.' . $image->getClientOriginalExtension();
+
+                $path = $image->storeAs(
+                    'pages_assets',
+                    $filename,
+                    'public'
+                );
 
                 $position = $order[$index] ?? $index;
-                $images[$position] = 'pages_assets/' . $filename;
+                $images[$position] = $path;
             }
 
-
-            // Sort by position
             ksort($images);
         }
 
@@ -61,7 +64,7 @@ class PageService
         $page = Page::create($validated);
 
         if ($request->has('reviews')) {
-            foreach ($request->reviews as $index => $review) {
+            foreach ($request->reviews as $review) {
 
                 $imagePath = null;
 
@@ -69,9 +72,14 @@ class PageService
                     isset($review['reviewer_image']) &&
                     $review['reviewer_image'] instanceof \Illuminate\Http\UploadedFile
                 ) {
-                    $filename = time() . '_' . $review['reviewer_image']->getClientOriginalName();
-                    $review['reviewer_image']->move(public_path('reviews'), $filename);
-                    $imagePath = 'reviews/' . $filename;
+                    $filename = time() . '_' . Str::random(8) . '.' .
+                        $review['reviewer_image']->getClientOriginalExtension();
+
+                    $imagePath = $review['reviewer_image']->storeAs(
+                        'reviews',
+                        $filename,
+                        'public'
+                    );
                 }
 
                 $page->reviews()->create([
@@ -96,10 +104,10 @@ class PageService
         return view('pages.show', compact('page'));
     }
 
-    public function edit(Page $page, Collection $products): View
+    public function edit(Page $page, Collection $products, Collection $websites): View
     {
         $upsellProductIds = $page->upsellProducts->toArray();
-        return view('pages.edit', compact('page', 'products', 'upsellProductIds'));
+        return view('pages.edit', compact('page', 'products', 'upsellProductIds', 'websites'));
     }
 
     public function update(Request $request, Page $page): RedirectResponse
@@ -110,34 +118,32 @@ class PageService
         $newImages = $request->file('images', []);
         $finalImages = [];
 
-        // If new images are uploaded, delete old images
         if (!empty($newImages)) {
+
             foreach ($oldImages as $img) {
-                $path = public_path($img);
-                if (file_exists($path)) {
-                    unlink($path);
+                if (Storage::disk('public')->exists($img)) {
+                    Storage::disk('public')->delete($img);
                 }
             }
 
             foreach ($newImages as $image) {
-                $filename = time() . '_' . $image->getClientOriginalName();
-                $image->move(public_path('pages_assets'), $filename);
-                $finalImages[] = 'pages_assets/' . $filename;
+                $filename = time() . '_' . Str::random(8) . '.' . $image->getClientOriginalExtension();
+
+                $path = $image->storeAs(
+                    'pages_assets',
+                    $filename,
+                    'public'
+                );
+
+                $finalImages[] = $path;
             }
-        } else if ($request->filled('images_order')) {
-            // Reorder old images if no new images
+        } elseif ($request->filled('images_order')) {
+
             $order = json_decode($request->images_order, true) ?? [];
-            foreach ($order as $key) {
-                if (str_starts_with($key, 'old_')) {
-                    $index = (int) str_replace('old_', '', $key);
-                    if (isset($oldImages[$index])) {
-                        $finalImages[] = $oldImages[$index];
-                    }
-                } elseif (is_numeric($key)) {
-                    $index = (int) $key;
-                    if (isset($oldImages[$index])) {
-                        $finalImages[] = $oldImages[$index];
-                    }
+
+            foreach ($order as $index) {
+                if (isset($oldImages[$index])) {
+                    $finalImages[] = $oldImages[$index];
                 }
             }
         }
@@ -152,32 +158,37 @@ class PageService
 
             foreach ($request->reviews as $reviewData) {
 
-                // DELETE
                 if (!empty($reviewData['_delete']) && !empty($reviewData['id'])) {
                     $review = PageReview::find($reviewData['id']);
 
                     if ($review) {
-                        if ($review->reviewer_image && file_exists(public_path($review->reviewer_image))) {
-                            unlink(public_path($review->reviewer_image));
+                        if (
+                            $review->reviewer_image &&
+                            Storage::disk('public')->exists($review->reviewer_image)
+                        ) {
+                            Storage::disk('public')->delete($review->reviewer_image);
                         }
                         $review->delete();
                     }
                     continue;
                 }
 
-                // IMAGE
                 $imagePath = null;
+
                 if (
                     isset($reviewData['reviewer_image']) &&
                     $reviewData['reviewer_image'] instanceof \Illuminate\Http\UploadedFile
                 ) {
+                    $filename = time() . '_' . Str::random(8) . '.' .
+                        $reviewData['reviewer_image']->getClientOriginalExtension();
 
-                    $filename = time() . '_' . $reviewData['reviewer_image']->getClientOriginalName();
-                    $reviewData['reviewer_image']->move(public_path('reviews'), $filename);
-                    $imagePath = 'reviews/' . $filename;
+                    $imagePath = $reviewData['reviewer_image']->storeAs(
+                        'reviews',
+                        $filename,
+                        'public'
+                    );
                 }
 
-                // UPDATE
                 if (!empty($reviewData['id'])) {
                     $review = PageReview::find($reviewData['id']);
                     if ($review) {
@@ -188,9 +199,7 @@ class PageService
                             'reviewer_image' => $imagePath ?? $review->reviewer_image,
                         ]);
                     }
-                }
-                // CREATE
-                else {
+                } else {
                     $page->reviews()->create([
                         'reviewer_name' => $reviewData['reviewer_name'],
                         'comment' => $reviewData['comment'],
@@ -200,7 +209,6 @@ class PageService
                 }
             }
 
-            // Update count
             $page->update([
                 'reviews_count' => $page->reviews()->count()
             ]);
@@ -215,7 +223,7 @@ class PageService
             ->with('success', 'تم تحديث صفحة البيع بنجاح');
     }
 
-    public function destroy(Page $page)
+    public function destroy(Page $page): JsonResponse|RedirectResponse
     {
         if (!Gate::allows('access-delete-any-thing')) {
             return response()->json([
@@ -266,6 +274,7 @@ class PageService
                 'unique:pages,name',
             ],
             'title' => ['required', 'string', 'max:255'],
+            'website_id' => ['required', 'exists:websites,id'],
             'description' => ['required', 'string'],
             'is_active' => ['nullable', 'boolean'],
             'theme_color' => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
@@ -318,6 +327,7 @@ class PageService
                 'unique:pages,name,' . $request->route('page')->id
             ],
             'title' => ['sometimes', 'string', 'max:255'],
+            'website_id' => ['sometimes', 'exists:websites,id'],
             'description' => ['nullable', 'string'],
             'is_active' => ['nullable', 'boolean'],
             'theme_color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],

@@ -28,6 +28,7 @@ class Page extends Model
         'images',
         'description',
         'is_active',
+        'website_id'
     ];
 
     protected $casts = [
@@ -41,10 +42,10 @@ class Page extends Model
         'is_active' => 'boolean',
     ];
 
-    public function getRouteKeyName()
-    {
-        return 'slug';
-    }
+    // public function getRouteKeyName()
+    // {
+    //     return 'slug';
+    // }
 
     public function product(): BelongsTo
     {
@@ -77,5 +78,10 @@ class Page extends Model
     public function upsellProducts(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'page_upsell_products', 'page_id', 'product_id');
+    }
+
+    public function website(): BelongsTo
+    {
+        return $this->belongsTo(Website::class);
     }
 }

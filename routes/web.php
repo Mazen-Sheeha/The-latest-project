@@ -35,20 +35,20 @@ Route::controller(AuthController::class)->group(function () {
 
 Route::middleware("auth")->group(function () {
     Route::get("/home", [HomeController::class, 'home'])->name('home');
-    Route::get('/statistics', [StatisticController::class, 'statistics'])->name('statistics')->middleware("ٌRedirectIfCannot:access-statistics");
+    Route::get('/statistics', [StatisticController::class, 'statistics'])->name('statistics')->middleware("RedirectIfCannot:access-statistics");
     Route::resource('/admins', UserController::class)
         ->only(['index', 'show', 'create', 'store', 'edit', 'update', 'destroy']);
     Route::resource('/shipping_companies', ShippingCompanyController::class)
         ->only(['index', 'show', 'create', 'store', 'edit', 'update', 'destroy'])
-        ->middleware("ٌRedirectIfCannot:access-shipping-companies");
-    Route::middleware("ٌRedirectIfCannot:access-products")->group(function () {
+        ->middleware("RedirectIfCannot:access-shipping-companies");
+    Route::middleware("RedirectIfCannot:access-products")->group(function () {
         Route::resource("/products", ProductController::class)
             ->only(['index', 'show', 'create', 'store', 'edit', 'update', 'destroy']);
         Route::post('{product}/increase_stock', [ProductController::class, 'increaseStock'])
             ->name('products.increase_stock');
         Route::post('/products/{product}/changeStatus', [ProductController::class, 'changeStatus'])->name('products.changeStatus');
     });
-    Route::middleware("ٌRedirectIfCannot:access-orders")->group(function () {
+    Route::middleware("RedirectIfCannot:access-orders")->group(function () {
         Route::resource("/orders", OrderController::class)
             ->only(['index', 'show', 'edit', 'update', 'create', 'store', 'destroy']);
         Route::get('/notifications/fetch', [NotificationController::class, 'fetch'])->name('notifications.fetch');
@@ -63,7 +63,7 @@ Route::middleware("auth")->group(function () {
             Route::post('/blocked_numbers', 'store')->name('blocked_numbers.store');
         });
     });
-    Route::middleware("ٌRedirectIfCannot:access-ads")->group(function () {
+    Route::middleware("RedirectIfCannot:access-ads")->group(function () {
         Route::resource('/adsets', AdsetController::class)
             ->only(['index', 'store', 'edit', 'update', 'destroy']);
         Route::post('/adsets/{adset}/active', [AdsetController::class, 'changeActive'])->name('adsets.changeActive');
@@ -76,20 +76,20 @@ Route::middleware("auth")->group(function () {
             ->only(['index', 'store', 'edit', 'update', 'destroy']);
         Route::get("/campaign_statistics", [CampaignController::class, 'statisticsIndex'])->name('campaigns.statistics');
     });
-    Route::middleware("ٌRedirectIfCannot:access-websites")->group(function () {
+    Route::middleware("RedirectIfCannot:access-websites")->group(function () {
         Route::resource('/websites', WebsiteController::class)
             ->only(['index', 'store', 'edit', 'update', 'destroy']);
     });
 
-    Route::middleware("ٌRedirectIfCannot:access-pages")->group(function () {
+    Route::middleware("RedirectIfCannot:access-pages")->group(function () {
+        Route::patch('/pages/{page}/toggle-active', [PageController::class, 'toggleActive'])->name('pages.toggleActive');
         Route::resource('/pages', PageController::class);
         Route::delete('/pages/{page}/image', [PageController::class, 'deleteImage'])->name('pages.image.delete');
-        Route::patch('/pages/{page}/toggle-active', [PageController::class, 'toggleActive'])->name('pages.toggleActive');
     });
 
 });
 
-Route::get('/buy/{page:slug}', [PageController::class, 'showBuyPage']);
+Route::get('/buy/{page:slug}', [PageController::class, 'showBuyPage'])->name('pages.buy');
 Route::get('/upsell/{slug}/{orderId}', [PageController::class, 'showUpsellPage'])->name('pages.showUpsellPage');
 Route::post('/buy/{page:slug}', [PageController::class, 'submitOrder'])->name('pages.submitOrder');
 Route::post('/buy/upsell/{product}', [PageController::class, 'submitOrderFromUpsellPage'])->name('pages.submitOrderFromUpsellPage');

@@ -16,7 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'RedirectIfAuthenticated' => RedirectIfAuthenticated::class,
-            "ٌRedirectIfCannot" => RedirectIfCannot::class
+            'RedirectIfCannot' => RedirectIfCannot::class
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

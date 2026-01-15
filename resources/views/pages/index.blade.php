@@ -65,7 +65,7 @@
                                 </td>
 
                                 <td>
-                                    <form action="{{ route('pages.toggleActive', $page->id) }}" method="POST">
+                                    <form action="{{ route('pages.toggleActive', $page) }}" method="POST">
                                         @csrf
                                         @method('PATCH')
 
@@ -79,8 +79,7 @@
                                 {{-- PUBLIC URL --}}
                                 <td>
                                     @if ($page->is_active)
-                                        <a href="{{ url('/buy/' . $page->slug) }}" target="_blank"
-                                            class="text-blue-600 underline">
+                                        <a href="{{ pageUrl($page) }}" target="_blank" class="text-blue-600 underline">
                                             عرض الصفحة
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block"
                                                 fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -92,7 +91,6 @@
                                         <span class="text-gray-400">غير متاحة</span>
                                     @endif
                                 </td>
-
                                 {{-- ACTIONS --}}
                                 <td class="text-center">
                                     <div class="menu inline-flex" data-menu="true">
