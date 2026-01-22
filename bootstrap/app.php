@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Middleware\RedirectIfCannot;
+use App\Http\Middleware\ResolveDomain;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -16,7 +17,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'RedirectIfAuthenticated' => RedirectIfAuthenticated::class,
-            'RedirectIfCannot' => RedirectIfCannot::class
+            'RedirectIfCannot' => RedirectIfCannot::class,
+            'resolveDomain' => ResolveDomain::class
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

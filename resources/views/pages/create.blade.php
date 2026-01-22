@@ -38,11 +38,11 @@
 
                         <div>
                             <label class="form-label">الموقع / الدومين *</label>
-                            <select name="website_id" class="input w-full" required>
+                            <select name="domain_id" class="input w-full" required>
                                 <option value="">اختر الدومين</option>
-                                @foreach ($websites as $website)
-                                    <option value="{{ $website->id }}">
-                                        {{ $website->domain }}
+                                @foreach ($domains as $domain)
+                                    <option value="{{ $domain->id }}">
+                                        {{ $domain->domain }}
                                     </option>
                                 @endforeach
                             </select>

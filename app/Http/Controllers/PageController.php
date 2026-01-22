@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Domain;
 use App\Models\Order;
 use App\Models\Page;
 use App\Models\Product;
-use App\Models\Website;
 use App\Services\EasyOrderService;
 use App\Services\PageService;
 use Illuminate\Http\JsonResponse;
@@ -26,14 +26,15 @@ class PageController extends Controller
     // -----------------------------------
     // Display Buy Page
     // -----------------------------------
-    public function showBuyPage(string $slug): View
+    public function showBuyPage(Request $request, string $slug): View
     {
-        $host = $this->normalizeDomain(request()->getHost());
+        $domain = $request->attributes->get('current_domain');
 
-        $page = Page::with('product', 'reviews', 'website')
+        $page = Page::with('product', 'reviews')
             ->where('slug', $slug)
-            ->whereHas('website', fn($q) => $q->whereRaw("LOWER(domain) = ?", [$host]))
-            ->first();
+            ->where('domain_id', $domain->id)
+            ->where('is_active', true)
+            ->firstOrFail();
 
         if (!$page || !$page->is_active) {
             return view('pages.inactive_page');
@@ -82,7 +83,7 @@ class PageController extends Controller
 
         Log::info('Submitting order', $request->all());
 
-        $order = $easyOrderService->createFromPage($request, $page);
+        $order = $easyOrderService->createFromPage($request, $page->product);
 
         if ($page->upsellProducts->count() > 0) {
             return redirect()->route('pages.showUpsellPage', [
@@ -115,7 +116,7 @@ class PageController extends Controller
         Log::info('Submitting order from upsell page', $request->all());
 
         $page = Page::find($request->page_id);
-        $order = $easyOrderService->createFromPage($request, $page);
+        $order = $easyOrderService->createFromPage($request, $product);
 
         return redirect()->route('pages.showUpsellPage', [
             'slug' => $page->slug,
@@ -135,8 +136,8 @@ class PageController extends Controller
     public function create(): View
     {
         $products = Product::all();
-        $websites = Website::all();
-        return view('pages.create', compact('products', 'websites'));
+        $domains = Domain::all();
+        return view('pages.create', compact('products', 'domains'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -152,8 +153,8 @@ class PageController extends Controller
     public function edit(Page $page): View
     {
         $products = Product::all();
-        $websites = Website::all();
-        return $this->pageService->edit($page, $products, $websites);
+        $domains = Domain::all();
+        return $this->pageService->edit($page, $products, $domains);
     }
 
     public function update(Request $request, Page $page): RedirectResponse
@@ -207,26 +208,5 @@ class PageController extends Controller
         $page->save();
 
         return redirect()->back()->with('success', 'تم تحديث حالة الصفحة بنجاح');
-    }
-
-    // -----------------------------------
-    // Helpers
-    // -----------------------------------
-    private function normalizeDomain(?string $domain): string
-    {
-        if (!$domain)
-            return '';
-
-        $domain = strtolower(trim($domain));
-        $domain = preg_replace('#^https?://#', '', $domain);
-        $domain = preg_replace('#^www\.#', '', $domain);
-        return rtrim($domain, '/');
-    }
-
-    public function pageUrl(Page $page, string $path = ''): string
-    {
-        $domain = rtrim($page->website->domain, '/');
-        $path = ltrim($path, '/');
-        return "https://{$domain}/buy/{$page->slug}" . ($path ? "/{$path}" : '');
     }
 }

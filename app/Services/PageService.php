@@ -104,10 +104,10 @@ class PageService
         return view('pages.show', compact('page'));
     }
 
-    public function edit(Page $page, Collection $products, Collection $websites): View
+    public function edit(Page $page, Collection $products, Collection $domains): View
     {
         $upsellProductIds = $page->upsellProducts->toArray();
-        return view('pages.edit', compact('page', 'products', 'upsellProductIds', 'websites'));
+        return view('pages.edit', compact('page', 'products', 'upsellProductIds', 'domains'));
     }
 
     public function update(Request $request, Page $page): RedirectResponse
@@ -274,7 +274,7 @@ class PageService
                 'unique:pages,name',
             ],
             'title' => ['required', 'string', 'max:255'],
-            'website_id' => ['required', 'exists:websites,id'],
+            'domain_id' => ['required', 'exists:domains,id'],
             'description' => ['required', 'string'],
             'is_active' => ['nullable', 'boolean'],
             'theme_color' => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
@@ -327,7 +327,7 @@ class PageService
                 'unique:pages,name,' . $request->route('page')->id
             ],
             'title' => ['sometimes', 'string', 'max:255'],
-            'website_id' => ['sometimes', 'exists:websites,id'],
+            'domain_id' => ['sometimes', 'exists:domains,id'],
             'description' => ['nullable', 'string'],
             'is_active' => ['nullable', 'boolean'],
             'theme_color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],

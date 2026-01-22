@@ -89,10 +89,12 @@ Route::middleware("auth")->group(function () {
 
 });
 
-Route::get('/buy/{page:slug}', [PageController::class, 'showBuyPage'])->name('pages.buy');
-Route::get('/upsell/{slug}/{orderId}', [PageController::class, 'showUpsellPage'])->name('pages.showUpsellPage');
-Route::post('/buy/{page:slug}', [PageController::class, 'submitOrder'])->name('pages.submitOrder');
-Route::post('/buy/upsell/{product}', [PageController::class, 'submitOrderFromUpsellPage'])->name('pages.submitOrderFromUpsellPage');
+Route::middleware('resolveDomain')->group(function () {
+    Route::get('/buy/{page:slug}', [PageController::class, 'showBuyPage'])->name('pages.buy');
+    Route::get('/upsell/{slug}/{orderId}', [PageController::class, 'showUpsellPage'])->name('pages.showUpsellPage');
+    Route::post('/buy/{page:slug}', [PageController::class, 'submitOrder'])->name('pages.submitOrder');
+    Route::post('/buy/upsell/{product}', [PageController::class, 'submitOrderFromUpsellPage'])->name('pages.submitOrderFromUpsellPage');
+});
 
 // Necessary Data To Migrate
 // User::create(['id' => 1, 'name' => "admin", 'email' => "admin@admin.com", 'password' => bcrypt("123456")]);

@@ -28,7 +28,7 @@ class Page extends Model
         'images',
         'description',
         'is_active',
-        'website_id'
+        'domain_id'
     ];
 
     protected $casts = [
@@ -80,8 +80,8 @@ class Page extends Model
         return $this->belongsToMany(Product::class, 'page_upsell_products', 'page_id', 'product_id');
     }
 
-    public function website(): BelongsTo
+    public function domain(): BelongsTo
     {
-        return $this->belongsTo(Website::class);
+        return $this->belongsTo(Domain::class);
     }
 }

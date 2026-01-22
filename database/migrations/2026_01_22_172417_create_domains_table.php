@@ -10,8 +10,12 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::table('pages', function (Blueprint $table) {
-            $table->foreignId('website_id')->after('id')->nullable()->constrained('websites')->onDelete('cascade');
+        Schema::create('domains', function (Blueprint $table) {
+            $table->id();
+            $table->string('domain');
+            $table->string('status')->default('pending');  //(pending / verified / failed)
+            $table->string('verification_ip');
+            $table->timestamps();
         });
     }
 
@@ -20,9 +24,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::table('pages', function (Blueprint $table) {
-            $table->dropForeign(['website_id']);
-            $table->dropColumn('website_id');
-        });
+        Schema::dropIfExists('domains');
     }
 };
