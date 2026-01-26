@@ -210,6 +210,18 @@
                                     </div>
                                 </div>
                             @endcan
+
+                            @can('access-domains')
+                                <div class="menu-item @if (request()->is('domains*')) active @endif">
+                                    <div class="menu-link flex items-center grow cursor-pointer border border-transparent gap-[10px] ps-[10px] pe-[10px] py-[6px]"
+                                        tabindex="0">
+                                        <a href="{{ route('domains.index') }}"
+                                            class="menu-title text-sm font-medium text-gray-800 menu-item-active:text-primary menu-link-hover:!text-primary">
+                                            دومينات الصفحات
+                                        </a>
+                                    </div>
+                                </div>
+                            @endcan
                         </div>
                         <!-- End of Sidebar Menu -->
                     </div>

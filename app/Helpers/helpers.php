@@ -13,7 +13,7 @@ if (!function_exists('pageUrl')) {
             $domain = '127.0.0.1:8000';
         }
 
-        $url = "{$scheme}://{$domain}/buy/{$page->slug}";
+        $url = "{$scheme}://{$domain}/{$page->slug}";
 
         if ($path) {
             $url .= '/' . ltrim($path, '/');

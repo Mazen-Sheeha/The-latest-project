@@ -28,7 +28,7 @@ class PageController extends Controller
     // -----------------------------------
     public function showBuyPage(Request $request, string $slug): View
     {
-        $domain = $request->attributes->get('current_domain');
+        $domain = request()->currentDomain();
 
         $page = Page::with('product', 'reviews')
             ->where('slug', $slug)
@@ -52,7 +52,12 @@ class PageController extends Controller
     // -----------------------------------
     public function showUpsellPage(string $slug, int $orderId): View
     {
-        $page = Page::with('product', 'reviews')->where('slug', $slug)->first();
+        $domain = request()->currentDomain();
+
+        $page = Page::where('slug', $slug)
+            ->where('domain_id', $domain->id)
+            ->where('is_active', true)
+            ->firstOrFail();
 
         if (!$page || !$page->is_active) {
             return view('pages.inactive_page');
@@ -71,7 +76,7 @@ class PageController extends Controller
     // -----------------------------------
     public function submitOrder(
         Request $request,
-        Page $page,
+        string $slug,
         EasyOrderService $easyOrderService
     ): RedirectResponse {
         $request->validate([
@@ -82,6 +87,13 @@ class PageController extends Controller
         ]);
 
         Log::info('Submitting order', $request->all());
+
+        $domain = request()->currentDomain();
+
+        $page = Page::where('slug', $slug)
+            ->where('domain_id', $domain->id)
+            ->where('is_active', true)
+            ->firstOrFail();
 
         $order = $easyOrderService->createFromPage($request, $page->product);
 
@@ -116,6 +128,7 @@ class PageController extends Controller
         Log::info('Submitting order from upsell page', $request->all());
 
         $page = Page::find($request->page_id);
+
         $order = $easyOrderService->createFromPage($request, $product);
 
         return redirect()->route('pages.showUpsellPage', [

@@ -39,7 +39,7 @@ class CampaignService
         $validated = $request->validated();
         $page = Page::findOrFail($validated['page_id']);
 
-        $baseUrl = url('/buy/' . $page->slug);
+        $baseUrl = url('/' . $page->slug);
         $utmUrl = $baseUrl
             . '?utm_source=' . urlencode($validated['source'])
             . '&utm_campaign=' . urlencode($validated['campaign']);

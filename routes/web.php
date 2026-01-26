@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BlockedNumberController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CampaignController;
+use App\Http\Controllers\DomainController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
@@ -81,6 +82,10 @@ Route::middleware("auth")->group(function () {
             ->only(['index', 'store', 'edit', 'update', 'destroy']);
     });
 
+    Route::middleware("RedirectIfCannot:access-domains")->group(function () {
+        Route::resource('/domains', DomainController::class);
+    });
+
     Route::middleware("RedirectIfCannot:access-pages")->group(function () {
         Route::patch('/pages/{page}/toggle-active', [PageController::class, 'toggleActive'])->name('pages.toggleActive');
         Route::resource('/pages', PageController::class);
@@ -90,10 +95,10 @@ Route::middleware("auth")->group(function () {
 });
 
 Route::middleware('resolveDomain')->group(function () {
-    Route::get('/buy/{page:slug}', [PageController::class, 'showBuyPage'])->name('pages.buy');
+    Route::get('/{page:slug}', [PageController::class, 'showBuyPage'])->name('pages.buy');
     Route::get('/upsell/{slug}/{orderId}', [PageController::class, 'showUpsellPage'])->name('pages.showUpsellPage');
-    Route::post('/buy/{page:slug}', [PageController::class, 'submitOrder'])->name('pages.submitOrder');
-    Route::post('/buy/upsell/{product}', [PageController::class, 'submitOrderFromUpsellPage'])->name('pages.submitOrderFromUpsellPage');
+    Route::post('/{page:slug}', [PageController::class, 'submitOrder'])->name('pages.submitOrder');
+    Route::post('/upsell/{product}', [PageController::class, 'submitOrderFromUpsellPage'])->name('pages.submitOrderFromUpsellPage');
 });
 
 // Necessary Data To Migrate
@@ -105,3 +110,4 @@ Route::middleware('resolveDomain')->group(function () {
 // Permission::create(['name' => "صلاحية شركات الشحن"]);
 // Permission::create(['name' => "صلاحية الاحصائيات"]);
 // Permission::create(['name' => "صلاحية الصفحات"]);
+// Permission::create(['name' => "صلاحية دومينات الصفحات"]);

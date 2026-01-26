@@ -380,7 +380,7 @@
 
 
                     {{-- FORM --}}
-                    <form method="POST" action="{{ route('pages.submitOrder', $page) }}" class="space-y-3">
+                    <form method="POST" action="{{ route('pages.submitOrder', $page->slug) }}" class="space-y-3">
                         @csrf
                         <input type="hidden" name="quantity" id="orderQuantity" value="1">
 

@@ -16,9 +16,20 @@ class ResolveDomain
             ->where('status', 'verified')
             ->first();
 
+        $platformDomains = [
+            // '127.0.0.1:8000/',
+            'trendocp.com',
+        ];
+
+
+        if (in_array($host, $platformDomains)) {
+            return $next($request);
+        }
+
         if (!$domain) {
             abort(404);
         }
+
 
         $request->attributes->set('current_domain', $domain);
 
