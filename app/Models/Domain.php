@@ -12,9 +12,14 @@ class Domain extends Model
     protected $fillable = [
         'domain',
         'status',
-        'verification_ip'
+        'verification_ip',
+        'setup_type',
+        'dns_record'
     ];
 
+    protected $casts = [
+        'dns_record' => 'array',
+    ];
     public function pages(): HasMany
     {
         return $this->hasMany(Page::class);

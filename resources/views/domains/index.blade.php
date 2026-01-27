@@ -12,13 +12,17 @@
     </span>
 @endsection
 @section('content')
-    <div class="card bg-white shadow-sm rounded-lg border border-gray-200 flex mb-5">
-        <div class="card-header">
-            <h3 class="card-title">
-                أضف دومين جديد
-            </h3>
+    <div class="card min-w-full mb-5">
+        <div class="card-header flex items-center justify-between">
+            <h3 class="card-title">دومينات الصفحات (host domains)</h3>
+
+            <a href="{{ route('domains.create') }}" class="btn btn-light hover:bg-blue-600 text-white px-4 py-2 rounded-md">
+                إضافة دومين جديد <i class="fas fa-plus ms-2"></i>
+            </a>
         </div>
-        <div class="card-body p-6">
+    </div>
+
+    {{-- <div class="card-body p-6">
             <form action="{{ route('domains.store') }}" method="post" id="add-domain" class="flex flex-col gap-6">
                 @csrf
                 <div class="flex flex-col md:flex-row gap-6">
@@ -52,6 +56,42 @@
                         </div>
                     </div>
                 </div>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h4 class="text-gray-800 font-semibold mb-4">طريقة الإعداد <span class="text-red-500">*</span></h4>
+
+                    <div class="flex flex-col gap-4">
+                        <!-- Wildcard Option -->
+                        <label
+                            class="flex items-start gap-3 p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition"
+                            onclick="updateSetupType('wildcard')">
+                            <input type="radio" name="setup_type" value="wildcard"
+                                {{ old('setup_type') == 'wildcard' || !old('setup_type') ? 'checked' : '' }} class="mt-1">
+                            <div class="flex-1">
+                                <h5 class="text-gray-800 font-semibold">Wildcard Domain (*.trendocp.com)</h5>
+                                <p class="text-gray-600 text-sm mt-1">استخدام الدومين كـ Wildcard بدون الحاجة لتعديل DNS.
+                                    سيتم حفظ الدومين كـ <code
+                                        class="bg-gray-200 px-2 py-1 rounded">domain.trendocp.com</code>
+                                </p>
+                            </div>
+                        </label>
+
+                        <!-- DNS Record Option -->
+                        <label
+                            class="flex items-start gap-3 p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition"
+                            onclick="updateSetupType('dns_record')">
+                            <input type="radio" name="setup_type" value="dns_record"
+                                {{ old('setup_type') == 'dns_record' ? 'checked' : '' }} class="mt-1">
+                            <div class="flex-1">
+                                <h5 class="text-gray-800 font-semibold">DNS Record للنسخ واللصق</h5>
+                                <p class="text-gray-600 text-sm mt-1">سيتم إنشاء سجل DNS جاهز للنسخ واللصق في لوحة التحكم
+                                    الخاصة بك (مثل Hostinger)</p>
+                            </div>
+                        </label>
+                    </div>
+                    @error('setup_type')
+                        <span class="text-red-500 text-sm mt-2 block">{{ $message }}</span>
+                    @enderror
+                </div>
                 <div class="flex flex-col md:flex-row gap-6">
                     <div class="flex gap-2 flex-1">
                         <div class="flex items-center">
@@ -73,8 +113,7 @@
                     </div>
                 </div>
             </form>
-        </div>
-    </div>
+        </div> --}}
 
     <div class="card min-w-full">
         <div class="card-header">
@@ -94,6 +133,9 @@
                         </th>
                         <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">
                             الحالة
+                        </th>
+                        <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">
+                            طريقة الإعداد
                         </th>
                         <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">
                             IP التحقق
@@ -118,6 +160,19 @@
                                     {{ $domain->status == 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                                     {{ $domain->status == 'active' ? 'نشط' : 'معطل' }}
                                 </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm">
+                                @if ($domain->setup_type === 'wildcard')
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                                        Wildcard
+                                    </span>
+                                @else
+                                    <span
+                                        class="px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
+                                        DNS Record
+                                    </span>
+                                @endif
+                            </td>
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-600">
                                 {{ $domain->verification_ip ?? 'غير محدد' }}

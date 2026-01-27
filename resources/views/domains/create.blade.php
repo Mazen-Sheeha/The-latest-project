@@ -59,6 +59,43 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h4 class="text-gray-800 font-semibold mb-4">طريقة الإعداد <span class="text-red-500">*</span></h4>
+
+                    <div class="flex flex-col gap-4">
+                        <!-- Wildcard Option -->
+                        <label
+                            class="flex items-start gap-3 p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition"
+                            onclick="updateSetupType('wildcard')">
+                            <input type="radio" name="setup_type" value="wildcard"
+                                {{ old('setup_type') == 'wildcard' || !old('setup_type') ? 'checked' : '' }} class="mt-1">
+                            <div class="flex-1">
+                                <h5 class="text-gray-800 font-semibold">Wildcard Domain (*.example.com)</h5>
+                                <p class="text-gray-600 text-sm mt-1">استخدام الدومين كـ Wildcard بدون الحاجة لتعديل DNS.
+                                    سيتم حفظ الدومين كـ <code class="bg-gray-200 px-2 py-1 rounded">domain.hostdomain</code>
+                                </p>
+                            </div>
+                        </label>
+
+                        <!-- DNS Record Option -->
+                        <label
+                            class="flex items-start gap-3 p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition"
+                            onclick="updateSetupType('dns_record')">
+                            <input type="radio" name="setup_type" value="dns_record"
+                                {{ old('setup_type') == 'dns_record' ? 'checked' : '' }} class="mt-1">
+                            <div class="flex-1">
+                                <h5 class="text-gray-800 font-semibold">DNS Record للنسخ واللصق</h5>
+                                <p class="text-gray-600 text-sm mt-1">سيتم إنشاء سجل DNS جاهز للنسخ واللصق في لوحة التحكم
+                                    الخاصة بك (مثل Hostinger)</p>
+                            </div>
+                        </label>
+                    </div>
+                    @error('setup_type')
+                        <span class="text-red-500 text-sm mt-2 block">{{ $message }}</span>
+                    @enderror
+                </div>
+
                 <div class="flex flex-col md:flex-row gap-6">
                     <div class="flex gap-2 flex-1">
                         <div class="flex items-center">
@@ -86,4 +123,11 @@
             </form>
         </div>
     </div>
+
+    <script>
+        function updateSetupType(type) {
+            // Update radio button
+            document.querySelector(`input[name="setup_type"][value="${type}"]`).checked = true;
+        }
+    </script>
 @endsection

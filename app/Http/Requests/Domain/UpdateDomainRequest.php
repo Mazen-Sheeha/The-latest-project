@@ -27,7 +27,9 @@ class UpdateDomainRequest extends FormRequest
         return [
             'domain' => ['required', 'string', 'regex:/^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,})?$/', 'unique:domains,domain,' . $domainId],
             'status' => ['required', 'in:active,inactive'],
-            'verification_ip' => ['nullable', 'ip']
+            'verification_ip' => ['nullable', 'ip'],
+            'setup_type' => ['required', 'in:wildcard,dns_record'],
+            'dns_record' => ['nullable', 'string']
         ];
     }
 
@@ -39,7 +41,9 @@ class UpdateDomainRequest extends FormRequest
             'domain.unique' => 'هذا الدومين موجود بالفعل',
             'status.required' => 'الحالة مطلوبة',
             'status.in' => 'الحالة يجب أن تكون نشطة أو معطلة',
-            'verification_ip.ip' => 'صيغة الـ IP غير صحيحة'
+            'verification_ip.ip' => 'صيغة الـ IP غير صحيحة',
+            'setup_type.required' => 'نوع الإعداد مطلوب',
+            'setup_type.in' => 'نوع الإعداد غير صحيح'
         ];
     }
 }

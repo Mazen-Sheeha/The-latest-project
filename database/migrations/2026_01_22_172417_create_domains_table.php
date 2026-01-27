@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->id();
             $table->string('domain');
             $table->string('status')->default('pending');  //(pending / verified / failed)
-            $table->string('verification_ip');
+            $table->string('verification_ip')->nullable();
             $table->timestamps();
         });
     }

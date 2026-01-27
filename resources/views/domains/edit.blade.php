@@ -63,6 +63,58 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h4 class="text-gray-800 font-semibold mb-4">طريقة الإعداد <span class="text-red-500">*</span></h4>
+
+                    <div class="flex flex-col gap-4">
+                        <!-- Wildcard Option -->
+                        <label
+                            class="flex items-start gap-3 p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition"
+                            onclick="updateSetupType('wildcard')">
+                            <input type="radio" name="setup_type" value="wildcard"
+                                {{ old('setup_type') ?? $domain->setup_type == 'wildcard' ? 'checked' : '' }}
+                                class="mt-1">
+                            <div class="flex-1">
+                                <h5 class="text-gray-800 font-semibold">Wildcard Domain (*.example.com)</h5>
+                                <p class="text-gray-600 text-sm mt-1">استخدام الدومين كـ Wildcard بدون الحاجة لتعديل DNS.
+                                    سيتم حفظ الدومين كـ <code class="bg-gray-200 px-2 py-1 rounded">domain.hostdomain</code>
+                                </p>
+                            </div>
+                        </label>
+
+                        <!-- DNS Record Option -->
+                        <label
+                            class="flex items-start gap-3 p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition"
+                            onclick="updateSetupType('dns_record')">
+                            <input type="radio" name="setup_type" value="dns_record"
+                                {{ old('setup_type') ?? $domain->setup_type == 'dns_record' ? 'checked' : '' }}
+                                class="mt-1">
+                            <div class="flex-1">
+                                <h5 class="text-gray-800 font-semibold">DNS Record للنسخ واللصق</h5>
+                                <p class="text-gray-600 text-sm mt-1">سيتم إنشاء سجل DNS جاهز للنسخ واللصق في لوحة التحكم
+                                    الخاصة بك (مثل Hostinger)</p>
+                                @if ($domain->setup_type === 'dns_record' && $domain->dns_record)
+                                    <div class="mt-3 p-3 bg-white border border-gray-300 rounded">
+                                        <p class="text-gray-700 text-sm mb-2">السجل الحالي:</p>
+                                        <div class="flex gap-2">
+                                            <code
+                                                class="bg-gray-100 px-3 py-2 rounded flex-1 text-xs overflow-auto">{{ $domain->dns_record }}</code>
+                                            <button type="button" class="btn btn-sm btn-primary"
+                                                onclick="copyDNS('{{ $domain->dns_record }}')">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        </label>
+                    </div>
+                    @error('setup_type')
+                        <span class="text-red-500 text-sm mt-2 block">{{ $message }}</span>
+                    @enderror
+                </div>
+
                 <div class="flex flex-col md:flex-row gap-6">
                     <div class="flex gap-2 flex-1">
                         <div class="flex items-center">
@@ -91,4 +143,32 @@
             </form>
         </div>
     </div>
+
+    <script>
+        function updateSetupType(type) {
+            document.querySelector(`input[name="setup_type"][value="${type}"]`).checked = true;
+        }
+
+        function copyDNS(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('تم نسخ السجل بنجاح!');
+            }).catch(() => {
+                alert('فشل النسخ، يرجى المحاولة يدويًا');
+            });
+        }
+    </script>
+@endsection
+<button type="submit"
+    class="btn btn-light hover:bg-blue-600 text-white px-6 py-2 rounded-md transition-colors duration-200">
+    حفظ التعديلات <i class="fas fa-save me-2 mr-2"></i>
+</button>
+<a href="{{ route('domains.index') }}"
+    class="btn btn-secondary text-white px-6 py-2 rounded-md transition-colors duration-200">
+    العودة
+</a>
+</div>
+</div>
+</form>
+</div>
+</div>
 @endsection

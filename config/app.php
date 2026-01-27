@@ -132,5 +132,7 @@ return [
 
     'aliases' => Facade::defaultAliases()->merge([
         'Excel' => Maatwebsite\Excel\Facades\Excel::class
-    ])->toArray()
+    ])->toArray(),
+
+    'platform_domain' => env('PLATFORM_DOMAIN', 'trendocp.com'),
 ];

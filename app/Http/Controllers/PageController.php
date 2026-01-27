@@ -30,11 +30,18 @@ class PageController extends Controller
     {
         $domain = request()->currentDomain();
 
-        $page = Page::with('product', 'reviews')
-            ->where('slug', $slug)
-            ->where('domain_id', $domain->id)
-            ->where('is_active', true)
-            ->firstOrFail();
+        if ($domain === null) {
+            $page = Page::with('product', 'reviews')
+                ->where('slug', $slug)
+                ->where('is_active', true)
+                ->firstOrFail();
+        } else {
+            $page = Page::with('product', 'reviews')
+                ->where('slug', $slug)
+                ->where('domain_id', $domain->id)
+                ->where('is_active', true)
+                ->firstOrFail();
+        }
 
         if (!$page || !$page->is_active) {
             return view('pages.inactive_page');
@@ -54,10 +61,19 @@ class PageController extends Controller
     {
         $domain = request()->currentDomain();
 
-        $page = Page::where('slug', $slug)
-            ->where('domain_id', $domain->id)
-            ->where('is_active', true)
-            ->firstOrFail();
+        if ($domain === null) {
+            $page = Page::with('product', 'reviews')
+                ->where('slug', $slug)
+                ->where('is_active', true)
+                ->firstOrFail();
+        } else {
+            $page = Page::with('product', 'reviews')
+                ->where('slug', $slug)
+                ->where('domain_id', $domain->id)
+                ->where('is_active', true)
+                ->firstOrFail();
+        }
+
 
         if (!$page || !$page->is_active) {
             return view('pages.inactive_page');
@@ -90,10 +106,19 @@ class PageController extends Controller
 
         $domain = request()->currentDomain();
 
-        $page = Page::where('slug', $slug)
-            ->where('domain_id', $domain->id)
-            ->where('is_active', true)
-            ->firstOrFail();
+
+        if ($domain === null) {
+            $page = Page::with('product', 'reviews')
+                ->where('slug', $slug)
+                ->where('is_active', true)
+                ->firstOrFail();
+        } else {
+            $page = Page::with('product', 'reviews')
+                ->where('slug', $slug)
+                ->where('domain_id', $domain->id)
+                ->where('is_active', true)
+                ->firstOrFail();
+        }
 
         $order = $easyOrderService->createFromPage($request, $page->product);
 

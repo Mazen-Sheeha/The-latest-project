@@ -49,6 +49,56 @@
                 </div>
 
                 <div class="flex flex-col">
+                    <label class="text-gray-600 text-sm font-semibold mb-2">طريقة الإعداد</label>
+                    <div class="text-gray-900 font-medium">
+                        @if ($domain->setup_type === 'wildcard')
+                            <span class="px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
+                                Wildcard Domain
+                            </span>
+                        @else
+                            <span class="px-3 py-1 rounded-full text-sm font-semibold bg-purple-100 text-purple-800">
+                                DNS Record
+                            </span>
+                        @endif
+                    </div>
+                </div>
+
+                @if ($domain->setup_type === 'dns_record' && $domain->dns_record)
+                    @php
+                        $dns = json_decode($domain->dns_record, true);
+                    @endphp
+
+                    <div class="flex flex-col col-span-2">
+                        <label class="text-gray-600 text-sm font-semibold mb-3">
+                            DNS Records
+                        </label>
+
+                        @foreach ($dns['records'] as $record)
+                            <div class="bg-gray-100 border border-gray-300 rounded-lg p-4 mb-3">
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                    <div>
+                                        <span class="text-gray-500">Type</span>
+                                        <div class="font-semibold">{{ $record['type'] }}</div>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500">Name</span>
+                                        <div class="font-semibold">{{ $record['host'] }}</div>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500">Points to</span>
+                                        <div class="font-semibold">{{ $record['value'] }} | (Server IP)</div>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500">TTL</span>
+                                        <div class="font-semibold">{{ $record['ttl'] }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
+                <div class="flex flex-col">
                     <label class="text-gray-600 text-sm font-semibold mb-2">تاريخ الإنشاء</label>
                     <div class="text-gray-900 font-medium">{{ $domain->created_at->format('d/m/Y H:i') }}</div>
                 </div>
@@ -113,4 +163,14 @@
             </div>
         </div>
     @endif
+
+    <script>
+        function copyDNS(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('DNS record copied successfully');
+            }).catch(() => {
+                alert('Copy failed, please copy manually');
+            });
+        }
+    </script>
 @endsection

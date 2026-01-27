@@ -40,9 +40,10 @@
                         <div>
                             <label class="form-label">الموقع / الدومين *</label>
                             <select name="domain_id" class="input w-full" required>
-                                <option value="{{ old('domain', $page?->domain?->domain) }}">اختر الدومين</option>
+                                <option value="">اختر الدومين</option>
                                 @foreach ($domains as $domain)
-                                    <option value="{{ $domain->id }}">
+                                    <option value="{{ $domain->id }}"
+                                        {{ $page?->domain?->id == $domain->id ? 'selected' : '' }}>
                                         {{ $domain->domain }}
                                     </option>
                                 @endforeach
