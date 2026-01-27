@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Product extends Model
 {
@@ -39,5 +40,10 @@ class Product extends Model
     public function hasOrders()
     {
         return $this->hasMany(OrderProduct::class)->count() > 0;
+    }
+
+    public function upsellProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(Page::class, 'page_upsell_products', 'product_id', 'page_id');
     }
 }

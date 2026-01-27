@@ -6,6 +6,7 @@ use App\Http\Requests\Campaign\CreateCampaignRequest;
 use App\Http\Requests\Campaign\UpdateCampaignRequest;
 use App\Models\Adset;
 use App\Models\Campaign;
+use App\Models\Page;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
@@ -13,7 +14,8 @@ class CampaignService
 {
     public function index(Request $request)
     {
-        if (!$request->adset) return to_route('adsets.index');
+        if (!$request->adset)
+            return to_route('adsets.index');
         $campaigns = Campaign::where('adset_id', $request->adset)->withSum('budgets', 'budget')->orderBy('active', "DESC")->orderBy('id', "DESC")->paginate(100);
         return view('campaigns.index', compact('campaigns'));
     }
@@ -35,12 +37,20 @@ class CampaignService
     public function store(CreateCampaignRequest $request)
     {
         $validated = $request->validated();
+        $page = Page::findOrFail($validated['page_id']);
+
+        $baseUrl = url('/' . $page->slug);
+        $utmUrl = $baseUrl
+            . '?utm_source=' . urlencode($validated['source'])
+            . '&utm_campaign=' . urlencode($validated['campaign']);
+
         $campaign = Campaign::create([
             'campaign' => $validated['campaign'],
             'source' => $validated['source'],
-            'url' => explode('?', $validated['url'])[0] . "?utm_source=" . $validated['source'] . "&utm_campaign=" . $validated['campaign'],
+            'page_id' => $page->id,
+            'url' => $utmUrl,
             'adset_id' => $validated['adset_id'],
-            'active' => true
+            'active' => true,
         ]);
         return response()->json(['success' => true, 'message' => "تم إضافة الحملة بنجاح", 'campaign' => $campaign]);
     }
@@ -57,7 +67,7 @@ class CampaignService
         $campaign = Campaign::findOrFail($id);
         $campaign->campaign = $validated['campaign'];
         $campaign->source = $validated['source'];
-        $campaign->url =  explode('?', $campaign->url)[0] . "?utm_source=" . $validated['source'] . "&utm_campaign=" . $validated['campaign'];
+        $campaign->url = explode('?', $campaign->url)[0] . "?utm_source=" . $validated['source'] . "&utm_campaign=" . $validated['campaign'];
         $campaign->active = true;
         $campaign->save();
         return to_route('campaigns.index', ['adset' => $campaign->adset_id])->with(['success' => "تم تعديل الحملة $campaign->campaign بنجاح", 'campaign' => $campaign]);
@@ -76,7 +86,8 @@ class CampaignService
     {
         if (!Gate::allows('access-delete-any-thing')) {
             return response()->json(['success' => false, 'message' => 'ليس مسموحا لك بهذا']);
-        };
+        }
+        ;
         $campaign = Campaign::findOrFail($id);
         $campaign->delete();
         return response()->json(['success' => true, 'message' => "تم حذف الحملة بنجاح"]);

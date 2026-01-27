@@ -8,7 +8,7 @@ use App\Services\ShippingCompanyService;
 
 class ShippingCompanyController extends Controller
 {
-    protected $shippingCompanyService;
+    protected ShippingCompanyService $shippingCompanyService;
 
     public function __construct(ShippingCompanyService $shippingCompanyService)
     {

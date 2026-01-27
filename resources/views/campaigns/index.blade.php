@@ -74,15 +74,31 @@
                         </select>
                     </div>
                 </div>
+                @php
+                    use App\Models\Page;
+                    $pages = Page::select('id', 'slug')->where('is_active', 1)->get();
+                @endphp
+
                 <div class="flex gap-2 flex-1">
                     <div class="flex items-center">
-                        <h5 class="text-gray-800 font-semibold text-nowrap">رابط المنتوج</h5>
+                        <h5 class="text-gray-800 font-semibold text-nowrap">
+                            صفحة المنتوج
+                        </h5>
                     </div>
+
                     <div class="flex items-center relative flex-1">
-                        <input type="text" class="input w-full" name="url" placeholder="رابط المنتوج"
-                            value="{{ old('url') }}">
+                        <select name="page_id" class="form-select" required>
+                            <option value="">اختر صفحة المنوج</option>
+
+                            @foreach ($pages as $page)
+                                <option value="{{ $page->id }}">
+                                    {{ $page->slug }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
+
                 <button type="submit"
                     class="btn btn-light hover:bg-blue-600 text-white px-4 py-2 rounded-md md:ml-auto transition-colors duration-200">
                     إضافة<i class="fas fa-plus me-2 mr-5"></i>
@@ -222,7 +238,7 @@
                 sendRequest("POST", form, "حدث خطأ أثناء إضافة الحملة", {
                     campaign: form.querySelector("[name='campaign']").value,
                     source: form.querySelector("[name='source']").value,
-                    url: form.querySelector("[name='url']").value,
+                    page_id: form.querySelector("[name='page_id']").value,
                     adset_id: form.querySelector("[name='adset_id']").value,
                 });
             });
@@ -339,7 +355,7 @@
                                     <a href='${campaign.url}'' style="color:blue; text-decoration: underline;">${campaign.url}</a>
                                 </td>
                                 <td>
-                                    0    
+                                    0
                                 </td>
                                 <td>
                                     <form action="/campaigns/${campaign.id}/active" class="active_form"

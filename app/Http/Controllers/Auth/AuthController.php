@@ -13,7 +13,7 @@ class AuthController extends Controller
 
     public function __construct(AuthService $authService)
     {
-        return $this->authService = $authService;
+        $this->authService = $authService;
     }
 
     public function showLogin()

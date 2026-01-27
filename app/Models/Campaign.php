@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Http\Request;
 
 class Campaign extends Model
 {
-    protected $fillable = ['campaign', 'source', 'active', 'adset_id', 'url'];
+    protected $fillable = ['campaign', 'source', 'active', 'adset_id', 'url', 'page_id'];
 
     public function adset()
     {
@@ -23,6 +24,11 @@ class Campaign extends Model
     public function budgets()
     {
         return $this->hasMany(Budget::class);
+    }
+
+    public function page(): BelongsTo
+    {
+        return $this->belongsTo(Page::class);
     }
 
     public function scopeWithStatistics(Builder $query, $from = null, $to = null)

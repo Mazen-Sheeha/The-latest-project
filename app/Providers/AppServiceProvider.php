@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -20,6 +21,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Request::macro('currentDomain', function () {
+            return $this->attributes->get('current_domain');
+        });
 
         DB::statement("SET time_zone = '+04:00'");
 
@@ -48,6 +52,14 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Gate::define("access-websites", function () {
+            return Auth::id() === 1;
+        });
+
+        Gate::define("access-pages", function () {
+            return Auth::id() === 1;
+        });
+
+        Gate::define("access-domains", function () {
             return Auth::id() === 1;
         });
     }
