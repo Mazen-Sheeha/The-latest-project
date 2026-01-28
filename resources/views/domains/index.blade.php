@@ -138,10 +138,7 @@
                             طريقة الإعداد
                         </th>
                         <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">
-                            IP التحقق
-                        </th>
-                        <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">
-                            الإجراءات
+                            التحكم
                         </th>
                     </tr>
                 </thead>
@@ -174,9 +171,6 @@
                                 @endif
                             </td>
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-600">
-                                {{ $domain->verification_ip ?? 'غير محدد' }}
-                            </td>
                             <td class="px-6 py-4 text-sm">
                                 <div class="flex gap-2">
                                     <a href="{{ route('domains.show', $domain->id) }}"
@@ -187,10 +181,14 @@
                                         class="btn btn-sm btn-primary text-white px-3 py-1 rounded transition-colors">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <button type="button" onclick="deleteDomain({{ $domain->id }})"
-                                        class="btn btn-sm btn-danger text-white px-3 py-1 rounded transition-colors">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    <form method="POST" action="{{ route('domains.destroy', $domain->id) }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                            class="btn btn-sm btn-danger text-white px-3 py-1 rounded transition-colors">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
@@ -210,17 +208,4 @@
             </div>
         @endif
     </div>
-
-    <script>
-        function deleteDomain(domainId) {
-            if (confirm('هل أنت متأكد من حذف هذا الدومين؟')) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '/domains/' + domainId;
-                form.innerHTML = '@csrf @method('DELETE')';
-                document.body.appendChild(form);
-                form.submit();
-            }
-        }
-    </script>
 @endsection

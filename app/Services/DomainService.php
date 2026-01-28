@@ -20,7 +20,6 @@ class DomainService
 
         if ($validated['setup_type'] === 'dns_record') {
             $validated['dns_record'] = json_encode($this->generateDNSRecord());
-            $validated['status'] = 'pending';
         }
 
         Domain::create($validated);
@@ -48,7 +47,6 @@ class DomainService
 
         if ($validated['setup_type'] === 'dns_record') {
             $validated['dns_record'] = json_encode($this->generateDNSRecord());
-            $validated['status'] = 'pending';
         }
 
         $domain->update($validated);

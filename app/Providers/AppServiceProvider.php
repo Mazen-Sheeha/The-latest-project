@@ -56,11 +56,11 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Gate::define("access-pages", function () {
-            return Auth::id() === 1;
+            return Auth::id() === 1 || Auth::user()->hasPermission("صلاحية الصفحات");
         });
 
         Gate::define("access-domains", function () {
-            return Auth::id() === 1;
+            return Auth::id() === 1 || Auth::user()->hasPermission("صلاحية دومينات الصفحات");
         });
     }
 }

@@ -24,7 +24,7 @@ class CreateDomainRequest extends FormRequest
     {
         return [
             'domain' => ['required', 'string', 'regex:/^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,})?$/', 'unique:domains,domain'],
-            'status' => ['required', 'in:active,inactive'],
+            'status' => ['required', 'in:active,pending'],
             'verification_ip' => ['nullable', 'ip'],
             'setup_type' => ['required', 'in:wildcard,dns_record'],
             'dns_record' => ['nullable', 'string']
