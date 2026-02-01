@@ -37,9 +37,10 @@ class CampaignService
     public function store(CreateCampaignRequest $request)
     {
         $validated = $request->validated();
-        $page = Page::findOrFail($validated['page_id']);
+        // $page = $request->page_id ? Page::findOrFail($validated['page_id']) : null;
 
-        $baseUrl = url('/' . $page->slug);
+        // $baseUrl = $page ? pageUrl($page) : $validated['url'];
+        $baseUrl = $validated['url'];
         $utmUrl = $baseUrl
             . '?utm_source=' . urlencode($validated['source'])
             . '&utm_campaign=' . urlencode($validated['campaign']);
@@ -47,7 +48,7 @@ class CampaignService
         $campaign = Campaign::create([
             'campaign' => $validated['campaign'],
             'source' => $validated['source'],
-            'page_id' => $page->id,
+            // 'page_id' => $page->id,
             'url' => $utmUrl,
             'adset_id' => $validated['adset_id'],
             'active' => true,

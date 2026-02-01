@@ -74,20 +74,20 @@
                         </select>
                     </div>
                 </div>
-                @php
+                {{-- @php
                     use App\Models\Page;
                     $pages = Page::select('id', 'slug')->where('is_active', 1)->get();
-                @endphp
+                @endphp --}}
 
                 <div class="flex gap-2 flex-1">
                     <div class="flex items-center">
                         <h5 class="text-gray-800 font-semibold text-nowrap">
-                            صفحة المنتوج
+                            رابط المنتوج
                         </h5>
                     </div>
 
                     <div class="flex items-center relative flex-1">
-                        <select name="page_id" class="form-select" required>
+                        {{-- <select name="page_id" class="form-select" required>
                             <option value="">اختر صفحة المنوج</option>
 
                             @foreach ($pages as $page)
@@ -95,7 +95,9 @@
                                     {{ $page->slug }}
                                 </option>
                             @endforeach
-                        </select>
+                        </select> --}}
+                        <input type="text" class="input w-full" name="url" placeholder="رابط المنتوج"
+                            value="{{ old('url') }}">
                     </div>
                 </div>
 
@@ -238,7 +240,8 @@
                 sendRequest("POST", form, "حدث خطأ أثناء إضافة الحملة", {
                     campaign: form.querySelector("[name='campaign']").value,
                     source: form.querySelector("[name='source']").value,
-                    page_id: form.querySelector("[name='page_id']").value,
+                    // page_id: form.querySelector("[name='page_id']").value,
+                    url: form.querySelector("[name='url']").value,
                     adset_id: form.querySelector("[name='adset_id']").value,
                 });
             });

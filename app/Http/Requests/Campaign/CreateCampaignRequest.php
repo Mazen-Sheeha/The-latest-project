@@ -26,8 +26,8 @@ class CreateCampaignRequest extends FormRequest
             'adset_id' => ['required', 'exists:adsets,id'],
             'campaign' => ['required', 'min:3', 'max:50', 'unique:campaigns,campaign'],
             'source' => ['required', 'min:2', 'max:50'],
-            'url' => ['sometimes', 'url'],
-            'page_id' => ['required', 'exists:pages,id'],
+            'url' => ['required', 'url'],
+            'page_id' => ['sometimes', 'exists:pages,id'],
         ];
     }
 
