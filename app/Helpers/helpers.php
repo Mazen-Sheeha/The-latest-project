@@ -6,31 +6,31 @@ if (!function_exists('pageUrl')) {
     function pageUrl(Page $page, string $path = ''): string
     {
         // Decide scheme
-        $scheme = app()->environment('local') ? 'http' : 'https';
+        // $scheme = app()->environment('local') ? 'http' : 'https';
+        $scheme = 'http';
 
         $domainModel = $page->domain;
 
         if ($domainModel) {
-            // If setup_type is dns_record, use full domain as domain.trendocp.com
             if ($domainModel->setup_type === 'wildcard') {
-                // Use wildcard or single
-                $domain = "*." . config('app.platform_domain', 'trendocp.com');
+                // If you want to use wildcard, just fallback to platform domain
+                $domain = config('app.platform_domain', 'trendocp.com');
             } else {
-                // Wildcard or custom domain
+                // Use custom domain
                 $domain = $domainModel->domain;
             }
         } else {
-            // Fallback
-            $domain = config('app.platform_domain', 'trendocp.com');
+            // Fallback to main app URL
+            $domain = parse_url(config('app.url', 'https://trendocp.com'), PHP_URL_HOST);
         }
 
-        // Local environment override
+        // Local override
         if (app()->environment('local')) {
             $domain = '127.0.0.1:8000';
         }
 
-        // Base URL
-        $url = "{$scheme}://{$domain}/{$page->slug}";
+        // Build full URL
+        $url = rtrim($scheme . '://' . $domain, '/') . '/buy/' . ltrim($page->slug, '/');
 
         // Optional extra path
         if (!empty($path)) {

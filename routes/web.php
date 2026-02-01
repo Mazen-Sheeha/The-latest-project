@@ -94,11 +94,15 @@ Route::middleware("auth")->group(function () {
 
 });
 
+Route::get('/test-domain', function () {
+    return request()->getHost();
+});
+
 Route::middleware('resolveDomain')->group(function () {
-    Route::get('/{page:slug}', [PageController::class, 'showBuyPage'])->name('pages.buy');
-    Route::get('/upsell/{slug}/{orderId}', [PageController::class, 'showUpsellPage'])->name('pages.showUpsellPage');
-    Route::post('/{page:slug}', [PageController::class, 'submitOrder'])->name('pages.submitOrder');
-    Route::post('/upsell/{product}', [PageController::class, 'submitOrderFromUpsellPage'])->name('pages.submitOrderFromUpsellPage');
+    Route::get('buy/{page:slug}', [PageController::class, 'showBuyPage'])->name('pages.buy');
+    Route::get('buy/upsell/{slug}/{orderId}', [PageController::class, 'showUpsellPage'])->name('pages.showUpsellPage');
+    Route::post('buy/{page:slug}', [PageController::class, 'submitOrder'])->name('pages.submitOrder');
+    Route::post('buy/upsell/{product}', [PageController::class, 'submitOrderFromUpsellPage'])->name('pages.submitOrderFromUpsellPage');
 });
 
 // Necessary Data To Migrate

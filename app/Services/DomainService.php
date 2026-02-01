@@ -69,19 +69,15 @@ class DomainService
      */
     private function generateDNSRecord(): array
     {
+        // Use server IP instead of wildcard CNAME
+        $serverIp = request()->getHost(); // Or set your server IP directly in config
         return [
             'provider' => 'hostinger',
             'records' => [
                 [
-                    'type' => 'CNAME',
+                    'type' => 'A',
                     'host' => '@',
-                    'value' => config('app.platform_domain', 'trendocp.com'),
-                    'ttl' => 'Auto',
-                ],
-                [
-                    'type' => 'CNAME',
-                    'host' => '*',
-                    'value' => config('app.platform_domain', 'trendocp.com'),
+                    'value' => config('app.host_ip', $serverIp),
                     'ttl' => 'Auto',
                 ],
             ],

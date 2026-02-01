@@ -135,4 +135,6 @@ return [
     ])->toArray(),
 
     'platform_domain' => env('PLATFORM_DOMAIN', 'trendocp.com'),
+    
+    'host_ip' => env('HOST_IP'),
 ];

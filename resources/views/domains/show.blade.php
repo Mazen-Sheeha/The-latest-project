@@ -74,7 +74,8 @@
                         </label>
 
                         @foreach ($dns['records'] as $record)
-                            <div class="bg-gray-100 border border-gray-300 rounded-lg p-4 mb-3">
+                            <div
+                                class="bg-gray-100 border border-gray-300 rounded-lg p-4 mb-3 flex justify-between items-center">
                                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                                     <div>
                                         <span class="text-gray-500">Type</span>
@@ -86,13 +87,17 @@
                                     </div>
                                     <div>
                                         <span class="text-gray-500">Points to</span>
-                                        <div class="font-semibold">{{ $record['value'] }} | (Server IP)</div>
+                                        <div class="font-semibold">{{ $record['value'] }}</div>
                                     </div>
                                     <div>
                                         <span class="text-gray-500">TTL</span>
                                         <div class="font-semibold">{{ $record['ttl'] }}</div>
                                     </div>
                                 </div>
+                                <button onclick="copyDNS('{{ $record['host'] }} {{ $record['value'] }}')"
+                                    class="btn btn-sm btn-secondary ml-4">
+                                    Copy
+                                </button>
                             </div>
                         @endforeach
                     </div>
