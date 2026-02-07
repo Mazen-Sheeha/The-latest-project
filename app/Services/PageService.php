@@ -31,7 +31,7 @@ class PageService
     public function store(Request $request): RedirectResponse
     {
         $validated = $this->validateStorePage($request);
-        $validated['slug'] = Str::slug($validated['name']);
+        $validated['slug'] = Str::slug($validated['slug']);
 
         // default reviews_count
         if (!isset($validated['reviews_count'])) {
@@ -113,6 +113,8 @@ class PageService
     public function update(Request $request, Page $page): RedirectResponse
     {
         $validated = $this->validateUpdatePage($request);
+
+        $validated['slug'] = Str::slug($validated['slug']);
 
         $oldImages = $page->images ?? [];
         $newImages = $request->file('images', []);
@@ -273,6 +275,7 @@ class PageService
                 'max:255',
                 'unique:pages,name',
             ],
+            'slug' => ['required', 'string', 'max:255', 'unique:pages,slug'],
             'title' => ['required', 'string', 'max:255'],
             'domain_id' => ['required', 'exists:domains,id'],
             'description' => ['required', 'string'],
@@ -325,6 +328,12 @@ class PageService
                 'string',
                 'max:255',
                 'unique:pages,name,' . $request->route('page')->id
+            ],
+            'slug' => [
+                'sometimes',
+                'string',
+                'max:255',
+                'unique:pages,slug,' . $request->route('page')->id
             ],
             'title' => ['sometimes', 'string', 'max:255'],
             'domain_id' => ['sometimes', 'exists:domains,id'],

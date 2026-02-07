@@ -28,12 +28,17 @@
                     <div class="grid md:grid-cols-2 gap-4 mb-2">
                         <div>
                             <label class="form-label">الاسم *</label>
-                            <input name="name" class="input w-full" required>
+                            <input name="name" class="input" required>
                         </div>
 
                         <div>
                             <label class="form-label">عنوان الصفحة *</label>
-                            <input name="title" class="input w-full" required>
+                            <input name="slug" class="input" required>
+                        </div>
+
+                        <div>
+                            <label class="form-label">عنوان صفحة البيع (header)</label>
+                            <input name="title" class="input" required>
                         </div>
 
                         <div>
@@ -303,22 +308,6 @@
         document.getElementById('has-sale').addEventListener('change', e => {
             document.getElementById('sale-fields')
                 .classList.toggle('hidden', !e.target.checked);
-        });
-    </script>
-
-    <script>
-        const productSelect = document.getElementById('product-select');
-
-        productSelect.addEventListener('change', e => {
-            const option = e.target.selectedOptions[0];
-
-            if (!option || !option.value) return;
-
-            const nameInput = document.querySelector('input[name="name"]');
-            nameInput.value = option.dataset.name || '';
-
-            const originalPriceInput = document.querySelector('input[name="original_price"]');
-            originalPriceInput.value = option.dataset.price || '';
         });
     </script>
 

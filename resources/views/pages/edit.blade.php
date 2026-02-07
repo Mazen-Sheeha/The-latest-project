@@ -34,7 +34,7 @@
 
                         <div>
                             <label class="form-label">عنوان الصفحة *</label>
-                            <input name="title" class="input w-full" required value="{{ old('title', $page->title) }}">
+                            <input name="slug" class="input w-full" required value="{{ old('slug', $page->slug) }}">
                         </div>
 
                         <div>

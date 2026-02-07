@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $page->title ?? 'Landing Page' }}</title>
+    <title>{{ $page->slug ?? 'Landing Page' }}</title>
 
     {{-- Tailwind CSS --}}
     <script src="https://cdn.tailwindcss.com"></script>
@@ -53,6 +53,11 @@
 
         .animate-scale-in {
             animation: scaleIn .35s ease-out forwards;
+        }
+
+        .overflow-text {
+            width: 100%;
+            overflow-wrap: anywhere;
         }
     </style>
 
@@ -182,7 +187,7 @@
                     معلومات مهمة
                 </h2>
 
-                <p class="text-gray-700 leading-relaxed text-base">
+                <p class="text-gray-700 leading-relaxed text-base overflow-text">
                     {{ $page->description }}
                 </p>
 
