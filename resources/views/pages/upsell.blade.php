@@ -42,6 +42,7 @@
                 <input type="hidden" name="government" value="{{ $orderData['government'] ?? '' }}">
                 <input type="hidden" name="address" value="{{ $orderData['address'] ?? '' }}">
                 <input type="hidden" name="quantity" value="{{ $orderData['quantity'] ?? 1 }}">
+                <input type="hidden" name="offer_price" value="{{ $offerPrice ?? $page->product->price }}">
             @endif
 
             {{-- Products --}}

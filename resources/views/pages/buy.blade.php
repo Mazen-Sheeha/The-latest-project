@@ -404,7 +404,7 @@
 
                     <h2 class="text-2xl font-bold text-center">اطلب الأن</h2>
 
-                    @if ($page->pageSaleActive() && !empty($page->offers))
+                    @if (!empty($page->offers))
                         {{-- CUSTOM OFFERS PRODUCTS --}}
                         <div class="space-y-3" id="offersContainer">
                             @foreach ($page->offers as $offer)
@@ -464,7 +464,7 @@
                         @csrf
                         <input type="hidden" name="quantity" id="orderQuantity" value="1">
                         <input type="hidden" name="offer_price" id="offer_price"
-                            value="{{ $page->sale_price ?? $page->product->price }}" />
+                            value="{{ $page->sale_price ?? ($page->original_price ?? $page->product->price) }}" />
 
                         <input name="full_name" placeholder="الاسم بالكامل" required
                             class="w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg text-sm sm:text-base">

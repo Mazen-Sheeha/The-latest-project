@@ -87,12 +87,14 @@ class PageController extends Controller
         } else {
             // Get order data from session (from buy page form)
             $orderData = session('order_data');
+            $orderOfferPrice = session('offer_price');
         }
 
         return view('pages.upsell', [
             'page' => $page,
             'order' => $order,
             'orderData' => $orderData,
+            'offerPrice' => $orderOfferPrice ?? null,
         ]);
     }
 
@@ -132,6 +134,7 @@ class PageController extends Controller
             session([
                 'order_data' => $request->only('full_name', 'phone', 'government', 'address', 'quantity'),
                 'page_id' => $page->id,
+                'offer_price' => $request->input('offer_price', null) ?? $page->sale_price ?? $page->original_price,
             ]);
 
             return redirect()->route('pages.showUpsellPage', [
@@ -157,6 +160,7 @@ class PageController extends Controller
         Request $request,
         EasyOrderService $easyOrderService
     ): RedirectResponse {
+        // dd($request->all());
         $request->validate([
             'full_name' => 'required|string',
             'phone' => 'required|string',
@@ -175,7 +179,6 @@ class PageController extends Controller
         $mainProduct = $page->product;
         $quantity = (int) $request->input('quantity', 1);
         $sellPrice = $request->input('offer_price', null) ?? $page->sale_price ?? $page->original_price;
-
         $order = $easyOrderService->createFromPage($request, $mainProduct, $sellPrice, $quantity);
 
         // Add selected upsell products to the same order
