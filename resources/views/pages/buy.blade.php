@@ -132,7 +132,7 @@
                         </span>
                     </div>
                     <span>
-                        {{ number_format($page->items_sold_count ?? 0) }} بيعت حتى الآن
+                        {{ number_format($page->product->sales_number ?? 0) }} بيعت حتى الآن
                     </span>
                 </div>
             </div>
