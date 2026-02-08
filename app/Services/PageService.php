@@ -306,6 +306,8 @@ class PageService
             // ================= UPSELL PRODUCTS =================
             'upsell_products' => ['nullable', 'array'],
             'upsell_products.*' => ['exists:products,id'],
+
+            'features' => 'sometimes|array',
         ]);
 
         if ($request->hasFile('images')) {
@@ -365,6 +367,8 @@ class PageService
             // ================= UPSELL PRODUCTS =================
             'upsell_products' => ['nullable', 'array'],
             'upsell_products.*' => ['exists:products,id'],
+
+            'features' => 'sometimes|array',
         ]);
 
         if ($request->hasFile('images')) {

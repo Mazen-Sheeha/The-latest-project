@@ -9,6 +9,10 @@
     {{-- Tailwind CSS --}}
     <script src="https://cdn.tailwindcss.com"></script>
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+        integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
     <style>
         .count-box {
             background: #2f7f78;
@@ -58,6 +62,10 @@
         .overflow-text {
             width: 100%;
             overflow-wrap: anywhere;
+        }
+
+        .features-grid:has(> :last-child:nth-child(odd))> :last-child {
+            grid-column: span 2;
         }
     </style>
 
@@ -178,9 +186,83 @@
             </div>
         </section>
 
+        @if (!empty($page->features))
+            <div class="card border-b">
+                <div class="p-4 grid grid-cols-2 gap-3 features-grid">
+
+                    @if (in_array('cod', $page->features ?? []))
+                        {{-- الدفع عند الاستلام --}}
+                        <label class="border p-3 rounded flex items-center gap-4">
+                            <i class="fa-regular fa-credit-card text-[{{ $page->theme_color }}] text-3xl"></i>
+                            <div>
+                                <p class="text-l">الدفع</p>
+                                <p class="text-gray-500 text-md">عند الاستلام</p>
+                            </div>
+                        </label>
+                    @endif
+
+                    @if (in_array('free_shipping', $page->features ?? []))
+                        {{-- شحن مجاني --}}
+                        <label class="border p-3 rounded flex items-center gap-4">
+                            <i class="fa-regular fa-truck text-[{{ $page->theme_color }}] text-3xl"></i>
+                            <div>
+                                <p class="text-l">مجاناً</p>
+                                <p class="text-gray-500 text-md">التوصيل</p>
+                            </div>
+                        </label>
+                    @endif
+
+                    @if (in_array('replace', $page->features ?? []))
+                        {{-- استبدال خلال 7 أيام --}}
+                        <label class="border p-3 rounded flex items-center gap-4">
+                            <i class="fa-solid fa-arrows-rotate text-[{{ $page->theme_color }}] text-3xl"></i>
+                            <div>
+                                <p class="text-l">استبدال</p>
+                                <p class="text-gray-500 text-md">خلال 7 يوم</p>
+                            </div>
+                        </label>
+                    @endif
+
+
+                    @if (in_array('support', $page->features ?? []))
+                        {{-- خدمة 7\24 --}}
+                        <label class="border p-3 rounded flex items-center gap-4">
+                            <i class="fa-solid fa-headset text-[{{ $page->theme_color }}] text-3xl"></i>
+                            <div>
+                                <p class="text-l">7\24</p>
+                                <p class="text-gray-500 text-md">خدمة</p>
+                            </div>
+                        </label>
+                    @endif
+
+                    @if (in_array('warranty', $page->features ?? []))
+                        {{-- ضمان لمدة سنة --}}
+                        <label class="border p-3 rounded flex items-center gap-4">
+                            <i class="fa-solid fa-shield text-[{{ $page->theme_color }}] text-3xl"></i>
+                            <div>
+                                <p class="text-l">ضمان</p>
+                                <p class="text-gray-500 text-md">لمدة سنة</p>
+                            </div>
+                        </label>
+                    @endif
+
+                    @if (in_array('same_day', $page->features ?? []))
+                        {{-- التوصيل نفس اليوم --}}
+                        <label class="border p-3 rounded flex items-center gap-4">
+                            <i class="fa-solid fa-hourglass text-[{{ $page->theme_color }}] text-3xl"></i>
+                            <div>
+                                <p class="text-l">التوصيل</p>
+                                <p class="text-gray-500 text-md">نفس اليوم</p>
+                            </div>
+                        </label>
+                    @endif
+                </div>
+            </div>
+        @endif
+
 
         {{-- IMPORTANT INFO --}}
-        <section class="bg-white px-4 py-8 border-t">
+        <section class="bg-white px-4 py-8">
             <div class="max-w-[420px] mx-auto space-y-4 text-right">
 
                 <h2 class="text-2xl font-bold text-gray-900">
@@ -318,12 +400,16 @@
                     @if ($page->pageSaleActive())
                         {{-- OFFER PRODUCTS --}}
                         <div class="space-y-3" id="offersContainer">
+                            @php
+                                $images = is_array($page->images) ? $page->images : json_decode($page->images, true);
+                            @endphp
+
                             {{-- OFFER 1 --}}
                             <div
                                 class="offer-item flex items-center gap-3 border rounded-lg p-3 sm:p-4 cursor-pointer hover:border-[{{ $page->theme_color }}]">
                                 <div class="flex flex-col sm:flex-row justify-between w-full gap-3">
                                     <div class="flex gap-3 sm:gap-4">
-                                        @if ($page->images)
+                                        @if (!empty($images) && isset($images[0]))
                                             <img src="{{ asset($page->images[0]) }}"
                                                 class="w-10 sm:w-12 rounded-lg flex-shrink-0" />
                                         @endif
@@ -355,8 +441,10 @@
                                 class="offer-item flex items-center gap-3 border rounded-lg p-3 sm:p-4 cursor-pointer hover:border-[{{ $page->theme_color }}]">
                                 <div class="flex flex-col sm:flex-row justify-between w-full gap-3">
                                     <div class="flex gap-3 sm:gap-4">
-                                        <img src="{{ asset($page->images[0]) }}"
-                                            class="w-10 sm:w-12 rounded-lg flex-shrink-0" />
+                                        @if (!empty($images) && isset($images[0]))
+                                            <img src="{{ asset($page->images[0]) }}"
+                                                class="w-10 sm:w-12 rounded-lg flex-shrink-0" />
+                                        @endif
                                         <div class="flex flex-col gap-2">
                                             <div class="font-bold text-sm sm:text-base">
                                                 اشتري <span class="text-[{{ $page->theme_color }}]">2</span> ب

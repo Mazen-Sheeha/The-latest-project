@@ -28,7 +28,8 @@ class Page extends Model
         'images',
         'description',
         'is_active',
-        'domain_id'
+        'domain_id',
+        'features',
     ];
 
     protected $casts = [
@@ -40,6 +41,7 @@ class Page extends Model
         'sale_ends_at' => 'date',
         'images' => 'array',
         'is_active' => 'boolean',
+        'features' => 'array',
     ];
 
     // public function getRouteKeyName()

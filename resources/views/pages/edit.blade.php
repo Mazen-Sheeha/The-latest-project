@@ -144,6 +144,53 @@
                 </div>
             </div>
 
+            {{-- ================= FEATURES ================= --}}
+            <div class="card bg-white shadow rounded-lg">
+                <div class="card-header">
+                    <h3 class="card-title">المميزات</h3>
+                </div>
+
+                <div class="card-body p-6 grid md:grid-cols-2 gap-4">
+
+                    <label class="flex items-center gap-3 border rounded p-3 cursor-pointer">
+                        <input type="checkbox" name="features[]" value="cod"
+                            {{ in_array('cod', $page->features ?? []) ? 'checked' : '' }}>
+                        الدفع عند الاستلام
+                    </label>
+
+                    <label class="flex items-center gap-3 border rounded p-3 cursor-pointer">
+                        <input type="checkbox" name="features[]" value="free_shipping"
+                            {{ in_array('free_shipping', $page->features ?? []) ? 'checked' : '' }}>
+                        شحن مجاني
+                    </label>
+
+                    <label class="flex items-center gap-3 border rounded p-3 cursor-pointer">
+                        <input type="checkbox" name="features[]" value="replace"
+                            {{ in_array('replace', $page->features ?? []) ? 'checked' : '' }}>
+                        استبدال خلال 7 ايام
+                    </label>
+
+                    <label class="flex items-center gap-3 border rounded p-3 cursor-pointer">
+                        <input type="checkbox" name="features[]" value="support"
+                            {{ in_array('support', $page->features ?? []) ? 'checked' : '' }}>
+                        خدمة 24/7
+                    </label>
+
+                    <label class="flex items-center gap-3 border rounded p-3 cursor-pointer">
+                        <input type="checkbox" name="features[]" value="warranty"
+                            {{ in_array('warranty', $page->features ?? []) ? 'checked' : '' }}>
+                        ضمان سنة
+                    </label>
+
+                    <label class="flex items-center gap-3 border rounded p-3 cursor-pointer">
+                        <input type="checkbox" name="features[]" value="same_day"
+                            {{ in_array('same_day', $page->features ?? []) ? 'checked' : '' }}>
+                        التوصيل نفس اليوم
+                    </label>
+
+                </div>
+            </div>
+
             {{-- ================= IMAGES ================= --}}
             <div class="card bg-white shadow rounded-lg">
                 <div class="card-header">

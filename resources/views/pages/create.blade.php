@@ -17,7 +17,6 @@
 
         <form action="{{ route('pages.store') }}" method="POST" enctype="multipart/form-data" id="page-form">
             @csrf
-
             {{-- ================= BASIC INFO ================= --}}
             <div class="card bg-white shadow rounded-lg">
                 <div class="card-header">
@@ -140,6 +139,47 @@
                         <label class="form-label">عدد التقييمات</label>
                         <input type="number" name="reviews_count" class="input w-full" value="0">
                     </div>
+                </div>
+            </div>
+
+            {{-- ================= FEATURES ================= --}}
+            <div class="card">
+                <div class="card-header">
+                    <h3>المميزات</h3>
+                </div>
+
+                <div class="p-4 grid grid-cols-2 gap-3">
+
+                    <label class="border p-3 rounded cursor-pointer">
+                        <input type="checkbox" name="features[]" value="cod">
+                        الدفع عند الاستلام
+                    </label>
+
+                    <label class="border p-3 rounded cursor-pointer">
+                        <input type="checkbox" name="features[]" value="free_shipping">
+                        شحن مجاني
+                    </label>
+
+                    <label class="border p-3 rounded cursor-pointer">
+                        <input type="checkbox" name="features[]" value="replace">
+                        استبدال خلال 7 ايام
+                    </label>
+
+                    <label class="border p-3 rounded cursor-pointer">
+                        <input type="checkbox" name="features[]" value="support">
+                        خدمة 24/7
+                    </label>
+
+                    <label class="border p-3 rounded cursor-pointer">
+                        <input type="checkbox" name="features[]" value="warranty">
+                        ضمان سنة
+                    </label>
+
+                    <label class="border p-3 rounded cursor-pointer">
+                        <input type="checkbox" name="features[]" value="same_day">
+                        التوصيل نفس اليوم
+                    </label>
+
                 </div>
             </div>
 
