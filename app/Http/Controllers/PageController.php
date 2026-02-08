@@ -130,7 +130,7 @@ class PageController extends Controller
         }
 
         return redirect()->route('pages.buy', [
-            'slug' => $page->slug,
+            'page' => $page,
             'success' => 1,
         ]);
     }
