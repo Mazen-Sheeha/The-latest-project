@@ -15,10 +15,90 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&display=swap" rel="stylesheet">
 
+    @php
+        function hexToRgb($hex)
+        {
+            $hex = str_replace('#', '', $hex);
+            if (strlen($hex) == 3) {
+                $r = hexdec(substr($hex, 0, 1) . substr($hex, 0, 1));
+                $g = hexdec(substr($hex, 1, 1) . substr($hex, 1, 1));
+                $b = hexdec(substr($hex, 2, 1) . substr($hex, 2, 1));
+            } else {
+                $r = hexdec(substr($hex, 0, 2));
+                $g = hexdec(substr($hex, 2, 2));
+                $b = hexdec(substr($hex, 4, 2));
+            }
+            return "$r,$g,$b";
+        }
+    @endphp
+
 
     <style>
         * {
             font-family: 'Almarai', sans-serif;
+        }
+
+        .top-text {
+            font-size: 14px;
+            display: inline-block;
+            transition: all .45s ease;
+            opacity: 1;
+            transform: translateX(0);
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        /* fade out → to left */
+        .top-text.fade-out {
+            opacity: 0;
+            transform: translateX(-40px);
+        }
+
+        /* prepare from right */
+        .top-text.prepare-in {
+            opacity: 0;
+            transform: translateX(40px);
+        }
+
+        /* fade in ← from right */
+        .top-text.fade-in {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .top-moving-banner {
+            width: 100%;
+            overflow: hidden;
+            background-color: rgba({{ hexToRgb($page->theme_color) }}, 0.3);
+            /* lighter than theme */
+            color: #fff;
+            position: relative;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .moving-texts {
+            display: flex;
+            white-space: nowrap;
+            position: absolute;
+            left: -100%;
+            /* start outside left */
+            animation: moveRight linear infinite;
+        }
+
+        .moving-texts span {
+            margin-right: 50px;
+        }
+
+        /* adjust duration for speed */
+        @keyframes moveRight {
+            0% {
+                left: -100%;
+            }
+
+            100% {
+                left: 100%;
+            }
         }
 
         .count-box {
@@ -74,6 +154,27 @@
         .features-grid:has(> :last-child:nth-child(odd))> :last-child {
             grid-column: span 2;
         }
+
+        .buy-popup {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translate(-50%, -20px);
+            background: #000;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            opacity: 0;
+            pointer-events: none;
+            transition: all .6s ease;
+            z-index: 9999;
+        }
+
+        .buy-popup.show {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
     </style>
 
 </head>
@@ -82,7 +183,45 @@
 <body class="bg-white text-gray-900" dir="rtl">
     <div class="w-full max-w-[520px] bg-white min-h-screen shadow-xl m-auto">
 
-        <div class="w-full p-4 bg-[{{ $page->theme_color }}] text-center text-white">الدفع عند الستلام</div>
+        <div class="top-moving-banner h-12 p-2">
+            <div class="moving-texts" id="movingTexts">
+            </div>
+        </div>
+
+
+        @php
+            $features = $page->features ?? [];
+
+            $map = [
+                'cod' => 'الدفع عند الاستلام',
+                'free_shipping' => 'شحن مجاني',
+                'exchange7' => 'استبدال خلال 7 أيام',
+                'support247' => 'خدمة 24/7',
+                'warranty' => 'ضمان لمدة سنة',
+                'same_day' => 'توصيل نفس اليوم',
+            ];
+
+            $texts = [];
+
+            if (!empty($features)) {
+                foreach ($features as $f) {
+                    if (isset($map[$f])) {
+                        $texts[] = $map[$f];
+                    }
+                }
+            }
+
+            if (empty($texts)) {
+                $texts = ['الدفع عند الاستلام', 'عروضنا لا تتوقف 🔥'];
+            }
+        @endphp
+
+        <div class="w-full p-4 bg-[{{ $page->theme_color }}] text-center text-white">
+            <p id="topFeatureText" class="top-text">{{ $texts[0] }}</p>
+        </div>
+
+
+        <p id="buy-text" class="buy-popup"> </p>
 
         {{-- HERO --}}
         <section class="bg-white px-4 pt-6 pb-4 border-b">
@@ -321,7 +460,8 @@
                             {{-- Reviewer Image --}}
                             <div class="shrink-0">
                                 @if ($review->reviewer_image)
-                                    <img src="{{ asset($review->reviewer_image) }}" alt="{{ $review->reviewer_name }}"
+                                    <img src="{{ asset($review->reviewer_image) }}"
+                                        alt="{{ $review->reviewer_name }}"
                                         class="w-12 h-12 rounded-full object-cover border">
                                 @else
                                     @php
@@ -692,5 +832,100 @@
     }
 </script>
 
+<script>
+    const maleNames = [
+        "محمد", "احمد", "محمود", "يوسف", "علي", "عبدالله", "مصطفى", "حسن", "عمر", "خالد",
+        "ابراهيم", "طارق", "كريم", "رامي", "اسلام", "ياسين", "وليد", "سامح", "هشام", "شريف",
+        "عمرو", "مروان", "تامر", "ادهم", "باسم", "سيف", "جمال", "حسين", "صلاح", "ريان"
+    ];
+
+    const femaleNames = [
+        "سارة", "مريم", "نور", "منة", "فاطمة", "هدى", "دينا", "رانيا", "نورا", "ياسمين",
+        "شيماء", "رحاب", "دعاء", "بسمة", "ندى", "آية", "ملك", "جنى", "سلمى", "فرح",
+        "ريم", "ليان", "تالا", "روان", "لينا", "سما", "هاجر", "مي", "سمر", "إسراء"
+    ];
+
+    const buyText = document.getElementById('buy-text');
+
+    function randomTime() {
+        const num = Math.floor(Math.random() * 7) + 3;
+        return `منذ ${num} دقائق`;
+    }
+
+    function showRandomBuy() {
+
+        const isMale = Math.random() > 0.5;
+
+        let name, text;
+
+        if (isMale) {
+            name = maleNames[Math.floor(Math.random() * maleNames.length)];
+            text = "اشترى";
+        } else {
+            name = femaleNames[Math.floor(Math.random() * femaleNames.length)];
+            text = "اشترت";
+        }
+
+        buyText.innerText = `${name} ${text} ${randomTime()}`;
+
+        buyText.classList.add('show');
+
+        setTimeout(() => {
+            buyText.classList.remove('show');
+        }, 1500);
+    }
+
+    // every 5s
+    setInterval(showRandomBuy, 5000);
+</script>
+
+<script>
+    const texts = @json($texts);
+    let i = 0;
+    const el = document.getElementById("topFeatureText");
+
+    if (texts.length > 1) {
+        setInterval(() => {
+
+            // fade out left
+            el.classList.add("fade-out");
+
+            setTimeout(() => {
+                // switch text
+                i = (i + 1) % texts.length;
+                el.innerText = texts[i];
+
+                // start from right
+                el.classList.remove("fade-out");
+                el.classList.add("prepare-in");
+
+                // small delay then fade in
+                setTimeout(() => {
+                    el.classList.remove("prepare-in");
+                    el.classList.add("fade-in");
+
+                    setTimeout(() => {
+                        el.classList.remove("fade-in");
+                    }, 450);
+
+                }, 50);
+
+            }, 450);
+
+        }, 2500);
+    }
+</script>
+
+
+<script>
+    const statements = @json($texts);
+
+    const container = document.getElementById('movingTexts');
+    container.innerHTML = statements.map(text => `<span>${text}</span>`).join('              ');
+    // calculate duration based on text width
+    const totalWidth = container.scrollWidth;
+    const speed = 30; // pixels per second
+    container.style.animationDuration = `${totalWidth / speed}s`;
+</script>
 
 </html>
