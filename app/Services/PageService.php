@@ -31,7 +31,8 @@ class PageService
     public function store(Request $request): RedirectResponse
     {
         $validated = $this->validateStorePage($request);
-        $validated['slug'] = Str::slug($validated['slug']);
+
+        // $validated['slug'] = Str::slug($validated['slug']);
 
         // default reviews_count
         if (!isset($validated['reviews_count'])) {
@@ -114,7 +115,7 @@ class PageService
     {
         $validated = $this->validateUpdatePage($request);
 
-        $validated['slug'] = Str::slug($validated['slug']);
+        // $validated['slug'] = Str::slug(title: $validated['slug']);
 
         $oldImages = $page->images ?? [];
         $newImages = $request->file('images', []);
