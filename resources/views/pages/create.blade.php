@@ -89,7 +89,7 @@
             {{-- ================= SALE ================= --}}
             <div class="card bg-white shadow rounded-lg">
                 <div class="card-header">
-                    <h3 class="card-title">بيانات الخصم</h3>
+                    <h3 class="card-title">بيانات الخصم والعروض</h3>
                 </div>
 
                 <div class="card-body p-6 space-y-4">
@@ -118,6 +118,24 @@
                         <div>
                             <label class="form-label">انتهاء العرض</label>
                             <input type="date" name="sale_ends_at" class="input w-full">
+                        </div>
+                    </div>
+
+                    {{-- Custom Offers --}}
+                    <div class="border-t pt-4 mt-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <label class="form-label font-bold">عروض مخصصة</label>
+                            <button type="button" class="btn btn-sm btn-primary" id="add-offer-btn">
+                                + إضافة عرض
+                            </button>
+                        </div>
+
+                        <p class="text-xs text-gray-600 mb-3">
+                            أضف عروض بكميات مختلفة - مثلاً: اشتري 1 ب100 ، اشتري 2 ب180 (توفير)
+                        </p>
+
+                        <div id="offers-container" class="space-y-3">
+                            {{-- Offers will be added here --}}
                         </div>
                     </div>
                 </div>
@@ -219,40 +237,22 @@
 
             {{-- ================= UPSELL PRODUCTS ================= --}}
             <div class="card bg-white shadow rounded-lg">
-                <div class="card-header">
+                <div class="card-header flex justify-between items-center">
                     <h3 class="card-title">منتجات إضافية (Upsell)</h3>
+                    <button type="button" class="btn btn-sm btn-primary" id="add-upsell-product">
+                        إضافة منتج
+                    </button>
                 </div>
 
                 <div class="card-body p-6 space-y-4">
 
                     <p class="text-sm text-gray-600">
-                        اختر المنتجات التي ستظهر بعد إتمام الطلب
+                        اختر المنتجات التي ستظهر بعد إتمام الطلب وقم بتخصيصها مع الصور والأسعار والعروض
                     </p>
 
-                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-
-                        @foreach ($products as $product)
-                            <label
-                                class="flex gap-3 items-center border rounded-lg p-3 cursor-pointer hover:border-blue-500 transition">
-
-                                <input type="checkbox" name="upsell_products[]" value="{{ $product->id }}"
-                                    class="accent-blue-600">
-
-                                <img src="{{ $product->image ? asset($product->image) : asset('images/productDefault.webp') }}"
-                                    class="w-14 h-14 rounded object-cover border">
-
-                                <div class="flex flex-col">
-                                    <span class="font-bold text-sm">
-                                        {{ $product->name }}
-                                    </span>
-                                    <span class="text-green-600 text-sm font-semibold">
-                                        {{ number_format($product->price) }} د.إ
-                                    </span>
-                                </div>
-
-                            </label>
-                        @endforeach
-
+                    {{-- Upsell Products Container --}}
+                    <div id="upsell-products-container" class="space-y-4">
+                        {{-- Products will be added here dynamically --}}
                     </div>
 
                 </div>
@@ -374,8 +374,73 @@
     </script>
 
     <script>
-        let reviewIndex = 0;
+        let offerIndex = 0;
 
+        document.getElementById('add-offer-btn').addEventListener('click', () => {
+            const container = document.getElementById('offers-container');
+            const offerDiv = document.createElement('div');
+            offerDiv.className = 'border rounded p-4 space-y-3 bg-gray-50';
+
+            offerDiv.innerHTML = `
+        <div class="flex justify-between items-center mb-2">
+            <strong>عرض #${offerIndex + 1}</strong>
+            <button type="button" class="text-red-600 remove-offer-btn text-sm font-bold">حذف</button>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-3">
+            <div class="flex-1">
+                <label class="form-label text-xs font-bold">الكمية *</label>
+                <input type="number" min="1" name="offers[${offerIndex}][quantity]"
+                       class="input w-full" placeholder="1" required>
+            </div>
+            <div class="flex-1">
+                <label class="form-label text-xs font-bold">السعر *</label>
+                <input type="number" step="0.01" name="offers[${offerIndex}][price]"
+                       class="input w-full" placeholder="0.00" required>
+            </div>
+        </div>
+
+        <div>
+            <label class="form-label text-xs font-bold">الوصف (اختياري)</label>
+            <input type="text" name="offers[${offerIndex}][label]"
+                   class="input w-full" placeholder="مثلاً: أفضل عرض، وفر 20%">
+        </div>
+
+        <div>
+            <label class="form-label text-xs font-bold">صورة العرض (اختياري)</label>
+            <div class="flex gap-3">
+                <input type="file" name="offers[${offerIndex}][image]"
+                       class="input w-full offer-image-input" accept="image/*">
+                <img class="offer-image-preview w-20 h-20 rounded border object-cover"
+                     src="https://via.placeholder.com/80" alt="Offer Image">
+            </div>
+        </div>
+    `;
+
+            offerDiv.querySelector('.remove-offer-btn').addEventListener('click', () => {
+                offerDiv.remove();
+            });
+
+            const imageInput = offerDiv.querySelector('.offer-image-input');
+            const imagePreview = offerDiv.querySelector('.offer-image-preview');
+
+            imageInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        imagePreview.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            container.appendChild(offerDiv);
+            offerIndex++;
+        });
+    </script>
+
+    <script>
         document.getElementById('add-review').addEventListener('click', () => {
             const wrapper = document.getElementById('reviews-wrapper');
 
@@ -419,6 +484,98 @@
             });
 
             reviewIndex++;
+        });
+    </script>
+
+    <script>
+        let upsellIndex = 0;
+        const allProducts = @json($products);
+
+        document.getElementById('add-upsell-product').addEventListener('click', () => {
+            const container = document.getElementById('upsell-products-container');
+
+            const div = document.createElement('div');
+            div.className = 'border rounded-lg p-4 space-y-4 bg-gray-50 flex flex-col gap-4';
+            div.dataset.index = upsellIndex;
+
+            div.innerHTML = `
+        <div class="flex justify-between items-center mb-2">
+            <strong>منتج إضافي #${upsellIndex + 1}</strong>
+            <button type="button" class="text-red-600 remove-upsell-product text-sm font-bold hover:text-red-800">حذف</button>
+        </div>
+
+        {{-- Product Selection --}}
+        <div>
+            <label class="form-label">اختر المنتج *</label>
+            <select name="upsell_products[${upsellIndex}][product_id]" class="input w-full product-select" required>
+                <option value="">اختر المنتج</option>
+                ${allProducts.map(p => `
+                            <option value="${p.id}"
+                                    data-name="${p.name}"
+                                    data-price="${p.price}"
+                                    data-image="${p.image ? '{{ asset('') }}' + p.image : '{{ asset('images/productDefault.webp') }}'}">
+                                ${p.name}
+                            </option>
+                        `).join('')}
+            </select>
+        </div>
+
+        {{-- Product Name --}}
+        <div>
+            <label class="form-label">اسم المنتج *</label>
+            <input type="text" name="upsell_products[${upsellIndex}][name]" class="input w-full product-name" placeholder="سيتم ملؤه تلقائياً" required>
+        </div>
+
+        {{-- Product Image --}}
+        <div>
+            <label class="form-label">صورة المنتج</label>
+            <div class="flex gap-3">
+                <input type="file" name="upsell_products[${upsellIndex}][image]" class="input w-full product-image-file" accept="image/*">
+                <img class="product-image-preview w-20 h-20 rounded border object-cover" src="https://via.placeholder.com/80" alt="Product Image">
+            </div>
+        </div>
+
+        {{-- Product Price --}}
+        <div>
+            <label class="form-label">سعر المنتج *</label>
+            <input type="number" step="0.01" name="upsell_products[${upsellIndex}][price]" class="input w-full product-price" placeholder="0.00" required>
+        </div>
+    `;
+
+            container.appendChild(div);
+
+            // Setup event listeners
+            const productSelect = div.querySelector('.product-select');
+            const productName = div.querySelector('.product-name');
+            const productPrice = div.querySelector('.product-price');
+            const productImageFile = div.querySelector('.product-image-file');
+            const productImagePreview = div.querySelector('.product-image-preview');
+
+            productSelect.addEventListener('change', (e) => {
+                const option = e.target.selectedOptions[0];
+                if (option.value) {
+                    productName.value = option.dataset.name;
+                    productPrice.value = option.dataset.price;
+                    productImagePreview.src = option.dataset.image;
+                }
+            });
+
+            productImageFile.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        productImagePreview.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            div.querySelector('.remove-upsell-product').addEventListener('click', () => {
+                div.remove();
+            });
+
+            upsellIndex++;
         });
     </script>
 @endsection

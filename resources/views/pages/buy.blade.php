@@ -404,77 +404,57 @@
 
                     <h2 class="text-2xl font-bold text-center">اطلب الأن</h2>
 
-                    @if ($page->pageSaleActive())
-                        {{-- OFFER PRODUCTS --}}
+                    @if ($page->pageSaleActive() && !empty($page->offers))
+                        {{-- CUSTOM OFFERS PRODUCTS --}}
                         <div class="space-y-3" id="offersContainer">
-                            @php
-                                $images = is_array($page->images) ? $page->images : json_decode($page->images, true);
-                            @endphp
-
-                            {{-- OFFER 1 --}}
-                            <div
-                                class="offer-item flex items-center gap-3 border rounded-lg p-3 sm:p-4 cursor-pointer hover:border-[{{ $page->theme_color }}]">
-                                <div class="flex flex-col sm:flex-row justify-between w-full gap-3">
-                                    <div class="flex gap-3 sm:gap-4">
-                                        @if (!empty($images) && isset($images[0]))
-                                            <img src="{{ asset($page->images[0]) }}"
-                                                class="w-10 sm:w-12 rounded-lg flex-shrink-0" />
-                                        @endif
-                                        <div class="flex flex-col gap-2">
-                                            <div class="font-bold text-sm sm:text-base">
-                                                اشتري <span class="text-[{{ $page->theme_color }}]">1</span> ب
-                                                <span
-                                                    class="text-[{{ $page->theme_color }}]">{{ $page->sale_price * 1 }}
-                                                    د.إ</span>
-                                            </div>
-                                            <div
-                                                class="bg-[{{ $page->theme_color }}] w-fit p-1 sm:p-2 text-xs sm:text-[15px] rounded-2xl text-white">
-                                                وفر %{{ $page->sale_percent }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div
-                                        class="text-xs sm:text-sm text-gray-500 flex flex-col gap-2 sm:gap-4 whitespace-nowrap">
-                                        <span
-                                            class="text-[{{ $page->theme_color }}] font-bold">{{ $page->sale_price * 1 }}
-                                            د.إ</span>
-                                        <span class="line-through">{{ $page->original_price * 1 }} د.إ</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- OFFER 2 --}}
-                            <div
-                                class="offer-item flex items-center gap-3 border rounded-lg p-3 sm:p-4 cursor-pointer hover:border-[{{ $page->theme_color }}]">
-                                <div class="flex flex-col sm:flex-row justify-between w-full gap-3">
-                                    <div class="flex gap-3 sm:gap-4">
-                                        @if (!empty($images) && isset($images[0]))
-                                            <img src="{{ asset($page->images[0]) }}"
-                                                class="w-10 sm:w-12 rounded-lg flex-shrink-0" />
-                                        @endif
-                                        <div class="flex flex-col gap-2">
-                                            <div class="font-bold text-sm sm:text-base">
-                                                اشتري <span class="text-[{{ $page->theme_color }}]">2</span> ب
-                                                <span
-                                                    class="text-[{{ $page->theme_color }}]">{{ $page->sale_price * 2 }}
-                                                    د.إ</span>
-                                            </div>
-                                            <div
-                                                class="bg-gradient-to-l from-orange-500 to-orange-400 w-fit p-1 sm:p-2 text-xs sm:text-[15px] rounded-2xl text-white">
-                                                أفضل عرض
+                            @foreach ($page->offers as $offer)
+                                <div class="offer-item flex items-center gap-3 border rounded-lg p-3 sm:p-4 cursor-pointer hover:border-[{{ $page->theme_color }}]"
+                                    data-quantity="{{ $offer['quantity'] }}">
+                                    <div class="flex flex-col sm:flex-row justify-between w-full gap-3">
+                                        <div class="flex gap-3 sm:gap-4">
+                                            @if (isset($offer['image']) && $offer['image'])
+                                                <img src="{{ asset($offer['image']) }}"
+                                                    class="w-10 sm:w-12 h-10 sm:h-12 rounded-lg flex-shrink-0 object-cover" />
+                                            @else
+                                                @php
+                                                    $images = is_array($page->images)
+                                                        ? $page->images
+                                                        : json_decode($page->images, true);
+                                                @endphp
+                                                @if (!empty($images) && isset($images[0]))
+                                                    <img src="{{ asset($images[0]) }}"
+                                                        class="w-10 sm:w-12 h-10 sm:h-12 rounded-lg flex-shrink-0 object-cover" />
+                                                @endif
+                                            @endif
+                                            <div class="flex flex-col gap-2">
+                                                <div class="font-bold text-sm sm:text-base">
+                                                    اشتري <span
+                                                        class="text-[{{ $page->theme_color }}]">{{ $offer['quantity'] }}</span>
+                                                    ب
+                                                    <span
+                                                        class="text-[{{ $page->theme_color }}]">{{ $offer['price'] }}
+                                                        د.إ</span>
+                                                </div>
+                                                @if ($offer['label'])
+                                                    <div
+                                                        class="bg-[{{ $page->theme_color }}] w-fit p-1 sm:p-2 text-xs sm:text-[15px] rounded-2xl text-white">
+                                                        {{ $offer['label'] }}
+                                                    </div>
+                                                @endif
                                             </div>
                                         </div>
-                                    </div>
-                                    <div
-                                        class="text-xs sm:text-sm text-gray-500 flex flex-col gap-2 sm:gap-4 whitespace-nowrap">
-                                        <span
-                                            class="text-[{{ $page->theme_color }}] font-bold">{{ $page->sale_price * 2 }}
-                                            د.إ</span>
-                                        <span class="line-through">{{ $page->original_price * 2 }} د.إ</span>
+                                        <div
+                                            class="text-xs sm:text-sm text-gray-500 flex flex-col gap-2 sm:gap-4 whitespace-nowrap">
+                                            <span
+                                                class="text-[{{ $page->theme_color }}] font-bold">{{ $offer['price'] }}
+                                                د.إ</span>
+                                            <span
+                                                class="line-through">{{ $page->original_price * $offer['quantity'] }}
+                                                د.إ</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-
+                            @endforeach
                         </div>
                     @endif
 

@@ -18,56 +18,90 @@
                 ممكن يعجبك كمان
             </h2>
             <p class="text-gray-500 text-sm mt-1">
-                ضيف منتجات بسعر مميز على طلبك
+                اختر المنتجات التي تريد إضافتها إلى طلبك
             </p>
         </div>
 
-        {{-- Products --}}
-        <div class="p-6 space-y-6">
-            @foreach ($page->upsellProducts as $product)
-                <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
+        {{-- Form Start --}}
+        <form method="POST" action="{{ route('pages.submitOrderFromUpsellPage') }}" class="flex flex-col h-screen">
+            @csrf
 
-                    {{-- Product Image --}}
-                    <div class="h-48 bg-gray-100">
-                        <img src="{{ $product->image ? asset($product->image) : asset('images/productDefault.webp') }}"
-                            alt="{{ $product->name }}" class="w-full h-full object-cover">
-                    </div>
+            {{-- Hidden Fields for Order Data --}}
+            <input type="hidden" name="page_id" value="{{ $page->id }}">
 
-                    {{-- Product Info --}}
-                    <div class="p-4 space-y-3">
-                        <h3 class="text-lg font-bold">
-                            {{ $product->name }}
-                        </h3>
+            @if ($order)
+                {{-- If we have an existing order --}}
+                <input type="hidden" name="full_name" value="{{ $order->name }}">
+                <input type="hidden" name="phone" value="{{ $order->phone }}">
+                <input type="hidden" name="government" value="{{ $order->city }}">
+                <input type="hidden" name="address" value="{{ $order->address }}">
+            @else
+                {{-- Otherwise use session order data --}}
+                <input type="hidden" name="full_name" value="{{ $orderData['full_name'] ?? '' }}">
+                <input type="hidden" name="phone" value="{{ $orderData['phone'] ?? '' }}">
+                <input type="hidden" name="government" value="{{ $orderData['government'] ?? '' }}">
+                <input type="hidden" name="address" value="{{ $orderData['address'] ?? '' }}">
+                <input type="hidden" name="quantity" value="{{ $orderData['quantity'] ?? 1 }}">
+            @endif
 
-                        <div class="flex items-center justify-between">
-                            <span class="text-[{{ $page->theme_color }}] text-xl font-extrabold">
-                                {{ $product->price }} د.إ
-                            </span>
+            {{-- Products --}}
+            <div class="p-6 space-y-4 flex-grow overflow-y-auto">
+                @foreach ($page->upsellProducts as $product)
+                    <label
+                        class="flex gap-4 items-start border rounded-2xl shadow-sm p-4 cursor-pointer hover:border-[{{ $page->theme_color }}] transition bg-white">
 
-                            <span class="text-sm text-gray-500">
-                                عرض خاص
-                            </span>
+                        {{-- Checkbox --}}
+                        <input type="checkbox" name="selected_upsell_products[]" value="{{ $product->id }}"
+                            class="mt-2 w-5 h-5 cursor-pointer accent-[{{ $page->theme_color }}]">
+
+                        {{-- Product Content --}}
+                        <div class="flex-1 space-y-2">
+                            {{-- Product Image --}}
+                            <div class="h-32 bg-gray-100 rounded-lg overflow-hidden">
+                                @if ($product->pivot->image)
+                                    <img src="{{ asset($product->pivot->image) }}" alt="{{ $product->pivot->name }}"
+                                        class="w-full h-full object-cover">
+                                @else
+                                    <img src="{{ $product->image ? asset($product->image) : asset('images/productDefault.webp') }}"
+                                        alt="{{ $product->pivot->name }}" class="w-full h-full object-cover">
+                                @endif
+                            </div>
+
+                            {{-- Product Info --}}
+                            <div class="space-y-1">
+                                <h3 class="text-lg font-bold">
+                                    {{ $product->pivot->name ?? $product->name }}
+                                </h3>
+
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[{{ $page->theme_color }}] text-xl font-extrabold">
+                                        {{ number_format($product->pivot->price ?? $product->price, 2) }} د.إ
+                                    </span>
+
+                                    <span class="text-sm text-gray-500">
+                                        عرض خاص
+                                    </span>
+                                </div>
+                            </div>
                         </div>
 
-                        {{-- Add To Order --}}
-                        <form method="POST" action="{{ route('pages.submitOrderFromUpsellPage', $product->id) }}">
-                            @csrf
+                    </label>
+                @endforeach
+            </div>
 
-                            <input type="hidden" name="page_id" value="{{ $page->id }}">
-                            <input type="hidden" name="full_name" value="{{ $order->name }}">
-                            <input type="hidden" name="phone" value="{{ $order->phone }}">
-                            <input type="hidden" name="government" value="{{ $order->city }}">
-                            <input type="hidden" name="address" value="{{ $order->address }}">
+            {{-- Action Buttons (Sticky) --}}
+            <div class="border-t bg-white p-6 space-y-3">
+                <button type="submit"
+                    class="w-full bg-[{{ $page->theme_color }}] transition text-white py-3 rounded-xl font-bold text-lg">
+                    تأكيد الطلب
+                </button>
 
-                            <button type="submit"
-                                class="w-full mt-4 bg-[{{ $page->theme_color }}] transition text-white py-3 rounded-xl font-bold text-lg">
-                                أضف إلى الطلب
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            @endforeach
-        </div>
+                <button type="button" onclick="skipUpsell()"
+                    class="w-full bg-gray-200 transition text-gray-800 py-3 rounded-xl font-bold text-lg hover:bg-gray-300">
+                    تجاوز العروض
+                </button>
+            </div>
+        </form>
 
     </div>
 
@@ -100,6 +134,7 @@
             </div>
         </div>
     @endif
+
 </body>
 <script>
     if (window.location.search.includes('success=1')) {
@@ -110,6 +145,11 @@
 
     function closeSuccessOverlay() {
         document.getElementById('successOverlay')?.remove();
+    }
+
+    function skipUpsell() {
+        // Submit the form without any selected products
+        document.querySelector('form').submit();
     }
 </script>
 

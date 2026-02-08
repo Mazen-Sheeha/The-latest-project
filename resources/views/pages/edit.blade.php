@@ -86,7 +86,7 @@
             {{-- ================= SALE ================= --}}
             <div class="card bg-white shadow rounded-lg">
                 <div class="card-header">
-                    <h3 class="card-title">بيانات الخصم</h3>
+                    <h3 class="card-title">بيانات الخصم والعروض</h3>
                 </div>
 
                 <div class="card-body p-6 space-y-4">
@@ -118,6 +118,67 @@
                             <label class="form-label">انتهاء العرض</label>
                             <input type="datetime-local" name="sale_ends_at" class="input w-full"
                                 value="{{ old('sale_ends_at', optional($page->sale_ends_at)->format('Y-m-d\TH:i')) }}">
+                        </div>
+                    </div>
+
+                    {{-- Custom Offers --}}
+                    <div class="border-t pt-4 mt-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <label class="form-label font-bold">عروض مخصصة</label>
+                            <button type="button" class="btn btn-sm btn-primary" id="add-offer-btn">
+                                + إضافة عرض
+                            </button>
+                        </div>
+
+                        <p class="text-xs text-gray-600 mb-3">
+                            أضف عروض بكميات مختلفة - مثلاً: اشتري 1 ب100 ، اشتري 2 ب180 (توفير)
+                        </p>
+
+                        <div id="offers-container" class="space-y-3">
+                            @if ($page->offers && is_array($page->offers))
+                                @foreach ($page->offers as $index => $offer)
+                                    <div class="border rounded p-4 space-y-3 bg-gray-50">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <strong>عرض #{{ $index + 1 }}</strong>
+                                            <button type="button"
+                                                class="text-red-600 remove-offer-btn text-sm font-bold">حذف</button>
+                                        </div>
+
+                                        <div class="grid md:grid-cols-2 gap-3">
+                                            <div class="flex-1">
+                                                <label class="form-label text-xs font-bold">الكمية</label>
+                                                <input type="number" min="1"
+                                                    name="offers[{{ $index }}][quantity]" class="input w-full"
+                                                    value="{{ $offer['quantity'] }}" required>
+                                            </div>
+                                            <div class="flex-1">
+                                                <label class="form-label text-xs font-bold">السعر</label>
+                                                <input type="number" step="0.01"
+                                                    name="offers[{{ $index }}][price]" class="input w-full"
+                                                    value="{{ $offer['price'] }}" required>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label class="form-label text-xs font-bold">الوصف (اختياري)</label>
+                                            <input type="text" name="offers[{{ $index }}][label]"
+                                                class="input w-full" value="{{ $offer['label'] ?? '' }}"
+                                                placeholder="مثلاً: أفضل عرض">
+                                        </div>
+
+                                        <div>
+                                            <label class="form-label text-xs font-bold">صورة العرض (اختياري)</label>
+                                            <div class="flex gap-3">
+                                                <input type="file" name="offers[{{ $index }}][image]"
+                                                    class="input w-full offer-image-input" accept="image/*">
+                                                <img class="offer-image-preview w-20 h-20 rounded border object-cover"
+                                                    src="{{ isset($offer['image']) && $offer['image'] ? asset($offer['image']) : 'https://via.placeholder.com/80' }}"
+                                                    alt="Offer Image">
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -293,30 +354,75 @@
             {{-- ================= UPSELL PRODUCTS ================= --}}
             @if ($products->count())
                 <div class="card bg-white shadow rounded-lg">
-                    <div class="card-header">
-                        <h3 class="card-title">منتجات Upsell (مقترحة بعد الشراء)</h3>
+                    <div class="card-header flex justify-between items-center">
+                        <h3 class="card-title">منتجات إضافية (Upsell)</h3>
+                        <button type="button" class="btn btn-sm btn-primary" id="add-upsell-product">
+                            إضافة منتج
+                        </button>
                     </div>
 
                     <div class="card-body p-6 space-y-4">
+
                         <p class="text-sm text-gray-600">
-                            اختر المنتجات التي ستظهر للعميل بعد إتمام الطلب
+                            اختر المنتجات التي ستظهر بعد إتمام الطلب وقم بتخصيصها مع الصور والأسعار
                         </p>
 
-                        <div class="grid md:grid-cols-2 gap-4">
-                            @foreach ($products as $product)
-                                <label class="flex items-center gap-3 border rounded p-3 cursor-pointer">
-                                    <input type="checkbox" name="upsell_products[]" value="{{ $product->id }}"
-                                        {{ !empty($upsellProducts) && $upsellProducts->contains($product->id) ? 'checked' : '' }}>
+                        {{-- Upsell Products Container --}}
+                        <div id="upsell-products-container" class="space-y-4">
+                            {{-- Products will be added here dynamically --}}
+                            @foreach ($page->upsellProducts as $product)
+                                <div class="border rounded-lg p-4 space-y-4 bg-gray-50 flex flex-col gap-4">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <strong>منتج: {{ $product->pivot->name ?? $product->name }}</strong>
+                                        <button type="button"
+                                            class="text-red-600 remove-upsell-product text-sm font-bold hover:text-red-800">حذف</button>
+                                    </div>
 
                                     <div>
-                                        <strong class="block">{{ $product->name }}</strong>
-                                        <span class="text-sm text-gray-500">
-                                            {{ number_format($product->price, 2) }} ج.م
-                                        </span>
+                                        <label class="form-label">اختر المنتج *</label>
+                                        <select name="upsell_products[${upsellIndex}][product_id]"
+                                            class="input w-full product-select" required>
+                                            <option value="{{ $product->id }}" selected>{{ $product->name }}</option>
+                                            @foreach ($products as $p)
+                                                @if ($p->id !== $product->id)
+                                                    <option value="{{ $p->id }}" data-name="{{ $p->name }}"
+                                                        data-price="{{ $p->price }}"
+                                                        data-image="{{ $p->image ? asset($p->image) : asset('images/productDefault.webp') }}">
+                                                        {{ $p->name }}</option>
+                                                @endif
+                                            @endforeach
+                                        </select>
                                     </div>
-                                </label>
+
+                                    <div>
+                                        <label class="form-label">اسم المنتج *</label>
+                                        <input type="text" name="upsell_products[${upsellIndex}][name]"
+                                            class="input w-full product-name"
+                                            value="{{ $product->pivot->name ?? $product->name }}" required>
+                                    </div>
+
+                                    <div>
+                                        <label class="form-label">صورة المنتج</label>
+                                        <div class="flex gap-3">
+                                            <input type="file" name="upsell_products[${upsellIndex}][image]"
+                                                class="input w-full product-image-file" accept="image/*">
+                                            <img class="product-image-preview w-20 h-20 rounded border object-cover"
+                                                src="{{ $product->pivot->image ? asset($product->pivot->image) : asset('images/productDefault.webp') }}"
+                                                alt="Product Image">
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="form-label">سعر المنتج *</label>
+                                        <input type="number" step="0.01"
+                                            name="upsell_products[${upsellIndex}][price]"
+                                            class="input w-full product-price"
+                                            value="{{ $product->pivot->price ?? $product->price }}" required>
+                                    </div>
+                                </div>
                             @endforeach
                         </div>
+
                     </div>
                 </div>
             @endif
@@ -409,6 +515,95 @@
             document.getElementById('sale-fields')
                 .classList.toggle('hidden', !e.target.checked);
         });
+
+        // ================= CUSTOM OFFERS =================
+        let offerIndex = document.querySelectorAll('#offers-container > div').length;
+
+        document.getElementById('add-offer-btn').addEventListener('click', () => {
+            const container = document.getElementById('offers-container');
+            const offerDiv = document.createElement('div');
+            offerDiv.className = 'border rounded p-4 space-y-3 bg-gray-50';
+
+            offerDiv.innerHTML = `
+        <div class="flex justify-between items-center mb-2">
+            <strong>عرض #${offerIndex + 1}</strong>
+            <button type="button" class="text-red-600 remove-offer-btn text-sm font-bold">حذف</button>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-3">
+            <div class="flex-1">
+                <label class="form-label text-xs font-bold">الكمية *</label>
+                <input type="number" min="1" name="offers[${offerIndex}][quantity]"
+                       class="input w-full" placeholder="1" required>
+            </div>
+            <div class="flex-1">
+                <label class="form-label text-xs font-bold">السعر *</label>
+                <input type="number" step="0.01" name="offers[${offerIndex}][price]"
+                       class="input w-full" placeholder="0.00" required>
+            </div>
+        </div>
+
+        <div>
+            <label class="form-label text-xs font-bold">الوصف (اختياري)</label>
+            <input type="text" name="offers[${offerIndex}][label]"
+                   class="input w-full" placeholder="مثلاً: أفضل عرض، وفر 20%">
+        </div>
+
+        <div>
+            <label class="form-label text-xs font-bold">صورة العرض (اختياري)</label>
+            <div class="flex gap-3">
+                <input type="file" name="offers[${offerIndex}][image]"
+                       class="input w-full offer-image-input" accept="image/*">
+                <img class="offer-image-preview w-20 h-20 rounded border object-cover"
+                     src="https://via.placeholder.com/80" alt="Offer Image">
+            </div>
+        </div>
+    `;
+
+            const removeBtn = offerDiv.querySelector('.remove-offer-btn');
+            const imageInput = offerDiv.querySelector('.offer-image-input');
+            const imagePreview = offerDiv.querySelector('.offer-image-preview');
+
+            removeBtn.addEventListener('click', () => {
+                offerDiv.remove();
+            });
+
+            imageInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        imagePreview.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            container.appendChild(offerDiv);
+            offerIndex++;
+        });
+
+        // Handle existing offer image previews
+        document.querySelectorAll('.offer-image-input').forEach(input => {
+            input.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        e.target.closest('.flex').querySelector('.offer-image-preview').src = event
+                            .target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+
+        // Remove existing offers
+        document.querySelectorAll('.remove-offer-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.closest('.border').remove();
+            });
+        });
     </script>
 
     <script>
@@ -480,6 +675,127 @@
 
             wrapper.appendChild(div);
             reviewIndex++;
+        });
+    </script>
+
+    <script>
+        let upsellIndex = {{ $page->upsellProducts->count() ?? 0 }};
+        const allProducts = @json($products);
+
+        document.getElementById('add-upsell-product').addEventListener('click', () => {
+            const container = document.getElementById('upsell-products-container');
+
+            const div = document.createElement('div');
+            div.className = 'border rounded-lg p-4 space-y-4 bg-gray-50 flex flex-col gap-4';
+            div.dataset.index = upsellIndex;
+
+            div.innerHTML = `
+        <div class="flex justify-between items-center mb-2">
+            <strong>منتج إضافي #${upsellIndex + 1}</strong>
+            <button type="button" class="text-red-600 remove-upsell-product text-sm font-bold hover:text-red-800">حذف</button>
+        </div>
+
+        <div>
+            <label class="form-label">اختر المنتج *</label>
+            <select name="upsell_products[${upsellIndex}][product_id]" class="input w-full product-select" required>
+                <option value="">اختر المنتج</option>
+                ${allProducts.map(p => `
+                            <option value="${p.id}"
+                                    data-name="${p.name}"
+                                    data-price="${p.price}"
+                                    data-image="${p.image ? '{{ asset('') }}' + p.image : '{{ asset('images/productDefault.webp') }}'}">
+                                ${p.name}
+                            </option>
+                        `).join('')}
+            </select>
+        </div>
+
+        <div>
+            <label class="form-label">اسم المنتج *</label>
+            <input type="text" name="upsell_products[${upsellIndex}][name]" class="input w-full product-name" placeholder="سيتم ملؤه تلقائياً" required>
+        </div>
+
+        <div>
+            <label class="form-label">صورة المنتج</label>
+            <div class="flex gap-3">
+                <input type="file" name="upsell_products[${upsellIndex}][image]" class="input w-full product-image-file" accept="image/*">
+                <img class="product-image-preview w-20 h-20 rounded border object-cover" src="https://via.placeholder.com/80" alt="Product Image">
+            </div>
+        </div>
+
+        <div>
+            <label class="form-label">سعر المنتج *</label>
+            <input type="number" step="0.01" name="upsell_products[${upsellIndex}][price]" class="input w-full product-price" placeholder="0.00" required>
+        </div>
+    `;
+
+            container.appendChild(div);
+
+            // Setup event listeners
+            const productSelect = div.querySelector('.product-select');
+            const productName = div.querySelector('.product-name');
+            const productPrice = div.querySelector('.product-price');
+            const productImageFile = div.querySelector('.product-image-file');
+            const productImagePreview = div.querySelector('.product-image-preview');
+
+            productSelect.addEventListener('change', (e) => {
+                const option = e.target.selectedOptions[0];
+                if (option.value) {
+                    productName.value = option.dataset.name;
+                    productPrice.value = option.dataset.price;
+                    productImagePreview.src = option.dataset.image;
+                }
+            });
+
+            productImageFile.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        productImagePreview.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            div.querySelector('.remove-upsell-product').addEventListener('click', () => {
+                div.remove();
+            });
+
+            upsellIndex++;
+        });
+
+        // Setup event listeners for existing upsell products
+        document.querySelectorAll('#upsell-products-container .product-select').forEach(select => {
+            select.addEventListener('change', (e) => {
+                const container = e.target.closest('.border');
+                const option = e.target.selectedOptions[0];
+                if (option.value) {
+                    container.querySelector('.product-name').value = option.dataset.name;
+                    container.querySelector('.product-price').value = option.dataset.price;
+                    container.querySelector('.product-image-preview').src = option.dataset.image;
+                }
+            });
+        });
+
+        document.querySelectorAll('#upsell-products-container .product-image-file').forEach(input => {
+            input.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        e.target.closest('.border').querySelector('.product-image-preview').src = event
+                            .target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+
+        document.querySelectorAll('#upsell-products-container .remove-upsell-product').forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.closest('.border').remove();
+            });
         });
     </script>
 @endsection

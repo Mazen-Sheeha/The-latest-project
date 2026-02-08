@@ -30,6 +30,7 @@ class Page extends Model
         'is_active',
         'domain_id',
         'features',
+        'offers',
     ];
 
     protected $casts = [
@@ -42,6 +43,7 @@ class Page extends Model
         'images' => 'array',
         'is_active' => 'boolean',
         'features' => 'array',
+        'offers' => 'array',
     ];
 
     // public function getRouteKeyName()
@@ -79,7 +81,9 @@ class Page extends Model
 
     public function upsellProducts(): BelongsToMany
     {
-        return $this->belongsToMany(Product::class, 'page_upsell_products', 'page_id', 'product_id');
+        return $this->belongsToMany(Product::class, 'page_upsell_products', 'page_id', 'product_id')
+            ->withPivot(['name', 'image', 'price'])
+            ->withTimestamps();
     }
 
     public function domain(): BelongsTo
