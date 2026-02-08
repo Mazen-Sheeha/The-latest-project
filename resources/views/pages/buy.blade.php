@@ -409,7 +409,7 @@
                         <div class="space-y-3" id="offersContainer">
                             @foreach ($page->offers as $offer)
                                 <div class="offer-item flex items-center gap-3 border rounded-lg p-3 sm:p-4 cursor-pointer hover:border-[{{ $page->theme_color }}]"
-                                    data-quantity="{{ $offer['quantity'] }}">
+                                    data-quantity="{{ $offer['quantity'] }}" data-price="{{ $offer['price'] }}">
                                     <div class="flex flex-col sm:flex-row justify-between w-full gap-3">
                                         <div class="flex gap-3 sm:gap-4">
                                             @if (isset($offer['image']) && $offer['image'])
@@ -463,6 +463,8 @@
                     <form method="POST" action="{{ route('pages.submitOrder', $page->slug) }}" class="space-y-3">
                         @csrf
                         <input type="hidden" name="quantity" id="orderQuantity" value="1">
+                        <input type="hidden" name="offer_price" id="offer_price"
+                            value="{{ $page->sale_price ?? $page->product->price }}" />
 
                         <input name="full_name" placeholder="الاسم بالكامل" required
                             class="w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg text-sm sm:text-base">
@@ -594,18 +596,51 @@
 <script>
     const offers = document.querySelectorAll('#offersContainer .offer-item');
     const quantityInput = document.getElementById('orderQuantity');
+    const offerPriceInput = document.getElementById('offer_price');
 
-    if (offers.length) {
-        offers[0].classList.add('border-[{{ $page->theme_color }}]', 'shadow-xl', 'border-2');
-        quantityInput.value = offers[0].dataset.quantity;
-    }
+    let selectedOffer = null;
+
+    // default values
+    quantityInput.value = 1;
 
     offers.forEach(offer => {
         offer.addEventListener('click', () => {
-            offers.forEach(o => o.classList.remove('border-[{{ $page->theme_color }}]', 'shadow-xl'));
-            offer.classList.add('border-[{{ $page->theme_color }}]', 'shadow-xl', 'border-2');
+
+            // unselect if clicked again
+            if (selectedOffer === offer) {
+                offer.classList.remove(
+                    'border-[{{ $page->theme_color }}]',
+                    'shadow-xl',
+                    'border-2'
+                );
+
+                selectedOffer = null;
+                quantityInput.value = 1;
+
+                // back to normal price
+                offerPriceInput.value = "{{ $page->sale_price ?? $page->product->price }}";
+                return;
+            }
+
+            // remove all selection
+            offers.forEach(o => o.classList.remove(
+                'border-[{{ $page->theme_color }}]',
+                'shadow-xl',
+                'border-2'
+            ));
+
+            // select current
+            offer.classList.add(
+                'border-[{{ $page->theme_color }}]',
+                'shadow-xl',
+                'border-2'
+            );
+
+            selectedOffer = offer;
+
             quantityInput.value = offer.dataset.quantity;
 
+            offerPriceInput.value = offer.dataset.price;
         });
     });
 </script>

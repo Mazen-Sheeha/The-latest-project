@@ -140,7 +140,9 @@ class PageController extends Controller
             ]);
         }
 
-        $order = $easyOrderService->createFromPage($request, $page->product);
+        $quantity = (int) $request->input('quantity', 1);
+        $sellPrice = $request->input('offer_price', null) ?? $page->sale_price ?? $page->original_price;
+        $order = $easyOrderService->createFromPage($request, $page->product, $sellPrice, $quantity);
 
         return redirect()->route('pages.buy', [
             'page' => $page,
@@ -171,7 +173,10 @@ class PageController extends Controller
 
         // Create order with main product
         $mainProduct = $page->product;
-        $order = $easyOrderService->createFromPage($request, $mainProduct);
+        $quantity = (int) $request->input('quantity', 1);
+        $sellPrice = $request->input('offer_price', null) ?? $page->sale_price ?? $page->original_price;
+
+        $order = $easyOrderService->createFromPage($request, $mainProduct, $sellPrice, $quantity);
 
         // Add selected upsell products to the same order
         if (!empty($upsellProductIds)) {

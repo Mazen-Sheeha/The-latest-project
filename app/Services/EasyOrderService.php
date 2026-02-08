@@ -120,7 +120,7 @@ class EasyOrderService
         return $storesList[$storeId] ?? null;
     }
 
-    public function createFromPage(Request $request, Product $product): Order
+    public function createFromPage(Request $request, Product $product, ?float $sellPrice = null, int $quantity = 1): Order
     {
         DB::beginTransaction();
 
@@ -151,15 +151,29 @@ class EasyOrderService
                 'url' => url()->full(),
                 'campaign_id' => $campaign?->id,
             ]);
+            // Determine the sale price and quantity for the main product
+            $qtyMain = (int) ($request->input('quantity', $quantity) ?? $quantity);
+
+            // offer price coming = TOTAL price (example 600 for 3 items)
+            $totalOfferPrice = $sellPrice !== null
+                ? (float) $sellPrice
+                : (float) ($product->price * $qtyMain);
+
+            // convert to unit price so DB stays correct
+            $unitPrice = $qtyMain > 0
+                ? $totalOfferPrice / $qtyMain
+                : $product->price;
+
             $order->products()->sync([
                 $product->id => [
-                    'price' => $product->price,
-                    'quantity' => 1,
-                    'real_price' => $product->price,
+                    'price' => $unitPrice, // price per item
+                    'quantity' => $qtyMain,
+                    'real_price' => (float) $product->price,
                 ]
             ]);
 
-            $product->increment('sales_number');
+            // increment sales by the ordered quantity
+            $product->increment('sales_number', $qtyMain);
 
             $users = User::where('id', 1)
                 ->orWhereHas(
