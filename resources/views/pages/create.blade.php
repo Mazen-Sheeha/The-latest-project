@@ -78,6 +78,12 @@
                             <input name="whatsapp_phone" class="input w-full" value="{{ old('whatsapp_phone') }}"
                                 placeholder="مثال: +971501234567">
                         </div>
+
+                        <div>
+                            <label class="form-label">السعر الأصلي</label>
+                            <input type="number" step="0.01" name="original_price" id="original_price"
+                                class="input w-full">
+                        </div>
                     </div>
 
                     <div>
@@ -89,187 +95,203 @@
                         <input type="checkbox" name="is_active" value="1" checked>
                         نشر الصفحة
                     </label>
-                </div>
-            </div>
 
-            {{-- ================= SALE ================= --}}
-            <div class="card bg-white shadow rounded-lg">
-                <div class="card-header">
-                    <h3 class="card-title">بيانات الخصم والعروض</h3>
-                </div>
-
-                <div class="card-body p-6 space-y-4">
-                    <label class="flex items-center gap-2">
-                        <input type="checkbox" id="has-sale">
-                        تفعيل الخصم
-                    </label>
-
-                    <div id="sale-fields" class="hidden grid md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="form-label">السعر الأصلي</label>
-                            <input type="number" step="0.01" name="original_price" id="original_price"
-                                class="input w-full">
-                        </div>
-
-                        <div>
-                            <label class="form-label">سعر البيع</label>
-                            <input type="number" step="0.01" name="sale_price" id="sale_price" class="input w-full">
-                        </div>
-
-                        <div>
-                            <label class="form-label">نسبة الخصم %</label>
-                            <input type="number" name="sale_percent" id="sale_percent" class="input w-full">
-                        </div>
-
-                        <div>
-                            <label class="form-label">انتهاء العرض</label>
-                            <input type="date" name="sale_ends_at" class="input w-full">
+                    {{-- Pixels Section --}}
+                    <div class="border-t pt-4 mt-4">
+                        <h4 class="form-label font-bold mb-4">بكسلات التتبع (Tracking Pixels)</h4>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="form-label">Meta Pixel / Facebook</label>
+                                <textarea name="meta_pixel" class="input w-full" rows="3" placeholder="أدخل كود Meta Pixel هنا">{{ old('meta_pixel') }}</textarea>
+                            </div>
+                            <div>
+                                <label class="form-label">TikTok Pixel</label>
+                                <textarea name="tiktok_pixel" class="input w-full" rows="3" placeholder="أدخل كود TikTok Pixel هنا">{{ old('tiktok_pixel') }}</textarea>
+                            </div>
+                            <div>
+                                <label class="form-label">Snapchat Pixel</label>
+                                <textarea name="snapchat_pixel" class="input w-full" rows="3" placeholder="أدخل كود Snapchat Pixel هنا">{{ old('snapchat_pixel') }}</textarea>
+                            </div>
+                            <div>
+                                <label class="form-label">Twitter Pixel</label>
+                                <textarea name="twitter_pixel" class="input w-full" rows="3" placeholder="أدخل كود Twitter Pixel هنا">{{ old('twitter_pixel') }}</textarea>
+                            </div>
                         </div>
                     </div>
 
-                    {{-- Custom Offers --}}
-                    <div class="border-t pt-4 mt-4">
-                        <div class="flex justify-between items-center mb-3">
-                            <label class="form-label font-bold">عروض مخصصة</label>
-                            <button type="button" class="btn btn-sm btn-primary" id="add-offer-btn">
-                                + إضافة عرض
+                    {{-- ================= SALE ================= --}}
+                    <div class="card bg-white shadow rounded-lg">
+                        <div class="card-header">
+                            <h3 class="card-title">بيانات الخصم والعروض</h3>
+                        </div>
+
+                        <div class="card-body p-6 space-y-4">
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" id="has-sale">
+                                تفعيل الخصم
+                            </label>
+
+                            <div id="sale-fields" class="hidden grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="form-label">سعر البيع</label>
+                                    <input type="number" step="0.01" name="sale_price" id="sale_price"
+                                        class="input w-full">
+                                </div>
+
+                                <div>
+                                    <label class="form-label">نسبة الخصم %</label>
+                                    <input type="number" name="sale_percent" id="sale_percent" class="input w-full">
+                                </div>
+
+                                <div>
+                                    <label class="form-label">انتهاء العرض</label>
+                                    <input type="date" name="sale_ends_at" class="input w-full">
+                                </div>
+                            </div>
+
+                            {{-- Custom Offers --}}
+                            <div class="border-t pt-4 mt-4">
+                                <div class="flex justify-between items-center mb-3">
+                                    <label class="form-label font-bold">عروض مخصصة</label>
+                                    <button type="button" class="btn btn-sm btn-primary" id="add-offer-btn">
+                                        + إضافة عرض
+                                    </button>
+                                </div>
+
+                                <p class="text-xs text-gray-600 mb-3">
+                                    أضف عروض بكميات مختلفة - مثلاً: اشتري 1 ب100 ، اشتري 2 ب180 (توفير)
+                                </p>
+
+                                <div id="offers-container" class="space-y-3">
+                                    {{-- Offers will be added here --}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- ================= STATS ================= --}}
+                    <div class="card bg-white shadow rounded-lg">
+                        <div class="card-header">
+                            <h3 class="card-title">الإحصائيات</h3>
+                        </div>
+
+                        <div class="card-body p-6 grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="form-label">عدد المبيعات</label>
+                                <input type="number" name="items_sold_count" class="input w-full" value="0">
+                            </div>
+
+                            <div>
+                                <label class="form-label">عدد التقييمات</label>
+                                <input type="number" name="reviews_count" class="input w-full" value="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- ================= FEATURES ================= --}}
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>المميزات</h3>
+                        </div>
+
+                        <div class="p-4 grid grid-cols-2 gap-3">
+
+                            <label class="border p-3 rounded cursor-pointer">
+                                <input type="checkbox" name="features[]" value="cod">
+                                الدفع عند الاستلام
+                            </label>
+
+                            <label class="border p-3 rounded cursor-pointer">
+                                <input type="checkbox" name="features[]" value="free_shipping">
+                                شحن مجاني
+                            </label>
+
+                            <label class="border p-3 rounded cursor-pointer">
+                                <input type="checkbox" name="features[]" value="replace">
+                                استبدال خلال 7 ايام
+                            </label>
+
+                            <label class="border p-3 rounded cursor-pointer">
+                                <input type="checkbox" name="features[]" value="support">
+                                خدمة 24/7
+                            </label>
+
+                            <label class="border p-3 rounded cursor-pointer">
+                                <input type="checkbox" name="features[]" value="warranty">
+                                ضمان سنة
+                            </label>
+
+                            <label class="border p-3 rounded cursor-pointer">
+                                <input type="checkbox" name="features[]" value="same_day">
+                                التوصيل نفس اليوم
+                            </label>
+
+                        </div>
+                    </div>
+
+                    {{-- ================= IMAGES ================= --}}
+                    <div class="card bg-white shadow rounded-lg">
+                        <div class="card-header">
+                            <h3 class="card-title">الصور (يمكنك ترتيبها)</h3>
+                        </div>
+
+                        <p class="text-sm text-gray-700 p-4 block">
+                            اسحب الصور لتغيير ترتيب العرض
+                        </p>
+
+
+                        <div class="card-body p-6 space-y-4">
+                            <input type="file" name="images[]" multiple accept="image/*" id="images-input">
+
+                            {{-- hidden input will store order --}}
+                            <input type="hidden" name="images_order" id="images-order">
+
+                            <div id="preview" class="flex flex-col gap-4 cursor-move">
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- ================= REVIEWS ================= --}}
+                    <div class="card bg-white shadow rounded-lg">
+                        <div class="card-header flex justify-between items-center">
+                            <h3 class="card-title">التقييمات</h3>
+                            <button type="button" class="btn btn-sm btn-primary" id="add-review">
+                                إضافة تقييم
                             </button>
                         </div>
 
-                        <p class="text-xs text-gray-600 mb-3">
-                            أضف عروض بكميات مختلفة - مثلاً: اشتري 1 ب100 ، اشتري 2 ب180 (توفير)
-                        </p>
+                        <div class="card-body p-6 space-y-4" id="reviews-wrapper"></div>
+                    </div>
 
-                        <div id="offers-container" class="space-y-3">
-                            {{-- Offers will be added here --}}
+                    {{-- ================= UPSELL PRODUCTS ================= --}}
+                    <div class="card bg-white shadow rounded-lg">
+                        <div class="card-header flex justify-between items-center">
+                            <h3 class="card-title">منتجات إضافية (Upsell)</h3>
+                            <button type="button" class="btn btn-sm btn-primary" id="add-upsell-product">
+                                إضافة منتج
+                            </button>
+                        </div>
+
+                        <div class="card-body p-6 space-y-4">
+
+                            <p class="text-sm text-gray-600">
+                                اختر المنتجات التي ستظهر بعد إتمام الطلب وقم بتخصيصها مع الصور والأسعار والعروض
+                            </p>
+
+                            {{-- Upsell Products Container --}}
+                            <div id="upsell-products-container" class="space-y-4">
+                                {{-- Products will be added here dynamically --}}
+                            </div>
+
                         </div>
                     </div>
-                </div>
-            </div>
 
-            {{-- ================= STATS ================= --}}
-            <div class="card bg-white shadow rounded-lg">
-                <div class="card-header">
-                    <h3 class="card-title">الإحصائيات</h3>
-                </div>
 
-                <div class="card-body p-6 grid md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="form-label">عدد المبيعات</label>
-                        <input type="number" name="items_sold_count" class="input w-full" value="0">
+                    {{-- ================= ACTIONS ================= --}}
+                    <div class="flex gap-3">
+                        <button class="btn btn-primary">حفظ</button>
+                        <a href="{{ route('pages.index') }}" class="btn btn-secondary">رجوع</a>
                     </div>
-
-                    <div>
-                        <label class="form-label">عدد التقييمات</label>
-                        <input type="number" name="reviews_count" class="input w-full" value="0">
-                    </div>
-                </div>
-            </div>
-
-            {{-- ================= FEATURES ================= --}}
-            <div class="card">
-                <div class="card-header">
-                    <h3>المميزات</h3>
-                </div>
-
-                <div class="p-4 grid grid-cols-2 gap-3">
-
-                    <label class="border p-3 rounded cursor-pointer">
-                        <input type="checkbox" name="features[]" value="cod">
-                        الدفع عند الاستلام
-                    </label>
-
-                    <label class="border p-3 rounded cursor-pointer">
-                        <input type="checkbox" name="features[]" value="free_shipping">
-                        شحن مجاني
-                    </label>
-
-                    <label class="border p-3 rounded cursor-pointer">
-                        <input type="checkbox" name="features[]" value="replace">
-                        استبدال خلال 7 ايام
-                    </label>
-
-                    <label class="border p-3 rounded cursor-pointer">
-                        <input type="checkbox" name="features[]" value="support">
-                        خدمة 24/7
-                    </label>
-
-                    <label class="border p-3 rounded cursor-pointer">
-                        <input type="checkbox" name="features[]" value="warranty">
-                        ضمان سنة
-                    </label>
-
-                    <label class="border p-3 rounded cursor-pointer">
-                        <input type="checkbox" name="features[]" value="same_day">
-                        التوصيل نفس اليوم
-                    </label>
-
-                </div>
-            </div>
-
-            {{-- ================= IMAGES ================= --}}
-            <div class="card bg-white shadow rounded-lg">
-                <div class="card-header">
-                    <h3 class="card-title">الصور (يمكنك ترتيبها)</h3>
-                </div>
-
-                <p class="text-sm text-gray-700 p-4 block">
-                    اسحب الصور لتغيير ترتيب العرض
-                </p>
-
-
-                <div class="card-body p-6 space-y-4">
-                    <input type="file" name="images[]" multiple accept="image/*" id="images-input">
-
-                    {{-- hidden input will store order --}}
-                    <input type="hidden" name="images_order" id="images-order">
-
-                    <div id="preview" class="flex flex-col gap-4 cursor-move">
-                    </div>
-                </div>
-            </div>
-
-            {{-- ================= REVIEWS ================= --}}
-            <div class="card bg-white shadow rounded-lg">
-                <div class="card-header flex justify-between items-center">
-                    <h3 class="card-title">التقييمات</h3>
-                    <button type="button" class="btn btn-sm btn-primary" id="add-review">
-                        إضافة تقييم
-                    </button>
-                </div>
-
-                <div class="card-body p-6 space-y-4" id="reviews-wrapper"></div>
-            </div>
-
-            {{-- ================= UPSELL PRODUCTS ================= --}}
-            <div class="card bg-white shadow rounded-lg">
-                <div class="card-header flex justify-between items-center">
-                    <h3 class="card-title">منتجات إضافية (Upsell)</h3>
-                    <button type="button" class="btn btn-sm btn-primary" id="add-upsell-product">
-                        إضافة منتج
-                    </button>
-                </div>
-
-                <div class="card-body p-6 space-y-4">
-
-                    <p class="text-sm text-gray-600">
-                        اختر المنتجات التي ستظهر بعد إتمام الطلب وقم بتخصيصها مع الصور والأسعار والعروض
-                    </p>
-
-                    {{-- Upsell Products Container --}}
-                    <div id="upsell-products-container" class="space-y-4">
-                        {{-- Products will be added here dynamically --}}
-                    </div>
-
-                </div>
-            </div>
-
-
-            {{-- ================= ACTIONS ================= --}}
-            <div class="flex gap-3">
-                <button class="btn btn-primary">حفظ</button>
-                <a href="{{ route('pages.index') }}" class="btn btn-secondary">رجوع</a>
-            </div>
 
         </form>
     </div>
@@ -516,13 +538,13 @@
             <select name="upsell_products[${upsellIndex}][product_id]" class="input w-full product-select" required>
                 <option value="">اختر المنتج</option>
                 ${allProducts.map(p => `
-                                <option value="${p.id}"
-                                        data-name="${p.name}"
-                                        data-price="${p.price}"
-                                        data-image="${p.image ? '{{ asset('') }}' + p.image : '{{ asset('images/productDefault.webp') }}'}">
-                                    ${p.name}
-                                </option>
-                            `).join('')}
+                                            <option value="${p.id}"
+                                                    data-name="${p.name}"
+                                                    data-price="${p.price}"
+                                                    data-image="${p.image ? '{{ asset('') }}' + p.image : '{{ asset('images/productDefault.webp') }}'}">
+                                                ${p.name}
+                                            </option>
+                                        `).join('')}
             </select>
         </div>
 

@@ -32,6 +32,10 @@ class Page extends Model
         'features',
         'whatsapp_phone',
         'offers',
+        'meta_pixel',
+        'tiktok_pixel',
+        'snapchat_pixel',
+        'twitter_pixel',
     ];
 
     protected $casts = [

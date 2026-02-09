@@ -15,6 +15,20 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&display=swap" rel="stylesheet">
 
+    {{-- Tracking Pixels --}}
+    @if ($page->meta_pixel)
+        {!! $page->meta_pixel !!}
+    @endif
+    @if ($page->tiktok_pixel)
+        {!! $page->tiktok_pixel !!}
+    @endif
+    @if ($page->snapchat_pixel)
+        {!! $page->snapchat_pixel !!}
+    @endif
+    @if ($page->twitter_pixel)
+        {!! $page->twitter_pixel !!}
+    @endif
+
     @php
         function hexToRgb($hex)
         {
