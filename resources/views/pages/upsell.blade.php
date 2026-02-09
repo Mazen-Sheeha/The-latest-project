@@ -137,30 +137,39 @@
 
                             <div class="mt-2 flex items-center justify-between">
                                 <span
-                                    class="inline-flex items-center text-[10px] font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
-                                    متوفر في المخزن
+                                    class="inline-flex items-center text-[10px] font-medium text-green-600 bg-green-50 rounded-full">
+                                    {{-- متوفر في المخزن --}}
                                 </span>
 
                                 {{-- Plus / Checkmark Toggle UI --}}
-                                <div
+                                {{-- <div
                                     class="w-8 h-8 rounded-full border-2 border-gray-200 flex items-center justify-center transition-all duration-300
                         peer-checked:bg-[{{ $page->theme_color }}] peer-checked:border-[{{ $page->theme_color }}]
                         group-hover:border-[{{ $page->theme_color }}]">
 
-                                    {{-- Plus Sign (Visible when NOT checked) --}}
                                     <svg class="w-5 h-5 text-[{{ $page->theme_color }}] peer-checked:hidden"
                                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                             d="M12 4v16m8-8H4"></path>
                                     </svg>
 
-                                    {{-- Checkmark (Visible ONLY when checked) --}}
                                     <svg class="w-5 h-5 text-white hidden peer-checked:block" fill="none"
                                         stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
                                             d="M5 13l4 4L19 7"></path>
                                     </svg>
+                                </div> --}}
+                                <div class="w-8 h-8 rounded-full border-2 border-gray-200 flex items-center justify-center transition-all duration-300 group-hover:border-[{{ $page->theme_color }}]
+    peer-checked:border-transparent peer-checked:bg-current"
+                                    style="color: {{ $page->theme_color }}">
+
+                                    <svg class="w-5 h-5 transition-all duration-300 text-current peer-checked:text-white"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                            d="M12 4v16m8-8H4"></path>
+                                    </svg>
                                 </div>
+
                             </div>
                         </div>
                     </label>
