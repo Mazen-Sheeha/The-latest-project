@@ -72,6 +72,12 @@
                             <input type="color" name="theme_color" class="input w-24 h-10 p-0 border rounded"
                                 value="#0d6efd">
                         </div>
+
+                        <div>
+                            <label class="form-label">رقم واتساب (اختياري)</label>
+                            <input name="whatsapp_phone" class="input w-full" value="{{ old('whatsapp_phone') }}"
+                                placeholder="مثال: +971501234567">
+                        </div>
                     </div>
 
                     <div>
@@ -510,13 +516,13 @@
             <select name="upsell_products[${upsellIndex}][product_id]" class="input w-full product-select" required>
                 <option value="">اختر المنتج</option>
                 ${allProducts.map(p => `
-                            <option value="${p.id}"
-                                    data-name="${p.name}"
-                                    data-price="${p.price}"
-                                    data-image="${p.image ? '{{ asset('') }}' + p.image : '{{ asset('images/productDefault.webp') }}'}">
-                                ${p.name}
-                            </option>
-                        `).join('')}
+                                <option value="${p.id}"
+                                        data-name="${p.name}"
+                                        data-price="${p.price}"
+                                        data-image="${p.image ? '{{ asset('') }}' + p.image : '{{ asset('images/productDefault.webp') }}'}">
+                                    ${p.name}
+                                </option>
+                            `).join('')}
             </select>
         </div>
 

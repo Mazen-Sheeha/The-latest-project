@@ -436,6 +436,7 @@ class PageService
             // 'upsell_products.*' => ['exists:products,id'],
 
             'features' => 'sometimes|array',
+            'whatsapp_phone' => ['nullable', 'string', 'max:32'],
         ]);
 
         if ($request->hasFile('images')) {
@@ -497,6 +498,7 @@ class PageService
             // 'upsell_products.*' => ['exists:products,id'],
 
             'features' => 'sometimes|array',
+            'whatsapp_phone' => ['nullable', 'string', 'max:32'],
         ]);
 
         if ($request->hasFile('images')) {

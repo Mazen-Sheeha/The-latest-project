@@ -30,6 +30,7 @@ class Page extends Model
         'is_active',
         'domain_id',
         'features',
+        'whatsapp_phone',
         'offers',
     ];
 

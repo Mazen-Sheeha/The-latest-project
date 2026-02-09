@@ -43,7 +43,7 @@ class PageController extends Controller
                 ->firstOrFail();
         }
 
-        if (!$page || !$page->is_active) {
+        if (!$page) {
             return view('pages.inactive_page');
         }
 
@@ -74,7 +74,7 @@ class PageController extends Controller
                 ->firstOrFail();
         }
 
-        if (!$page || !$page->is_active) {
+        if (!$page) {
             return view('pages.inactive_page');
         }
 

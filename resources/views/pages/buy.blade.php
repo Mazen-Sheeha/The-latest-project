@@ -175,13 +175,57 @@
             opacity: 1;
             transform: translate(-50%, 0);
         }
-    </style>
 
+        .whatsapp-float {
+            position: fixed;
+            bottom: 120px;
+            right: 0px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            transition: transform 0.2s;
+            z-index: 40;
+        }
+
+        .whatsapp-float:hover {
+            transform: scale(1.1);
+        }
+
+        .whatsapp-float .label {
+            margin-right: 13px;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            background-color: white;
+            padding: 8px;
+            border-radius: 10px;
+        }
+
+        .whatsapp-float img {
+            width: 30px;
+            height: 30px;
+        }
+    </style>
 </head>
 
 
 <body class="bg-white text-gray-900" dir="rtl">
-    <div class="w-full max-w-[520px] bg-white min-h-screen shadow-xl m-auto">
+    <div class="w-full max-w-[520px] bg-white min-h-screen shadow-xl m-auto relative">
+
+        @php
+            $wa = $page->whatsapp_phone ?? null;
+            $wa_clean = $wa ? preg_replace('/[^0-9]/', '', $wa) : '1234567890';
+        @endphp
+
+        @if ($wa)
+            <a href="https://wa.me/{{ $wa_clean }}" target="_blank" class="whatsapp-float">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" />
+                <span class="label">تحدث معنا</span>
+            </a>
+        @endif
 
         <div class="top-moving-banner h-12 p-2">
             <div class="moving-texts" id="movingTexts">
@@ -212,7 +256,7 @@
             }
 
             if (empty($texts)) {
-                $texts = ['الدفع عند الاستلام', 'عروضنا لا تتوقف 🔥'];
+                $texts = ['الدفع عند الاستلام', 'عروضنا لا تتوقف'];
             }
         @endphp
 
