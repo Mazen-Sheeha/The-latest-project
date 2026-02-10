@@ -109,16 +109,16 @@
             {{-- Scrollable Products List --}}
             <div class="px-6 pb-6 space-y-4 flex-grow overflow-y-auto custom-scroll bg-white">
                 @foreach ($page->upsellProducts as $product)
-                    <label
-                        class="group relative flex gap-4 items-center border-2 rounded-2xl p-3 cursor-pointer transition-all duration-300 bg-white hover:shadow-lg border-gray-100 has-[:checked]:border-[{{ $page->theme_color }}] has-[:checked]:bg-[{{ $page->theme_color }}]/5 hover:border-gray-200">
+                    <label onclick="toggleProduct(this)"
+                        class="product-card group relative flex gap-4 items-center border-2 rounded-2xl p-3 cursor-pointer
+    transition-all duration-300 bg-white hover:shadow-lg border-gray-100 hover:border-gray-200">
 
-                        {{-- Hidden Checkbox --}}
                         <input type="checkbox" name="selected_upsell_products[]" value="{{ $product->id }}"
-                            class="peer hidden">
+                            class="hidden product-checkbox">
 
-                        {{-- Product Image --}}
+                        {{-- image --}}
                         <div
-                            class="relative w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
+                            class="relative w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden bg-gray-100 border border-gray-100">
                             @php
                                 $imgSrc = $product->pivot->image
                                     ? asset($product->pivot->image)
@@ -126,8 +126,8 @@
                                         ? asset($product->image)
                                         : asset('images/productDefault.webp'));
                             @endphp
-                            <img src="{{ $imgSrc }}" alt="{{ $product->pivot->name ?? $product->name }}"
-                                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            <img src="{{ $imgSrc }}"
+                                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
 
                             <div
                                 class="absolute top-1 right-1 bg-red-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded shadow-sm">
@@ -135,10 +135,9 @@
                             </div>
                         </div>
 
-                        {{-- Product Info --}}
                         <div class="flex-1 min-w-0">
-                            <h3
-                                class="text-base font-bold text-gray-800 line-clamp-1 group-hover:text-[{{ $page->theme_color }}] transition-colors">
+
+                            <h3 class="text-base font-bold text-gray-800 line-clamp-1 product-title">
                                 {{ $product->pivot->name ?? $product->name }}
                             </h3>
 
@@ -149,36 +148,18 @@
                                 </span>
                             </div>
 
-                            <div class="mt-2 flex items-center justify-between">
-                                <span
-                                    class="inline-flex items-center text-[10px] font-medium text-green-600 bg-green-50 rounded-full">
-                                    {{-- متوفر في المخزن --}}
-                                </span>
+                            <div class="flex items-center justify-between mt-1">
 
-                                {{-- Plus / Checkmark Toggle UI --}}
-                                {{-- <div
-                                    class="w-8 h-8 rounded-full border-2 border-gray-200 flex items-center justify-center transition-all duration-300
-                        peer-checked:bg-[{{ $page->theme_color }}] peer-checked:border-[{{ $page->theme_color }}]
-                        group-hover:border-[{{ $page->theme_color }}]">
+                                <p class="text-[11px] font-bold text-green-600 opacity-0 product-added">
+                                    ✓ تمت إضافة المنتج إلى طلبك
+                                </p>
 
-                                    <svg class="w-5 h-5 text-[{{ $page->theme_color }}] peer-checked:hidden"
-                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                            d="M12 4v16m8-8H4"></path>
-                                    </svg>
+                                <div
+                                    class="plus-btn w-8 h-8 rounded-full border-2 border-gray-300
+                flex items-center justify-center transition-all duration-300">
 
-                                    <svg class="w-5 h-5 text-white hidden peer-checked:block" fill="none"
-                                        stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                            d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                </div> --}}
-                                <div class="w-8 h-8 rounded-full border-2 border-gray-200 flex items-center justify-center transition-all duration-300 group-hover:border-[{{ $page->theme_color }}]
-    peer-checked:border-transparent peer-checked:bg-current"
-                                    style="color: {{ $page->theme_color }}">
-
-                                    <svg class="w-5 h-5 transition-all duration-300 text-current peer-checked:text-white"
-                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-5 h-5 text-gray-400 plus-icon" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                             d="M12 4v16m8-8H4"></path>
                                     </svg>
@@ -248,6 +229,43 @@
             document.querySelector('form').submit();
         }
     </script>
+
+    <script>
+        function toggleProduct(card) {
+
+            const checkbox = card.querySelector('.product-checkbox');
+            const plusBtn = card.querySelector('.plus-btn');
+            const plusIcon = card.querySelector('.plus-icon');
+            const addedText = card.querySelector('.product-added');
+            const title = card.querySelector('.product-title');
+
+            checkbox.checked = !checkbox.checked;
+
+            if (checkbox.checked) {
+                card.style.borderColor = "{{ $page->theme_color }}";
+                card.style.background = "{{ $page->theme_color }}10";
+
+                // plusBtn.style.background = "{{ $page->theme_color }}";
+                plusBtn.style.borderColor = "{{ $page->theme_color }}";
+                plusIcon.style.color = "{{ $page->theme_color }}";
+
+                addedText.style.opacity = "1";
+                title.style.color = "{{ $page->theme_color }}";
+
+            } else {
+                card.style.borderColor = "#f3f4f6";
+                card.style.background = "white";
+
+                plusBtn.style.background = "transparent";
+                plusBtn.style.borderColor = "#d1d5db";
+                plusIcon.style.color = "#9ca3af";
+
+                addedText.style.opacity = "0";
+                title.style.color = "#1f2937";
+            }
+        }
+    </script>
+
 </body>
 
 </html>
