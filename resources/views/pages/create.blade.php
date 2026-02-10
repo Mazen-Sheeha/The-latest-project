@@ -17,7 +17,6 @@
 
         <form action="{{ route('pages.store') }}" method="POST" enctype="multipart/form-data" id="page-form">
             @csrf
-
             {{-- ================= BASIC INFO ================= --}}
             <div class="card bg-white shadow rounded-lg">
                 <div class="card-header">
@@ -28,12 +27,17 @@
                     <div class="grid md:grid-cols-2 gap-4 mb-2">
                         <div>
                             <label class="form-label">الاسم *</label>
-                            <input name="name" class="input w-full" required>
+                            <input name="name" class="input" required>
                         </div>
 
                         <div>
                             <label class="form-label">عنوان الصفحة *</label>
-                            <input name="title" class="input w-full" required>
+                            <input name="slug" class="input" required>
+                        </div>
+
+                        <div>
+                            <label class="form-label">عنوان صفحة البيع (header)</label>
+                            <input name="title" class="input" required>
                         </div>
 
                         <div>
@@ -68,6 +72,18 @@
                             <input type="color" name="theme_color" class="input w-24 h-10 p-0 border rounded"
                                 value="#0d6efd">
                         </div>
+
+                        <div>
+                            <label class="form-label">رقم واتساب (اختياري)</label>
+                            <input name="whatsapp_phone" class="input w-full" value="{{ old('whatsapp_phone') }}"
+                                placeholder="مثال: +971501234567">
+                        </div>
+
+                        <div>
+                            <label class="form-label">السعر الأصلي</label>
+                            <input type="number" step="0.01" name="original_price" id="original_price"
+                                class="input w-full">
+                        </div>
                     </div>
 
                     <div>
@@ -79,146 +95,203 @@
                         <input type="checkbox" name="is_active" value="1" checked>
                         نشر الصفحة
                     </label>
-                </div>
-            </div>
 
-            {{-- ================= SALE ================= --}}
-            <div class="card bg-white shadow rounded-lg">
-                <div class="card-header">
-                    <h3 class="card-title">بيانات الخصم</h3>
-                </div>
-
-                <div class="card-body p-6 space-y-4">
-                    <label class="flex items-center gap-2">
-                        <input type="checkbox" id="has-sale">
-                        تفعيل الخصم
-                    </label>
-
-                    <div id="sale-fields" class="hidden grid md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="form-label">السعر الأصلي</label>
-                            <input type="number" step="0.01" name="original_price" id="original_price"
-                                class="input w-full">
-                        </div>
-
-                        <div>
-                            <label class="form-label">سعر البيع</label>
-                            <input type="number" step="0.01" name="sale_price" id="sale_price" class="input w-full">
-                        </div>
-
-                        <div>
-                            <label class="form-label">نسبة الخصم %</label>
-                            <input type="number" name="sale_percent" id="sale_percent" class="input w-full">
-                        </div>
-
-                        <div>
-                            <label class="form-label">انتهاء العرض</label>
-                            <input type="date" name="sale_ends_at" class="input w-full">
+                    {{-- Pixels Section --}}
+                    <div class="border-t pt-4 mt-4">
+                        <h4 class="form-label font-bold mb-4">بكسلات التتبع (Tracking Pixels)</h4>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="form-label">Meta Pixel / Facebook</label>
+                                <textarea name="meta_pixel" class="input w-full" rows="3" placeholder="أدخل كود Meta Pixel هنا">{{ old('meta_pixel') }}</textarea>
+                            </div>
+                            <div>
+                                <label class="form-label">TikTok Pixel</label>
+                                <textarea name="tiktok_pixel" class="input w-full" rows="3" placeholder="أدخل كود TikTok Pixel هنا">{{ old('tiktok_pixel') }}</textarea>
+                            </div>
+                            <div>
+                                <label class="form-label">Snapchat Pixel</label>
+                                <textarea name="snapchat_pixel" class="input w-full" rows="3" placeholder="أدخل كود Snapchat Pixel هنا">{{ old('snapchat_pixel') }}</textarea>
+                            </div>
+                            <div>
+                                <label class="form-label">Twitter Pixel</label>
+                                <textarea name="twitter_pixel" class="input w-full" rows="3" placeholder="أدخل كود Twitter Pixel هنا">{{ old('twitter_pixel') }}</textarea>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            {{-- ================= STATS ================= --}}
-            <div class="card bg-white shadow rounded-lg">
-                <div class="card-header">
-                    <h3 class="card-title">الإحصائيات</h3>
-                </div>
+                    {{-- ================= SALE ================= --}}
+                    <div class="card bg-white shadow rounded-lg">
+                        <div class="card-header">
+                            <h3 class="card-title">بيانات الخصم والعروض</h3>
+                        </div>
 
-                <div class="card-body p-6 grid md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="form-label">عدد المبيعات</label>
-                        <input type="number" name="items_sold_count" class="input w-full" value="0">
-                    </div>
+                        <div class="card-body p-6 space-y-4">
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" id="has-sale">
+                                تفعيل الخصم
+                            </label>
 
-                    <div>
-                        <label class="form-label">عدد التقييمات</label>
-                        <input type="number" name="reviews_count" class="input w-full" value="0">
-                    </div>
-                </div>
-            </div>
-
-            {{-- ================= IMAGES ================= --}}
-            <div class="card bg-white shadow rounded-lg">
-                <div class="card-header">
-                    <h3 class="card-title">الصور (يمكنك ترتيبها)</h3>
-                </div>
-
-                <p class="text-sm text-gray-700 p-4 block">
-                    اسحب الصور لتغيير ترتيب العرض
-                </p>
-
-
-                <div class="card-body p-6 space-y-4">
-                    <input type="file" name="images[]" multiple accept="image/*" id="images-input">
-
-                    {{-- hidden input will store order --}}
-                    <input type="hidden" name="images_order" id="images-order">
-
-                    <div id="preview" class="flex flex-col gap-4 cursor-move">
-                    </div>
-                </div>
-            </div>
-
-            {{-- ================= REVIEWS ================= --}}
-            <div class="card bg-white shadow rounded-lg">
-                <div class="card-header flex justify-between items-center">
-                    <h3 class="card-title">التقييمات</h3>
-                    <button type="button" class="btn btn-sm btn-primary" id="add-review">
-                        إضافة تقييم
-                    </button>
-                </div>
-
-                <div class="card-body p-6 space-y-4" id="reviews-wrapper"></div>
-            </div>
-
-            {{-- ================= UPSELL PRODUCTS ================= --}}
-            <div class="card bg-white shadow rounded-lg">
-                <div class="card-header">
-                    <h3 class="card-title">منتجات إضافية (Upsell)</h3>
-                </div>
-
-                <div class="card-body p-6 space-y-4">
-
-                    <p class="text-sm text-gray-600">
-                        اختر المنتجات التي ستظهر بعد إتمام الطلب
-                    </p>
-
-                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-
-                        @foreach ($products as $product)
-                            <label
-                                class="flex gap-3 items-center border rounded-lg p-3 cursor-pointer hover:border-blue-500 transition">
-
-                                <input type="checkbox" name="upsell_products[]" value="{{ $product->id }}"
-                                    class="accent-blue-600">
-
-                                <img src="{{ $product->image ? asset($product->image) : asset('images/productDefault.webp') }}"
-                                    class="w-14 h-14 rounded object-cover border">
-
-                                <div class="flex flex-col">
-                                    <span class="font-bold text-sm">
-                                        {{ $product->name }}
-                                    </span>
-                                    <span class="text-green-600 text-sm font-semibold">
-                                        {{ number_format($product->price) }} د.إ
-                                    </span>
+                            <div id="sale-fields" class="hidden grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="form-label">سعر البيع</label>
+                                    <input type="number" step="0.01" name="sale_price" id="sale_price"
+                                        class="input w-full">
                                 </div>
 
-                            </label>
-                        @endforeach
+                                <div>
+                                    <label class="form-label">نسبة الخصم %</label>
+                                    <input type="number" name="sale_percent" id="sale_percent" class="input w-full">
+                                </div>
 
+                                <div>
+                                    <label class="form-label">انتهاء العرض</label>
+                                    <input type="date" name="sale_ends_at" class="input w-full">
+                                </div>
+                            </div>
+
+                            {{-- Custom Offers --}}
+                            <div class="border-t pt-4 mt-4">
+                                <div class="flex justify-between items-center mb-3">
+                                    <label class="form-label font-bold">عروض مخصصة</label>
+                                    <button type="button" class="btn btn-sm btn-primary" id="add-offer-btn">
+                                        + إضافة عرض
+                                    </button>
+                                </div>
+
+                                <p class="text-xs text-gray-600 mb-3">
+                                    أضف عروض بكميات مختلفة - مثلاً: اشتري 1 ب100 ، اشتري 2 ب180 (توفير)
+                                </p>
+
+                                <div id="offers-container" class="space-y-3">
+                                    {{-- Offers will be added here --}}
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                </div>
-            </div>
+                    {{-- ================= STATS ================= --}}
+                    <div class="card bg-white shadow rounded-lg">
+                        <div class="card-header">
+                            <h3 class="card-title">الإحصائيات</h3>
+                        </div>
+
+                        <div class="card-body p-6 grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="form-label">عدد المبيعات</label>
+                                <input type="number" name="items_sold_count" class="input w-full" value="0">
+                            </div>
+
+                            <div>
+                                <label class="form-label">عدد التقييمات</label>
+                                <input type="number" name="reviews_count" class="input w-full" value="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- ================= FEATURES ================= --}}
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>المميزات</h3>
+                        </div>
+
+                        <div class="p-4 grid grid-cols-2 gap-3">
+
+                            <label class="border p-3 rounded cursor-pointer">
+                                <input type="checkbox" name="features[]" value="cod">
+                                الدفع عند الاستلام
+                            </label>
+
+                            <label class="border p-3 rounded cursor-pointer">
+                                <input type="checkbox" name="features[]" value="free_shipping">
+                                شحن مجاني
+                            </label>
+
+                            <label class="border p-3 rounded cursor-pointer">
+                                <input type="checkbox" name="features[]" value="replace">
+                                استبدال خلال 7 ايام
+                            </label>
+
+                            <label class="border p-3 rounded cursor-pointer">
+                                <input type="checkbox" name="features[]" value="support">
+                                خدمة 24/7
+                            </label>
+
+                            <label class="border p-3 rounded cursor-pointer">
+                                <input type="checkbox" name="features[]" value="warranty">
+                                ضمان سنة
+                            </label>
+
+                            <label class="border p-3 rounded cursor-pointer">
+                                <input type="checkbox" name="features[]" value="same_day">
+                                التوصيل نفس اليوم
+                            </label>
+
+                        </div>
+                    </div>
+
+                    {{-- ================= IMAGES ================= --}}
+                    <div class="card bg-white shadow rounded-lg">
+                        <div class="card-header">
+                            <h3 class="card-title">الصور (يمكنك ترتيبها)</h3>
+                        </div>
+
+                        <p class="text-sm text-gray-700 p-4 block">
+                            اسحب الصور لتغيير ترتيب العرض
+                        </p>
 
 
-            {{-- ================= ACTIONS ================= --}}
-            <div class="flex gap-3">
-                <button class="btn btn-primary">حفظ</button>
-                <a href="{{ route('pages.index') }}" class="btn btn-secondary">رجوع</a>
-            </div>
+                        <div class="card-body p-6 space-y-4">
+                            <input type="file" name="images[]" multiple accept="image/*" id="images-input">
+
+                            {{-- hidden input will store order --}}
+                            <input type="hidden" name="images_order" id="images-order">
+
+                            <div id="preview" class="flex flex-col gap-4 cursor-move">
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- ================= REVIEWS ================= --}}
+                    <div class="card bg-white shadow rounded-lg">
+                        <div class="card-header flex justify-between items-center">
+                            <h3 class="card-title">التقييمات</h3>
+                            <button type="button" class="btn btn-sm btn-primary" id="add-review">
+                                إضافة تقييم
+                            </button>
+                        </div>
+
+                        <div class="card-body p-6 space-y-4" id="reviews-wrapper"></div>
+                    </div>
+
+                    {{-- ================= UPSELL PRODUCTS ================= --}}
+                    <div class="card bg-white shadow rounded-lg">
+                        <div class="card-header flex justify-between items-center">
+                            <h3 class="card-title">منتجات إضافية (Upsell)</h3>
+                            <button type="button" class="btn btn-sm btn-primary" id="add-upsell-product">
+                                إضافة منتج
+                            </button>
+                        </div>
+
+                        <div class="card-body p-6 space-y-4">
+
+                            <p class="text-sm text-gray-600">
+                                اختر المنتجات التي ستظهر بعد إتمام الطلب وقم بتخصيصها مع الصور والأسعار والعروض
+                            </p>
+
+                            {{-- Upsell Products Container --}}
+                            <div id="upsell-products-container" class="space-y-4">
+                                {{-- Products will be added here dynamically --}}
+                            </div>
+
+                        </div>
+                    </div>
+
+
+                    {{-- ================= ACTIONS ================= --}}
+                    <div class="flex gap-3">
+                        <button class="btn btn-primary">حفظ</button>
+                        <a href="{{ route('pages.index') }}" class="btn btn-secondary">رجوع</a>
+                    </div>
 
         </form>
     </div>
@@ -307,22 +380,6 @@
     </script>
 
     <script>
-        const productSelect = document.getElementById('product-select');
-
-        productSelect.addEventListener('change', e => {
-            const option = e.target.selectedOptions[0];
-
-            if (!option || !option.value) return;
-
-            const nameInput = document.querySelector('input[name="name"]');
-            nameInput.value = option.dataset.name || '';
-
-            const originalPriceInput = document.querySelector('input[name="original_price"]');
-            originalPriceInput.value = option.dataset.price || '';
-        });
-    </script>
-
-    <script>
         const originalPrice = document.getElementById('original_price');
         const salePrice = document.getElementById('sale_price');
         const salePercent = document.getElementById('sale_percent');
@@ -345,8 +402,73 @@
     </script>
 
     <script>
-        let reviewIndex = 0;
+        let offerIndex = 0;
 
+        document.getElementById('add-offer-btn').addEventListener('click', () => {
+            const container = document.getElementById('offers-container');
+            const offerDiv = document.createElement('div');
+            offerDiv.className = 'border rounded p-4 space-y-3 bg-gray-50';
+
+            offerDiv.innerHTML = `
+        <div class="flex justify-between items-center mb-2">
+            <strong>عرض #${offerIndex + 1}</strong>
+            <button type="button" class="text-red-600 remove-offer-btn text-sm font-bold">حذف</button>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-3">
+            <div class="flex-1">
+                <label class="form-label text-xs font-bold">الكمية *</label>
+                <input type="number" min="1" name="offers[${offerIndex}][quantity]"
+                       class="input w-full" placeholder="1" required>
+            </div>
+            <div class="flex-1">
+                <label class="form-label text-xs font-bold">السعر *</label>
+                <input type="number" step="0.01" name="offers[${offerIndex}][price]"
+                       class="input w-full" placeholder="0.00" required>
+            </div>
+        </div>
+
+        <div>
+            <label class="form-label text-xs font-bold">الوصف (اختياري)</label>
+            <input type="text" name="offers[${offerIndex}][label]"
+                   class="input w-full" placeholder="مثلاً: أفضل عرض، وفر 20%">
+        </div>
+
+        <div>
+            <label class="form-label text-xs font-bold">صورة العرض (اختياري)</label>
+            <div class="flex gap-3">
+                <input type="file" name="offers[${offerIndex}][image]"
+                       class="input w-full offer-image-input" accept="image/*">
+                <img class="offer-image-preview w-20 h-20 rounded border object-cover"
+                     src="https://via.placeholder.com/80" alt="Offer Image">
+            </div>
+        </div>
+    `;
+
+            offerDiv.querySelector('.remove-offer-btn').addEventListener('click', () => {
+                offerDiv.remove();
+            });
+
+            const imageInput = offerDiv.querySelector('.offer-image-input');
+            const imagePreview = offerDiv.querySelector('.offer-image-preview');
+
+            imageInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        imagePreview.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            container.appendChild(offerDiv);
+            offerIndex++;
+        });
+    </script>
+
+    <script>
         document.getElementById('add-review').addEventListener('click', () => {
             const wrapper = document.getElementById('reviews-wrapper');
 
@@ -390,6 +512,98 @@
             });
 
             reviewIndex++;
+        });
+    </script>
+
+    <script>
+        let upsellIndex = 0;
+        const allProducts = @json($products);
+
+        document.getElementById('add-upsell-product').addEventListener('click', () => {
+            const container = document.getElementById('upsell-products-container');
+
+            const div = document.createElement('div');
+            div.className = 'border rounded-lg p-4 space-y-4 bg-gray-50 flex flex-col gap-4';
+            div.dataset.index = upsellIndex;
+
+            div.innerHTML = `
+        <div class="flex justify-between items-center mb-2">
+            <strong>منتج إضافي #${upsellIndex + 1}</strong>
+            <button type="button" class="text-red-600 remove-upsell-product text-sm font-bold hover:text-red-800">حذف</button>
+        </div>
+
+        {{-- Product Selection --}}
+        <div>
+            <label class="form-label">اختر المنتج *</label>
+            <select name="upsell_products[${upsellIndex}][product_id]" class="input w-full product-select" required>
+                <option value="">اختر المنتج</option>
+                ${allProducts.map(p => `
+                                            <option value="${p.id}"
+                                                    data-name="${p.name}"
+                                                    data-price="${p.price}"
+                                                    data-image="${p.image ? '{{ asset('') }}' + p.image : '{{ asset('images/productDefault.webp') }}'}">
+                                                ${p.name}
+                                            </option>
+                                        `).join('')}
+            </select>
+        </div>
+
+        {{-- Product Name --}}
+        <div>
+            <label class="form-label">اسم المنتج *</label>
+            <input type="text" name="upsell_products[${upsellIndex}][name]" class="input w-full product-name" placeholder="سيتم ملؤه تلقائياً" required>
+        </div>
+
+        {{-- Product Image --}}
+        <div>
+            <label class="form-label">صورة المنتج</label>
+            <div class="flex gap-3">
+                <input type="file" name="upsell_products[${upsellIndex}][image]" class="input w-full product-image-file" accept="image/*">
+                <img class="product-image-preview w-20 h-20 rounded border object-cover" src="https://via.placeholder.com/80" alt="Product Image">
+            </div>
+        </div>
+
+        {{-- Product Price --}}
+        <div>
+            <label class="form-label">سعر المنتج *</label>
+            <input type="number" step="0.01" name="upsell_products[${upsellIndex}][price]" class="input w-full product-price" placeholder="0.00" required>
+        </div>
+    `;
+
+            container.appendChild(div);
+
+            // Setup event listeners
+            const productSelect = div.querySelector('.product-select');
+            const productName = div.querySelector('.product-name');
+            const productPrice = div.querySelector('.product-price');
+            const productImageFile = div.querySelector('.product-image-file');
+            const productImagePreview = div.querySelector('.product-image-preview');
+
+            productSelect.addEventListener('change', (e) => {
+                const option = e.target.selectedOptions[0];
+                if (option.value) {
+                    productName.value = option.dataset.name;
+                    productPrice.value = option.dataset.price;
+                    productImagePreview.src = option.dataset.image;
+                }
+            });
+
+            productImageFile.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        productImagePreview.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            div.querySelector('.remove-upsell-product').addEventListener('click', () => {
+                div.remove();
+            });
+
+            upsellIndex++;
         });
     </script>
 @endsection

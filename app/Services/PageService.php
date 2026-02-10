@@ -31,7 +31,8 @@ class PageService
     public function store(Request $request): RedirectResponse
     {
         $validated = $this->validateStorePage($request);
-        $validated['slug'] = Str::slug($validated['name']);
+
+        // $validated['slug'] = Str::slug($validated['slug']);
 
         // default reviews_count
         if (!isset($validated['reviews_count'])) {
@@ -60,6 +61,33 @@ class PageService
         }
 
         $validated['images'] = $images;
+
+        // Handle custom offers
+        if ($request->has('offers') && is_array($request->offers)) {
+            $offers = [];
+            foreach ($request->offers as $offerIndex => $offer) {
+                if (isset($offer['quantity']) && isset($offer['price'])) {
+                    $imagePath = null;
+
+                    // Check if there's an image file for this offer
+                    if ($request->hasFile("offers.$offerIndex.image")) {
+                        $image = $request->file("offers.$offerIndex.image");
+                        $filename = time() . '_' . Str::random(8) . '.' . $image->getClientOriginalExtension();
+                        $imagePath = $image->storeAs('offers', $filename, 'public');
+                    }
+
+                    $offers[] = [
+                        'quantity' => (int) $offer['quantity'],
+                        'price' => (float) $offer['price'],
+                        'label' => $offer['label'] ?? null,
+                        'image' => $imagePath,
+                    ];
+                }
+            }
+            if (!empty($offers)) {
+                $validated['offers'] = $offers;
+            }
+        }
 
         $page = Page::create($validated);
 
@@ -92,7 +120,35 @@ class PageService
         }
 
         if ($request->filled('upsell_products')) {
-            $page->upsellProducts()->sync($request->upsell_products);
+            $upsellData = [];
+            foreach ($request->upsell_products as $index => $product) {
+                $productId = $product['product_id'] ?? null;
+                if (!$productId)
+                    continue;
+
+                $imagePath = null;
+                if (
+                    isset($product['image']) &&
+                    $product['image'] instanceof \Illuminate\Http\UploadedFile
+                ) {
+                    $filename = time() . '_' . Str::random(8) . '.' .
+                        $product['image']->getClientOriginalExtension();
+
+                    $imagePath = $product['image']->storeAs(
+                        'upsell_products',
+                        $filename,
+                        'public'
+                    );
+                }
+
+                $upsellData[$productId] = [
+                    'name' => $product['name'] ?? null,
+                    'image' => $imagePath,
+                    'price' => $product['price'] ?? null,
+                ];
+            }
+
+            $page->upsellProducts()->sync($upsellData);
         }
 
         return redirect()
@@ -113,6 +169,8 @@ class PageService
     public function update(Request $request, Page $page): RedirectResponse
     {
         $validated = $this->validateUpdatePage($request);
+
+        // $validated['slug'] = Str::slug(title: $validated['slug']);
 
         $oldImages = $page->images ?? [];
         $newImages = $request->file('images', []);
@@ -150,6 +208,39 @@ class PageService
 
         if (!empty($finalImages)) {
             $validated['images'] = $finalImages;
+        }
+
+        // Handle custom offers
+        if ($request->has('offers') && is_array($request->offers)) {
+            $offers = [];
+            foreach ($request->offers as $offerIndex => $offer) {
+                if (isset($offer['quantity']) && isset($offer['price'])) {
+                    $imagePath = null;
+
+                    // Check if there's a new image file for this offer
+                    if ($request->hasFile("offers.$offerIndex.image")) {
+                        $image = $request->file("offers.$offerIndex.image");
+                        $filename = time() . '_' . Str::random(8) . '.' . $image->getClientOriginalExtension();
+                        $imagePath = $image->storeAs('offers', $filename, 'public');
+                    } else {
+                        // Keep existing image if no new image is uploaded
+                        $existingOffers = $page->offers ?? [];
+                        if (isset($existingOffers[$offerIndex]['image'])) {
+                            $imagePath = $existingOffers[$offerIndex]['image'];
+                        }
+                    }
+
+                    $offers[] = [
+                        'quantity' => (int) $offer['quantity'],
+                        'price' => (float) $offer['price'],
+                        'label' => $offer['label'] ?? null,
+                        'image' => $imagePath,
+                    ];
+                }
+            }
+            if (!empty($offers)) {
+                $validated['offers'] = $offers;
+            }
         }
 
         $page->update($validated);
@@ -218,6 +309,45 @@ class PageService
             $request->input('upsell_products', [])
         );
 
+        // Handle upsell products with custom data
+        if ($request->filled('upsell_products')) {
+            $upsellData = [];
+            foreach ($request->upsell_products as $index => $product) {
+                $productId = $product['product_id'] ?? null;
+                if (!$productId)
+                    continue;
+
+                $imagePath = null;
+                if (
+                    isset($product['image']) &&
+                    $product['image'] instanceof \Illuminate\Http\UploadedFile
+                ) {
+                    $filename = time() . '_' . Str::random(8) . '.' .
+                        $product['image']->getClientOriginalExtension();
+
+                    $imagePath = $product['image']->storeAs(
+                        'upsell_products',
+                        $filename,
+                        'public'
+                    );
+                }
+
+                // If no new image uploaded, use existing one
+                $existingProduct = $page->upsellProducts()->where('product_id', $productId)->first();
+                if (!$imagePath && $existingProduct) {
+                    $imagePath = $existingProduct->pivot->image;
+                }
+
+                $upsellData[$productId] = [
+                    'name' => $product['name'] ?? null,
+                    'image' => $imagePath,
+                    'price' => $product['price'] ?? null,
+                ];
+            }
+
+            $page->upsellProducts()->sync($upsellData);
+        }
+
         return redirect()
             ->route('pages.index')
             ->with('success', 'تم تحديث صفحة البيع بنجاح');
@@ -273,6 +403,7 @@ class PageService
                 'max:255',
                 'unique:pages,name',
             ],
+            'slug' => ['required', 'string', 'max:255', 'unique:pages,slug'],
             'title' => ['required', 'string', 'max:255'],
             'domain_id' => ['required', 'exists:domains,id'],
             'description' => ['required', 'string'],
@@ -302,7 +433,10 @@ class PageService
 
             // ================= UPSELL PRODUCTS =================
             'upsell_products' => ['nullable', 'array'],
-            'upsell_products.*' => ['exists:products,id'],
+            // 'upsell_products.*' => ['exists:products,id'],
+
+            'features' => 'sometimes|array',
+            'whatsapp_phone' => ['nullable', 'string', 'max:32'],
         ]);
 
         if ($request->hasFile('images')) {
@@ -325,6 +459,12 @@ class PageService
                 'string',
                 'max:255',
                 'unique:pages,name,' . $request->route('page')->id
+            ],
+            'slug' => [
+                'sometimes',
+                'string',
+                'max:255',
+                'unique:pages,slug,' . $request->route('page')->id
             ],
             'title' => ['sometimes', 'string', 'max:255'],
             'domain_id' => ['sometimes', 'exists:domains,id'],
@@ -355,7 +495,14 @@ class PageService
 
             // ================= UPSELL PRODUCTS =================
             'upsell_products' => ['nullable', 'array'],
-            'upsell_products.*' => ['exists:products,id'],
+            // 'upsell_products.*' => ['exists:products,id'],
+
+            'features' => 'sometimes|array',
+            'whatsapp_phone' => ['nullable', 'string', 'max:32'],
+            'meta_pixel' => ['nullable', 'string'],
+            'tiktok_pixel' => ['nullable', 'string'],
+            'snapchat_pixel' => ['nullable', 'string'],
+            'twitter_pixel' => ['nullable', 'string'],
         ]);
 
         if ($request->hasFile('images')) {

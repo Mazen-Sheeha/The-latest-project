@@ -4,12 +4,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $page->title ?? 'Landing Page' }}</title>
+    <title>{{ $page->slug ?? 'Landing Page' }}</title>
 
     {{-- Tailwind CSS --}}
     <script src="https://cdn.tailwindcss.com"></script>
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+        integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&display=swap" rel="stylesheet">
+
+    {{-- Tracking Pixels --}}
+    @if ($page->meta_pixel)
+        {!! $page->meta_pixel !!}
+    @endif
+    @if ($page->tiktok_pixel)
+        {!! $page->tiktok_pixel !!}
+    @endif
+    @if ($page->snapchat_pixel)
+        {!! $page->snapchat_pixel !!}
+    @endif
+    @if ($page->twitter_pixel)
+        {!! $page->twitter_pixel !!}
+    @endif
+
+    @php
+        function hexToRgb($hex)
+        {
+            $hex = str_replace('#', '', $hex);
+            if (strlen($hex) == 3) {
+                $r = hexdec(substr($hex, 0, 1) . substr($hex, 0, 1));
+                $g = hexdec(substr($hex, 1, 1) . substr($hex, 1, 1));
+                $b = hexdec(substr($hex, 2, 1) . substr($hex, 2, 1));
+            } else {
+                $r = hexdec(substr($hex, 0, 2));
+                $g = hexdec(substr($hex, 2, 2));
+                $b = hexdec(substr($hex, 4, 2));
+            }
+            return "$r,$g,$b";
+        }
+    @endphp
+
+
     <style>
+        * {
+            font-family: 'Almarai', sans-serif;
+        }
+
+        .top-text {
+            font-size: 14px;
+            display: inline-block;
+            transition: all .45s ease;
+            opacity: 1;
+            transform: translateX(0);
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        /* fade out → to left */
+        .top-text.fade-out {
+            opacity: 0;
+            transform: translateX(-40px);
+        }
+
+        /* prepare from right */
+        .top-text.prepare-in {
+            opacity: 0;
+            transform: translateX(40px);
+        }
+
+        /* fade in ← from right */
+        .top-text.fade-in {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .top-moving-banner {
+            width: 100%;
+            overflow: hidden;
+            background-color: rgba({{ hexToRgb($page->theme_color) }}, 0.3);
+            /* lighter than theme */
+            color: #fff;
+            position: relative;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .moving-texts {
+            display: flex;
+            white-space: nowrap;
+            position: absolute;
+            left: -100%;
+            /* start outside left */
+            animation: moveRight linear infinite;
+        }
+
+        .moving-texts span {
+            margin-right: 50px;
+        }
+
+        /* adjust duration for speed */
+        @keyframes moveRight {
+            0% {
+                left: -100%;
+            }
+
+            100% {
+                left: 100%;
+            }
+        }
+
         .count-box {
             background: #2f7f78;
             color: #fff;
@@ -54,15 +159,127 @@
         .animate-scale-in {
             animation: scaleIn .35s ease-out forwards;
         }
-    </style>
 
+        .overflow-text {
+            width: 100%;
+            overflow-wrap: anywhere;
+        }
+
+        .features-grid:has(> :last-child:nth-child(odd))> :last-child {
+            grid-column: span 2;
+        }
+
+        .buy-popup {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translate(-50%, -20px);
+            background: #000;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            opacity: 0;
+            pointer-events: none;
+            transition: all .6s ease;
+            z-index: 9999;
+        }
+
+        .buy-popup.show {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+
+        .whatsapp-float {
+            position: fixed;
+            bottom: 120px;
+            right: 0px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            transition: transform 0.2s;
+            z-index: 40;
+        }
+
+        .whatsapp-float:hover {
+            transform: scale(1.1);
+        }
+
+        .whatsapp-float .label {
+            margin-right: 13px;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            background-color: white;
+            padding: 8px;
+            border-radius: 10px;
+        }
+
+        .whatsapp-float img {
+            width: 30px;
+            height: 30px;
+        }
+    </style>
 </head>
 
 
 <body class="bg-white text-gray-900" dir="rtl">
-    <div class="w-full max-w-[520px] bg-white min-h-screen shadow-xl m-auto">
+    <div class="w-full max-w-[520px] bg-white min-h-screen shadow-xl m-auto relative">
 
-        <div class="w-full p-4 bg-[{{ $page->theme_color }}] text-center text-white">الدفع عند الستلام</div>
+        @php
+            $wa = $page->whatsapp_phone ?? null;
+            $wa_clean = $wa ? preg_replace('/[^0-9]/', '', $wa) : '1234567890';
+        @endphp
+
+        @if ($wa)
+            <a href="https://wa.me/{{ $wa_clean }}" target="_blank" class="whatsapp-float">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" />
+                <span class="label">تحدث معنا</span>
+            </a>
+        @endif
+
+        <div class="top-moving-banner h-12 p-2">
+            <div class="moving-texts" id="movingTexts">
+            </div>
+        </div>
+
+
+        @php
+            $features = $page->features ?? [];
+
+            $map = [
+                'cod' => 'الدفع عند الاستلام',
+                'free_shipping' => 'شحن مجاني',
+                'exchange7' => 'استبدال خلال 7 أيام',
+                'support247' => 'خدمة 24/7',
+                'warranty' => 'ضمان لمدة سنة',
+                'same_day' => 'توصيل نفس اليوم',
+            ];
+
+            $texts = [];
+
+            if (!empty($features)) {
+                foreach ($features as $f) {
+                    if (isset($map[$f])) {
+                        $texts[] = $map[$f];
+                    }
+                }
+            }
+
+            if (empty($texts)) {
+                $texts = ['الدفع عند الاستلام', 'عروضنا لا تتوقف'];
+            }
+        @endphp
+
+        <div class="w-full p-4 bg-[{{ $page->theme_color }}] text-center text-white">
+            <p id="topFeatureText" class="top-text">{{ $texts[0] }}</p>
+        </div>
+
+
+        <p id="buy-text" class="buy-popup"> </p>
 
         {{-- HERO --}}
         <section class="bg-white px-4 pt-6 pb-4 border-b">
@@ -112,7 +329,7 @@
                         </span>
                     </div>
                     <span>
-                        {{ number_format($page->items_sold_count ?? 0) }} بيعت حتى الآن
+                        {{ number_format($page->product->sales_number ?? 0) }} بيعت حتى الآن
                     </span>
                 </div>
             </div>
@@ -173,16 +390,90 @@
             </div>
         </section>
 
+        @if (!empty($page->features))
+            <div class="card border-b">
+                <div class="p-4 grid grid-cols-2 gap-3 features-grid">
+
+                    @if (in_array('cod', $page->features ?? []))
+                        {{-- الدفع عند الاستلام --}}
+                        <label class="border p-3 rounded flex items-center gap-4">
+                            <i class="fa-regular fa-credit-card text-[{{ $page->theme_color }}] text-3xl"></i>
+                            <div>
+                                <p class="text-l">الدفع</p>
+                                <p class="text-gray-500 text-md">عند الاستلام</p>
+                            </div>
+                        </label>
+                    @endif
+
+                    @if (in_array('free_shipping', $page->features ?? []))
+                        {{-- شحن مجاني --}}
+                        <label class="border p-3 rounded flex items-center gap-4">
+                            <i class="fa-regular fa-truck text-[{{ $page->theme_color }}] text-3xl"></i>
+                            <div>
+                                <p class="text-l">مجاناً</p>
+                                <p class="text-gray-500 text-md">التوصيل</p>
+                            </div>
+                        </label>
+                    @endif
+
+                    @if (in_array('replace', $page->features ?? []))
+                        {{-- استبدال خلال 7 أيام --}}
+                        <label class="border p-3 rounded flex items-center gap-4">
+                            <i class="fa-solid fa-arrows-rotate text-[{{ $page->theme_color }}] text-3xl"></i>
+                            <div>
+                                <p class="text-l">استبدال</p>
+                                <p class="text-gray-500 text-md">خلال 7 يوم</p>
+                            </div>
+                        </label>
+                    @endif
+
+
+                    @if (in_array('support', $page->features ?? []))
+                        {{-- خدمة 7\24 --}}
+                        <label class="border p-3 rounded flex items-center gap-4">
+                            <i class="fa-solid fa-headset text-[{{ $page->theme_color }}] text-3xl"></i>
+                            <div>
+                                <p class="text-l">7\24</p>
+                                <p class="text-gray-500 text-md">خدمة</p>
+                            </div>
+                        </label>
+                    @endif
+
+                    @if (in_array('warranty', $page->features ?? []))
+                        {{-- ضمان لمدة سنة --}}
+                        <label class="border p-3 rounded flex items-center gap-4">
+                            <i class="fa-solid fa-shield text-[{{ $page->theme_color }}] text-3xl"></i>
+                            <div>
+                                <p class="text-l">ضمان</p>
+                                <p class="text-gray-500 text-md">لمدة سنة</p>
+                            </div>
+                        </label>
+                    @endif
+
+                    @if (in_array('same_day', $page->features ?? []))
+                        {{-- التوصيل نفس اليوم --}}
+                        <label class="border p-3 rounded flex items-center gap-4">
+                            <i class="fa-solid fa-hourglass text-[{{ $page->theme_color }}] text-3xl"></i>
+                            <div>
+                                <p class="text-l">التوصيل</p>
+                                <p class="text-gray-500 text-md">نفس اليوم</p>
+                            </div>
+                        </label>
+                    @endif
+                </div>
+            </div>
+        @endif
+
 
         {{-- IMPORTANT INFO --}}
-        <section class="bg-white px-4 py-8 border-t">
+        <section class="bg-white px-4 py-8">
             <div class="max-w-[420px] mx-auto space-y-4 text-right">
 
                 <h2 class="text-2xl font-bold text-gray-900">
                     معلومات مهمة
                 </h2>
 
-                <p class="text-gray-700 leading-relaxed text-base">
+                <p class="text-gray-700 leading-relaxed text-base overflow-text">
                     {{ $page->description }}
                 </p>
 
@@ -227,7 +518,8 @@
                             {{-- Reviewer Image --}}
                             <div class="shrink-0">
                                 @if ($review->reviewer_image)
-                                    <img src="{{ asset($review->reviewer_image) }}" alt="{{ $review->reviewer_name }}"
+                                    <img src="{{ asset($review->reviewer_image) }}"
+                                        alt="{{ $review->reviewer_name }}"
                                         class="w-12 h-12 rounded-full object-cover border">
                                 @else
                                     @php
@@ -310,71 +602,57 @@
 
                     <h2 class="text-2xl font-bold text-center">اطلب الأن</h2>
 
-                    @if ($page->pageSaleActive())
-                        {{-- OFFER PRODUCTS --}}
+                    @if (!empty($page->offers))
+                        {{-- CUSTOM OFFERS PRODUCTS --}}
                         <div class="space-y-3" id="offersContainer">
-                            {{-- OFFER 1 --}}
-                            <div
-                                class="offer-item flex items-center gap-3 border rounded-lg p-3 sm:p-4 cursor-pointer hover:border-[{{ $page->theme_color }}]">
-                                <div class="flex flex-col sm:flex-row justify-between w-full gap-3">
-                                    <div class="flex gap-3 sm:gap-4">
-                                        @if ($page->images)
-                                            <img src="{{ asset($page->images[0]) }}"
-                                                class="w-10 sm:w-12 rounded-lg flex-shrink-0" />
-                                        @endif
-                                        <div class="flex flex-col gap-2">
-                                            <div class="font-bold text-sm sm:text-base">
-                                                اشتري <span class="text-[{{ $page->theme_color }}]">1</span> ب
-                                                <span
-                                                    class="text-[{{ $page->theme_color }}]">{{ $page->sale_price * 1 }}
-                                                    د.إ</span>
-                                            </div>
-                                            <div
-                                                class="bg-[{{ $page->theme_color }}] w-fit p-1 sm:p-2 text-xs sm:text-[15px] rounded-2xl text-white">
-                                                وفر %{{ $page->sale_percent }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div
-                                        class="text-xs sm:text-sm text-gray-500 flex flex-col gap-2 sm:gap-4 whitespace-nowrap">
-                                        <span
-                                            class="text-[{{ $page->theme_color }}] font-bold">{{ $page->sale_price * 1 }}
-                                            د.إ</span>
-                                        <span class="line-through">{{ $page->original_price * 1 }} د.إ</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- OFFER 2 --}}
-                            <div
-                                class="offer-item flex items-center gap-3 border rounded-lg p-3 sm:p-4 cursor-pointer hover:border-[{{ $page->theme_color }}]">
-                                <div class="flex flex-col sm:flex-row justify-between w-full gap-3">
-                                    <div class="flex gap-3 sm:gap-4">
-                                        <img src="{{ asset($page->images[0]) }}"
-                                            class="w-10 sm:w-12 rounded-lg flex-shrink-0" />
-                                        <div class="flex flex-col gap-2">
-                                            <div class="font-bold text-sm sm:text-base">
-                                                اشتري <span class="text-[{{ $page->theme_color }}]">2</span> ب
-                                                <span
-                                                    class="text-[{{ $page->theme_color }}]">{{ $page->sale_price * 2 }}
-                                                    د.إ</span>
-                                            </div>
-                                            <div
-                                                class="bg-gradient-to-l from-orange-500 to-orange-400 w-fit p-1 sm:p-2 text-xs sm:text-[15px] rounded-2xl text-white">
-                                                أفضل عرض
+                            @foreach ($page->offers as $offer)
+                                <div class="offer-item flex items-center gap-3 border rounded-lg p-3 sm:p-4 cursor-pointer hover:border-[{{ $page->theme_color }}]"
+                                    data-quantity="{{ $offer['quantity'] }}" data-price="{{ $offer['price'] }}">
+                                    <div class="flex flex-col sm:flex-row justify-between w-full gap-3">
+                                        <div class="flex gap-3 sm:gap-4">
+                                            @if (isset($offer['image']) && $offer['image'])
+                                                <img src="{{ asset($offer['image']) }}"
+                                                    class="w-10 sm:w-12 h-10 sm:h-12 rounded-lg flex-shrink-0 object-cover" />
+                                            @else
+                                                @php
+                                                    $images = is_array($page->images)
+                                                        ? $page->images
+                                                        : json_decode($page->images, true);
+                                                @endphp
+                                                @if (!empty($images) && isset($images[0]))
+                                                    <img src="{{ asset($images[0]) }}"
+                                                        class="w-10 sm:w-12 h-10 sm:h-12 rounded-lg flex-shrink-0 object-cover" />
+                                                @endif
+                                            @endif
+                                            <div class="flex flex-col gap-2">
+                                                <div class="font-bold text-sm sm:text-base">
+                                                    اشتري <span
+                                                        class="text-[{{ $page->theme_color }}]">{{ $offer['quantity'] }}</span>
+                                                    ب
+                                                    <span
+                                                        class="text-[{{ $page->theme_color }}]">{{ $offer['price'] }}
+                                                        د.إ</span>
+                                                </div>
+                                                @if ($offer['label'])
+                                                    <div
+                                                        class="bg-[{{ $page->theme_color }}] w-fit p-1 sm:p-2 text-xs sm:text-[15px] rounded-2xl text-white">
+                                                        {{ $offer['label'] }}
+                                                    </div>
+                                                @endif
                                             </div>
                                         </div>
-                                    </div>
-                                    <div
-                                        class="text-xs sm:text-sm text-gray-500 flex flex-col gap-2 sm:gap-4 whitespace-nowrap">
-                                        <span
-                                            class="text-[{{ $page->theme_color }}] font-bold">{{ $page->sale_price * 2 }}
-                                            د.إ</span>
-                                        <span class="line-through">{{ $page->original_price * 2 }} د.إ</span>
+                                        <div
+                                            class="text-xs sm:text-sm text-gray-500 flex flex-col gap-2 sm:gap-4 whitespace-nowrap">
+                                            <span
+                                                class="text-[{{ $page->theme_color }}] font-bold">{{ $offer['price'] }}
+                                                د.إ</span>
+                                            <span
+                                                class="line-through">{{ $page->original_price * $offer['quantity'] }}
+                                                د.إ</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-
+                            @endforeach
                         </div>
                     @endif
 
@@ -383,6 +661,8 @@
                     <form method="POST" action="{{ route('pages.submitOrder', $page->slug) }}" class="space-y-3">
                         @csrf
                         <input type="hidden" name="quantity" id="orderQuantity" value="1">
+                        <input type="hidden" name="offer_price" id="offer_price"
+                            value="{{ $page->sale_price ?? ($page->original_price ?? $page->product->price) }}" />
 
                         <input name="full_name" placeholder="الاسم بالكامل" required
                             class="w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg text-sm sm:text-base">
@@ -514,18 +794,51 @@
 <script>
     const offers = document.querySelectorAll('#offersContainer .offer-item');
     const quantityInput = document.getElementById('orderQuantity');
+    const offerPriceInput = document.getElementById('offer_price');
 
-    if (offers.length) {
-        offers[0].classList.add('border-[{{ $page->theme_color }}]', 'shadow-xl', 'border-2');
-        quantityInput.value = offers[0].dataset.quantity;
-    }
+    let selectedOffer = null;
+
+    // default values
+    quantityInput.value = 1;
 
     offers.forEach(offer => {
         offer.addEventListener('click', () => {
-            offers.forEach(o => o.classList.remove('border-[{{ $page->theme_color }}]', 'shadow-xl'));
-            offer.classList.add('border-[{{ $page->theme_color }}]', 'shadow-xl', 'border-2');
+
+            // unselect if clicked again
+            if (selectedOffer === offer) {
+                offer.classList.remove(
+                    'border-[{{ $page->theme_color }}]',
+                    'shadow-xl',
+                    'border-2'
+                );
+
+                selectedOffer = null;
+                quantityInput.value = 1;
+
+                // back to normal price
+                offerPriceInput.value = "{{ $page->sale_price ?? $page->product->price }}";
+                return;
+            }
+
+            // remove all selection
+            offers.forEach(o => o.classList.remove(
+                'border-[{{ $page->theme_color }}]',
+                'shadow-xl',
+                'border-2'
+            ));
+
+            // select current
+            offer.classList.add(
+                'border-[{{ $page->theme_color }}]',
+                'shadow-xl',
+                'border-2'
+            );
+
+            selectedOffer = offer;
+
             quantityInput.value = offer.dataset.quantity;
 
+            offerPriceInput.value = offer.dataset.price;
         });
     });
 </script>
@@ -577,5 +890,100 @@
     }
 </script>
 
+<script>
+    const maleNames = [
+        "محمد", "احمد", "محمود", "يوسف", "علي", "عبدالله", "مصطفى", "حسن", "عمر", "خالد",
+        "ابراهيم", "طارق", "كريم", "رامي", "اسلام", "ياسين", "وليد", "سامح", "هشام", "شريف",
+        "عمرو", "مروان", "تامر", "ادهم", "باسم", "سيف", "جمال", "حسين", "صلاح", "ريان"
+    ];
+
+    const femaleNames = [
+        "سارة", "مريم", "نور", "منة", "فاطمة", "هدى", "دينا", "رانيا", "نورا", "ياسمين",
+        "شيماء", "رحاب", "دعاء", "بسمة", "ندى", "آية", "ملك", "جنى", "سلمى", "فرح",
+        "ريم", "ليان", "تالا", "روان", "لينا", "سما", "هاجر", "مي", "سمر", "إسراء"
+    ];
+
+    const buyText = document.getElementById('buy-text');
+
+    function randomTime() {
+        const num = Math.floor(Math.random() * 7) + 3;
+        return `منذ ${num} دقائق`;
+    }
+
+    function showRandomBuy() {
+
+        const isMale = Math.random() > 0.5;
+
+        let name, text;
+
+        if (isMale) {
+            name = maleNames[Math.floor(Math.random() * maleNames.length)];
+            text = "اشترى";
+        } else {
+            name = femaleNames[Math.floor(Math.random() * femaleNames.length)];
+            text = "اشترت";
+        }
+
+        buyText.innerText = `${name} ${text} ${randomTime()}`;
+
+        buyText.classList.add('show');
+
+        setTimeout(() => {
+            buyText.classList.remove('show');
+        }, 1500);
+    }
+
+    // every 5s
+    setInterval(showRandomBuy, 5000);
+</script>
+
+<script>
+    const texts = @json($texts);
+    let i = 0;
+    const el = document.getElementById("topFeatureText");
+
+    if (texts.length > 1) {
+        setInterval(() => {
+
+            // fade out left
+            el.classList.add("fade-out");
+
+            setTimeout(() => {
+                // switch text
+                i = (i + 1) % texts.length;
+                el.innerText = texts[i];
+
+                // start from right
+                el.classList.remove("fade-out");
+                el.classList.add("prepare-in");
+
+                // small delay then fade in
+                setTimeout(() => {
+                    el.classList.remove("prepare-in");
+                    el.classList.add("fade-in");
+
+                    setTimeout(() => {
+                        el.classList.remove("fade-in");
+                    }, 450);
+
+                }, 50);
+
+            }, 450);
+
+        }, 2500);
+    }
+</script>
+
+
+<script>
+    const statements = @json($texts);
+
+    const container = document.getElementById('movingTexts');
+    container.innerHTML = statements.map(text => `<span>${text}</span>`).join('              ');
+    // calculate duration based on text width
+    const totalWidth = container.scrollWidth;
+    const speed = 30; // pixels per second
+    container.style.animationDuration = `${totalWidth / speed}s`;
+</script>
 
 </html>
