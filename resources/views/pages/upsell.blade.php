@@ -108,17 +108,36 @@
 
             {{-- Scrollable Products List --}}
             <div class="px-6 pb-6 space-y-4 flex-grow overflow-y-auto custom-scroll bg-white">
+                @php
+                    $isSingle = $page->upsellProducts->count() === 1;
+                @endphp
+
+                {{-- LIMITED TIME OFFER STATEMENT --}}
+                <div class="mb-1">
+                    <span
+                        class="inline-flex items-center gap-1 text-orange-600 bg-orange-50 px-2 py-0.5 rounded-md font-bold {{ $isSingle ? 'text-sm mb-2' : 'text-[10px]' }} animate-pulse">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                        عرض لفترة محدودة
+                    </span>
+                </div>
                 @foreach ($page->upsellProducts as $product)
                     <label onclick="toggleProduct(this)"
-                        class="product-card group relative flex gap-4 items-center border-2 rounded-2xl p-3 cursor-pointer
-    transition-all duration-300 bg-white hover:shadow-lg border-gray-100 hover:border-gray-200">
+                        class="product-card group relative border-2 rounded-2xl cursor-pointer
+    transition-all duration-300 bg-white hover:shadow-lg border-gray-100 hover:border-gray-200
+    {{ $isSingle ? 'flex flex-col items-center text-center p-6' : 'flex gap-4 items-center p-3' }}">
+
 
                         <input type="checkbox" name="selected_upsell_products[]" value="{{ $product->id }}"
                             class="hidden product-checkbox">
 
                         {{-- image --}}
                         <div
-                            class="relative w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden bg-gray-100 border border-gray-100">
+                            class="relative {{ $isSingle ? 'w-44 h-44 mb-4' : 'w-24 h-24' }} flex-shrink-0 rounded-xl overflow-hidden bg-gray-100 border border-gray-100">
+
                             @php
                                 $imgSrc = $product->pivot->image
                                     ? asset($product->pivot->image)
@@ -135,20 +154,22 @@
                             </div>
                         </div>
 
-                        <div class="flex-1 min-w-0">
+                        <div class="{{ $isSingle ? 'w-full text-center' : 'flex-1 min-w-0' }}">
 
-                            <h3 class="text-base font-bold text-gray-800 line-clamp-1 product-title">
+                            <h3
+                                class="text-base font-bold text-gray-800 line-clamp-1 product-title {{ $isSingle ? 'text-lg mt-2' : '' }}">
                                 {{ $product->pivot->name ?? $product->name }}
                             </h3>
 
-                            <div class="flex items-center gap-2 mt-1">
+                            <div class="flex items-center {{ $isSingle ? 'justify-center' : '' }} gap-2 mt-1">
                                 <span class="text-xl font-black text-[{{ $page->theme_color }}]">
                                     {{ number_format($product->pivot->price ?? $product->price, 2) }}
                                     <span class="text-[10px] font-normal text-gray-500">د.إ</span>
                                 </span>
                             </div>
 
-                            <div class="flex items-center justify-between mt-1">
+                            <div
+                                class="flex items-center {{ $isSingle ? 'justify-between gap-4 mt-3' : 'justify-between mt-1' }}">
 
                                 <p class="text-[11px] font-bold text-green-600 opacity-0 product-added">
                                     ✓ تمت إضافة المنتج إلى طلبك
