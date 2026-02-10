@@ -11,6 +11,7 @@ use App\Services\PageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
@@ -266,8 +267,9 @@ class PageController extends Controller
         }
 
         $imagePath = $images[$index];
-        if (file_exists($imagePath))
-            unlink($imagePath);
+        if (Storage::disk('direct_public')->exists($imagePath)) {
+            Storage::disk('direct_public')->delete($imagePath);
+        }
 
         array_splice($images, $index, 1);
         $page->images = $images;

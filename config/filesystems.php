@@ -60,6 +60,12 @@ return [
             'report' => false,
         ],
 
+        'direct_public' => [
+            'driver' => 'local',
+            'root' => public_path(), // Directs to the /public folder
+            'url' => env('APP_URL'),
+            'visibility' => 'public',
+        ],
     ],
 
     /*
