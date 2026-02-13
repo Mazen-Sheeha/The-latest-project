@@ -30,7 +30,7 @@
     @endif
 
     @php
-        function hexToRgb($hex)
+        function hexToRgb($hex, $returnArray = false)
         {
             $hex = str_replace('#', '', $hex);
             if (strlen($hex) == 3) {
@@ -42,8 +42,22 @@
                 $g = hexdec(substr($hex, 2, 2));
                 $b = hexdec(substr($hex, 4, 2));
             }
+            if ($returnArray) {
+                return [$r, $g, $b];
+            }
+
             return "$r,$g,$b";
         }
+
+        function isLightColor($hex)
+        {
+            [$r, $g, $b] = hexToRgb($hex, true);
+            // standard luminance formula
+            $luminance = 0.299 * $r + 0.587 * $g + 0.114 * $b;
+            return $luminance > 165; // Adjust threshold as needed
+        }
+
+        $contrastColor = isLightColor($page->theme_color) ? '#000000' : '#ffffff';
     @endphp
 
 
@@ -60,6 +74,7 @@
             transform: translateX(0);
             white-space: nowrap;
             overflow: hidden;
+            color: {{ $contrastColor }} !important;
         }
 
         /* fade out → to left */
@@ -84,8 +99,7 @@
             width: 100%;
             overflow: hidden;
             background-color: rgba({{ hexToRgb($page->theme_color) }}, 0.3);
-            /* lighter than theme */
-            color: #fff;
+            color: {{ isLightColor($page->theme_color) ? '#000' : $page->theme_color }};
             position: relative;
             font-weight: 700;
             font-size: 16px;
@@ -96,7 +110,6 @@
             white-space: nowrap;
             position: absolute;
             left: -100%;
-            /* start outside left */
             animation: moveRight linear infinite;
         }
 
@@ -104,7 +117,6 @@
             margin-right: 50px;
         }
 
-        /* adjust duration for speed */
         @keyframes moveRight {
             0% {
                 left: -100%;
@@ -116,8 +128,8 @@
         }
 
         .count-box {
-            background: #2f7f78;
-            color: #fff;
+            background: {{ $page->theme_color }};
+            color: {{ $contrastColor }};
             font-size: 1.5rem;
             font-weight: 800;
             padding: 10px 12px;
@@ -129,14 +141,14 @@
             display: block;
             margin-top: 4px;
             font-size: 0.8rem;
-            color: #2f7f78;
+            color: {{ $page->theme_color }};
             font-weight: 600;
         }
 
         .colon {
             font-size: 1.5rem;
             font-weight: bold;
-            color: #2f7f78;
+            color: {{ $page->theme_color }};
             margin-top: -18px;
         }
 
@@ -216,6 +228,8 @@
             background-color: white;
             padding: 8px;
             border-radius: 10px;
+            color: #25D366;
+            /* WhatsApp Green */
         }
 
         .whatsapp-float img {
@@ -274,7 +288,7 @@
             }
         @endphp
 
-        <div class="w-full p-4 bg-[{{ $page->theme_color }}] text-center text-white">
+        <div class="w-full p-4 bg-[{{ $page->theme_color }}] text-center">
             <p id="topFeatureText" class="top-text">{{ $texts[0] }}</p>
         </div>
 
@@ -308,7 +322,7 @@
                     {{-- DISCOUNT BADGE --}}
                     @if ($page->sale_percent && $page->pageSaleActive())
                         <span
-                            class="flex items-center gap-1 bg-[{{ $page->theme_color }}] text-white text-sm font-bold px-3 py-1 rounded-full">
+                            class="flex items-center gap-1 bg-[{{ $page->theme_color }}] text-[{{ $contrastColor }}] text-sm font-bold px-3 py-1 rounded-full">
                             {{ $page->sale_percent }}%
                         </span>
                     @endif
@@ -318,11 +332,9 @@
                 <div class="flex items-center justify-between gap-3 text-sm text-gray-600">
 
                     <div class="flex gap-2">
-                        {{-- STARS --}}
                         <div class="flex items-center gap-1 text-yellow-400">
                             ★★★★★
                         </div>
-
                         <span>
                             {{ number_format($page->reviews_count ?? ($page->items_sold_count ?? 0)) }}
                             تقييم
@@ -339,7 +351,6 @@
         <section class="bg-white px-4 py-6 border-b" dir="rtl">
             <div class="max-w-[420px] mx-auto text-center space-y-4">
 
-                {{-- STOCK --}}
                 <div class="text-lg font-bold text-gray-900">
                     عجل! فقط
                     <span class="inline-block bg-gray-200 px-3 py-1 rounded-md mx-1">
@@ -349,39 +360,34 @@
                 </div>
 
                 @if ($page->pageSaleActive())
-                    {{-- COUNTDOWN BOX --}}
                     <div class="border rounded-xl p-4 inline-block bg-white shadow-sm">
                         <div id="countdown" data-end="{{ \Carbon\Carbon::parse($page->sale_ends_at)->timestamp }}"
                             class="flex items-center justify-center gap-3">
 
-                            {{-- DAYS --}}
                             <div class="text-center">
-                                <div class="count-box bg-[{{ $page->theme_color }}]" data-days>00</div>
-                                <span class="label text-[{{ $page->theme_color }}]">يوم</span>
+                                <div class="count-box" data-days>00</div>
+                                <span class="label">يوم</span>
                             </div>
 
-                            <span class="colon text-[{{ $page->theme_color }}]">:</span>
+                            <span class="colon">:</span>
 
-                            {{-- HOURS --}}
                             <div class="text-center">
-                                <div class="count-box bg-[{{ $page->theme_color }}]" data-hours>00</div>
-                                <span class="label text-[{{ $page->theme_color }}]">ساعة</span>
+                                <div class="count-box" data-hours>00</div>
+                                <span class="label">ساعة</span>
                             </div>
 
-                            <span class="colon text-[{{ $page->theme_color }}]">:</span>
+                            <span class="colon">:</span>
 
-                            {{-- MINUTES --}}
                             <div class="text-center">
-                                <div class="count-box bg-[{{ $page->theme_color }}]" data-minutes>00</div>
-                                <span class="label text-[{{ $page->theme_color }}]">دقائق</span>
+                                <div class="count-box" data-minutes>00</div>
+                                <span class="label">دقائق</span>
                             </div>
 
-                            <span class="colon text-[{{ $page->theme_color }}]">:</span>
+                            <span class="colon">:</span>
 
-                            {{-- SECONDS --}}
                             <div class="text-center">
-                                <div class="count-box bg-[{{ $page->theme_color }}]" data-seconds>00</div>
-                                <span class="label text-[{{ $page->theme_color }}]">ثواني</span>
+                                <div class="count-box" data-seconds>00</div>
+                                <span class="label">ثواني</span>
                             </div>
 
                         </div>
@@ -468,15 +474,10 @@
         {{-- IMPORTANT INFO --}}
         <section class="bg-white px-4 py-8">
             <div class="max-w-[420px] mx-auto space-y-4 text-right">
-
-                <h2 class="text-2xl font-bold text-gray-900">
-                    معلومات مهمة
-                </h2>
-
+                <h2 class="text-2xl font-bold text-gray-900">معلومات مهمة</h2>
                 <p class="text-gray-700 leading-relaxed text-base overflow-text">
                     {{ $page->description }}
                 </p>
-
             </div>
         </section>
 
@@ -499,74 +500,40 @@
             </div>
         </section>
 
-        {{-- ================= REVIEWS SECTION ================= --}}
+        {{-- REVIEWS --}}
         @if ($page->reviews->count())
             <section class="bg-white rounded-lg shadow p-6 space-y-6">
-
                 <h2 class="text-xl font-bold text-gray-800">
                     آراء العملاء
-                    <span class="text-sm text-gray-500">
-                        ({{ $page->reviews->count() }} تقييم)
-                    </span>
+                    <span class="text-sm text-gray-500">({{ $page->reviews->count() }} تقييم)</span>
                 </h2>
-
                 <div class="space-y-5">
-
                     @foreach ($page->reviews as $review)
                         <div class="flex gap-4 border-b pb-5 last:border-b-0">
-
-                            {{-- Reviewer Image --}}
                             <div class="shrink-0">
                                 @if ($review->reviewer_image)
                                     <img src="{{ asset($review->reviewer_image) }}"
-                                        alt="{{ $review->reviewer_name }}"
                                         class="w-12 h-12 rounded-full object-cover border">
                                 @else
-                                    @php
-                                        $names = explode(' ', trim($review->reviewer_name));
-                                        $first = mb_substr($names[0] ?? '', 0, 1);
-                                        $second = mb_substr($names[1] ?? '', 0, 1);
-                                        $initials = mb_strtoupper($first . $second);
-                                    @endphp
-
                                     <div
-                                        class="w-12 h-12 rounded-full flex items-center justify-center
-                   bg-blue-600 text-white font-bold border">
-                                        {{ $initials }}
+                                        class="w-12 h-12 rounded-full flex items-center justify-center bg-gray-200 text-gray-600 font-bold border">
+                                        {{ mb_substr($review->reviewer_name, 0, 1) }}
                                     </div>
                                 @endif
                             </div>
-
-                            {{-- Content --}}
                             <div class="flex-1 space-y-1">
-
-                                {{-- Name + Stars --}}
                                 <div class="flex items-center justify-between">
-                                    <strong class="text-gray-800">
-                                        {{ $review->reviewer_name }}
-                                    </strong>
-
-                                    {{-- Stars --}}
+                                    <strong class="text-gray-800">{{ $review->reviewer_name }}</strong>
                                     <div class="flex text-yellow-400 text-sm">
                                         @for ($i = 1; $i <= 5; $i++)
-                                            @if ($i <= $review->stars)
-                                                ★
-                                            @else
-                                                ☆
-                                            @endif
+                                            {{ $i <= $review->stars ? '★' : '☆' }}
                                         @endfor
                                     </div>
                                 </div>
-
-                                {{-- Comment --}}
-                                <p class="text-gray-600 text-sm leading-relaxed">
-                                    {{ $review->comment }}
-                                </p>
-
+                                <p class="text-gray-600 text-sm leading-relaxed">{{ $review->comment }}</p>
                             </div>
                         </div>
                     @endforeach
-
                 </div>
             </section>
         @endif
@@ -574,13 +541,9 @@
 
         {{-- STICKY ORDER BUTTON --}}
         <div id="sticky-order"
-            class="fixed bottom-0 inset-x-0 z-40
-            bg-white border-t shadow-lg p-3
-            transition-transform duration-300 ease-in-out">
-            <button onclick="openOrderModal()"
-                class="w-full max-w-md mx-auto block
-               bg-[{{ $page->theme_color }}]
-               text-white font-bold py-4 rounded-xl text-xl">
+            class="fixed bottom-0 inset-x-0 z-40 bg-white border-t shadow-lg p-3 transition-transform duration-300 ease-in-out">
+            <button onclick="openOrderModal()" class="w-full max-w-md mx-auto block font-bold py-4 rounded-xl text-xl"
+                style="background-color: {{ $page->theme_color }}; color: {{ $contrastColor }};">
                 اطلب الأن
             </button>
         </div>
@@ -590,89 +553,48 @@
         <div id="orderModal"
             class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 p-4 overflow-y-auto"
             onclick="closeOrderModal()">
-
-            <div class="bg-white w-full max-w-sm sm:max-w-md md:max-w-lg rounded-xl shadow-xl relative my-8 order-modal-inner"
+            <div class="bg-white w-full max-w-sm sm:max-w-md md:max-w-lg rounded-xl shadow-xl relative my-8"
                 onclick="event.stopPropagation()">
-
-                {{-- CLOSE --}}
                 <button onclick="closeOrderModal()"
                     class="absolute right-4 top-4 text-gray-400 text-2xl hover:text-gray-600">&times;</button>
-
-                <div class="p-4 sm:p-6 space-y-5 modal-body-scroll">
-
+                <div class="p-4 sm:p-6 space-y-5">
                     <h2 class="text-2xl font-bold text-center">اطلب الأن</h2>
 
                     @if (!empty($page->offers))
-                        {{-- CUSTOM OFFERS PRODUCTS --}}
                         <div class="space-y-3" id="offersContainer">
                             @foreach ($page->offers as $offer)
-                                <div class="offer-item flex items-center gap-3 border rounded-lg p-3 sm:p-4 cursor-pointer hover:border-[{{ $page->theme_color }}]"
+                                <div class="offer-item flex items-center gap-3 border rounded-lg p-3 cursor-pointer hover:border-[{{ $page->theme_color }}]"
                                     data-quantity="{{ $offer['quantity'] }}" data-price="{{ $offer['price'] }}">
-                                    <div class="flex flex-col sm:flex-row justify-between w-full gap-3">
-                                        <div class="flex gap-3 sm:gap-4">
-                                            @if (isset($offer['image']) && $offer['image'])
-                                                <img src="{{ asset($offer['image']) }}"
-                                                    class="w-10 sm:w-12 h-10 sm:h-12 rounded-lg flex-shrink-0 object-cover" />
-                                            @else
-                                                @php
-                                                    $images = is_array($page->images)
-                                                        ? $page->images
-                                                        : json_decode($page->images, true);
-                                                @endphp
-                                                @if (!empty($images) && isset($images[0]))
-                                                    <img src="{{ asset($images[0]) }}"
-                                                        class="w-10 sm:w-12 h-10 sm:h-12 rounded-lg flex-shrink-0 object-cover" />
-                                                @endif
-                                            @endif
-                                            <div class="flex flex-col gap-2">
-                                                <div class="font-bold text-sm sm:text-base">
-                                                    اشتري <span
-                                                        class="text-[{{ $page->theme_color }}]">{{ $offer['quantity'] }}</span>
-                                                    ب
-                                                    <span
-                                                        class="text-[{{ $page->theme_color }}]">{{ $offer['price'] }}
-                                                        د.إ</span>
-                                                </div>
-                                                @if ($offer['label'])
-                                                    <div
-                                                        class="bg-[{{ $page->theme_color }}] w-fit p-1 sm:p-2 text-xs sm:text-[15px] rounded-2xl text-white">
-                                                        {{ $offer['label'] }}
-                                                    </div>
-                                                @endif
+                                    <div class="flex justify-between w-full">
+                                        <div class="font-bold">
+                                            اشتري <span
+                                                class="text-[{{ $page->theme_color }}]">{{ $offer['quantity'] }}</span>
+                                            ب
+                                            <span class="text-[{{ $page->theme_color }}]">{{ $offer['price'] }}
+                                                د.إ</span>
+                                        </div>
+                                        @if ($offer['label'])
+                                            <div
+                                                class="bg-[{{ $page->theme_color }}] text-[{{ $contrastColor }}] px-2 py-1 text-xs rounded-full">
+                                                {{ $offer['label'] }}
                                             </div>
-                                        </div>
-                                        <div
-                                            class="text-xs sm:text-sm text-gray-500 flex flex-col gap-2 sm:gap-4 whitespace-nowrap">
-                                            <span
-                                                class="text-[{{ $page->theme_color }}] font-bold">{{ $offer['price'] }}
-                                                د.إ</span>
-                                            <span
-                                                class="line-through">{{ $page->original_price * $offer['quantity'] }}
-                                                د.إ</span>
-                                        </div>
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach
                         </div>
                     @endif
 
-
-                    {{-- FORM --}}
                     <form method="POST" action="{{ route('pages.submitOrder', $page->slug) }}" class="space-y-3">
                         @csrf
                         <input type="hidden" name="quantity" id="orderQuantity" value="1">
                         <input type="hidden" name="offer_price" id="offer_price"
-                            value="{{ $page->sale_price ?? ($page->original_price ?? $page->product->price) }}" />
-
+                            value="{{ $page->sale_price ?? $page->original_price }}" />
                         <input name="full_name" placeholder="الاسم بالكامل" required
-                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg text-sm sm:text-base">
-
+                            class="w-full px-4 py-3 border rounded-lg">
                         <input name="phone" placeholder="رقم الهاتف" required
-                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg text-sm sm:text-base">
-
-                        {{-- Governorate / City --}}
-                        <select name="government" required
-                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg bg-white text-sm sm:text-base">
+                            class="w-full px-4 py-3 border rounded-lg">
+                        <select name="government" required class="w-full px-4 py-3 border rounded-lg bg-white">
                             <option value="Abu Dhabi" selected>Abu Dhabi / أبو ظبي</option>
                             <option value="Dubai">Dubai / دبي</option>
                             <option value="Sharjah">Sharjah / الشارقة</option>
@@ -682,18 +604,13 @@
                             <option value="Umm Al-Quwain">Umm Al-Quwain / أم القيوين</option>
                             <option value="Ras Al Khaimah">Ras Al Khaimah / رأس الخيمة</option>
                         </select>
-
-                        {{-- Address --}}
                         <textarea name="address" placeholder="العنوان بالتفصيل" required rows="3"
-                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg resize-none text-sm sm:text-base"></textarea>
-
-                        <button type="submit" id="submitBtn"
-                            class="w-full text-white font-bold py-3 rounded-lg text-lg"
-                            style="background-color: {{ $page->theme_color }}">
+                            class="w-full px-4 py-3 border rounded-lg resize-none"></textarea>
+                        <button type="submit" id="submitBtn" class="w-full font-bold py-3 rounded-lg text-lg"
+                            style="background-color: {{ $page->theme_color }}; color: {{ $contrastColor }};">
                             تأكيد الطلب
                         </button>
                     </form>
-
                 </div>
             </div>
         </div>
@@ -701,30 +618,17 @@
 
     @if (request()->query('success'))
         <div id="successOverlay" class="fixed inset-0 bg-black/80 z-[999] flex items-center justify-center">
-
             <div class="bg-white rounded-2xl p-8 text-center max-w-sm w-full mx-4 animate-scale-in">
-
-                {{-- Check Icon --}}
                 <div class="mx-auto mb-4 w-20 h-20 rounded-full bg-green-100 flex items-center justify-center">
                     <svg class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" stroke-width="3"
                         viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                 </div>
-
-                <h2 class="text-2xl font-extrabold text-gray-900 mb-2">
-                    تم استلام طلبك
-                </h2>
-
-                <p class="text-gray-600 mb-6">
-                    سيتم التواصل معك في أقرب وقت لتأكيد الطلب
-                </p>
-
+                <h2 class="text-2xl font-extrabold text-gray-900 mb-2">تم استلام طلبك</h2>
+                <p class="text-gray-600 mb-6">سيتم التواصل معك في أقرب وقت لتأكيد الطلب</p>
                 <button onclick="closeSuccessOverlay()"
-                    class="w-full bg-green-600 hover:bg-green-700 transition
-                       text-white font-bold py-3 rounded-xl text-lg">
-                    تمام
-                </button>
+                    class="w-full bg-green-600 text-white font-bold py-3 rounded-xl text-lg">تمام</button>
             </div>
         </div>
     @endif
@@ -732,38 +636,30 @@
 </body>
 
 <script>
+    // Countdown Logic
     document.addEventListener('DOMContentLoaded', () => {
         const el = document.getElementById('countdown');
         if (!el) return;
-
         const endTime = parseInt(el.dataset.end) * 1000;
-
         const d = el.querySelector('[data-days]');
         const h = el.querySelector('[data-hours]');
         const m = el.querySelector('[data-minutes]');
         const s = el.querySelector('[data-seconds]');
-
         const pad = n => String(n).padStart(2, '0');
-
         const tick = () => {
             const now = Date.now();
             let diff = Math.max(0, endTime - now);
-
             const days = Math.floor(diff / (1000 * 60 * 60 * 24));
             diff %= (1000 * 60 * 60 * 24);
-
             const hours = Math.floor(diff / (1000 * 60 * 60));
             diff %= (1000 * 60 * 60);
-
             const minutes = Math.floor(diff / (1000 * 60));
             const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
             d.textContent = pad(days);
             h.textContent = pad(hours);
             m.textContent = pad(minutes);
             s.textContent = pad(seconds);
         };
-
         tick();
         setInterval(tick, 1000);
     });
