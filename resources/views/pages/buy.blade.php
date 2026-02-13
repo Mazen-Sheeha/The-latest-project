@@ -204,16 +204,22 @@
 
         .whatsapp-float {
             position: fixed;
+            /* This formula keeps it on the edge of your 520px container */
+            right: calc(50% - 260px + 10px);
             bottom: 120px;
-            right: 0px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            padding: 10px 15px;
+            z-index: 50;
             text-decoration: none;
-            transition: transform 0.2s;
-            z-index: 40;
+            transition: transform 0.3s ease;
+        }
+
+        /* For small screens, just pin it to the right */
+        @media (max-width: 520px) {
+            .whatsapp-float {
+                right: 15px;
+            }
         }
 
         .whatsapp-float:hover {
@@ -221,37 +227,42 @@
         }
 
         .whatsapp-float .label {
-            margin-right: 13px;
-            font-weight: bold;
-            font-size: 14px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            margin-right: 12px;
+            font-weight: 800;
+            font-size: 16px;
+            /* Bigger Font */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             background-color: white;
-            padding: 8px;
-            border-radius: 10px;
+            padding: 12px 20px;
+            /* Bigger Padding */
+            border-radius: 50px;
+            /* Rounded Pill Shape */
             color: #25D366;
-            /* WhatsApp Green */
+            border: 1px solid #e2e2e2;
         }
 
         .whatsapp-float img {
-            width: 30px;
-            height: 30px;
+            width: 55px;
+            /* Bigger Icon */
+            height: 55px;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
         }
     </style>
 </head>
 
 
 <body class="bg-white text-gray-900" dir="rtl">
-    <div class="w-full max-w-[520px] bg-white min-h-screen shadow-xl m-auto relative">
-
+    <div class="w-full max-w-[520px] bg-white min-h-screen shadow-xl m-auto relative pb-24">
         @php
             $wa = $page->whatsapp_phone ?? null;
             $wa_clean = $wa ? preg_replace('/[^0-9]/', '', $wa) : '1234567890';
         @endphp
 
+        {{-- WhatsApp Button - Now inside the relative container --}}
         @if ($wa)
             <a href="https://wa.me/{{ $wa_clean }}" target="_blank" class="whatsapp-float">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" />
                 <span class="label">تحدث معنا</span>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" />
             </a>
         @endif
 
@@ -396,6 +407,35 @@
             </div>
         </section>
 
+        {{-- IMPORTANT INFO --}}
+        <section class="bg-white px-4 py-8">
+            <div class="max-w-[420px] mx-auto space-y-4 text-right">
+                <h2 class="text-2xl font-bold text-gray-900">معلومات مهمة</h2>
+                <p class="text-gray-700 leading-relaxed text-base overflow-text">
+                    {{ $page->description }}
+                </p>
+            </div>
+        </section>
+
+        {{-- ALL IMAGES --}}
+        <section class="bg-gray-50 px-4 py-8">
+            <div class="max-w-[420px] mx-auto">
+
+                {{-- <h2 class="text-2xl font-bold text-center mb-6 text-gray-900">
+                    صور المنتج
+                </h2> --}}
+
+                <div class="grid grid-cols-1 gap-3">
+                    @foreach ($page->images as $order => $path)
+                        <button type="button" onclick="openImageModal('{{ asset($path) }}')"
+                            class="focus:outline-none">
+                            <img src="{{ asset($path) }}" class="w-full object-cover rounded-lg shadow">
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+
         @if (!empty($page->features))
             <div class="card border-b">
                 <div class="p-4 grid grid-cols-2 gap-3 features-grid">
@@ -469,36 +509,6 @@
                 </div>
             </div>
         @endif
-
-
-        {{-- IMPORTANT INFO --}}
-        <section class="bg-white px-4 py-8">
-            <div class="max-w-[420px] mx-auto space-y-4 text-right">
-                <h2 class="text-2xl font-bold text-gray-900">معلومات مهمة</h2>
-                <p class="text-gray-700 leading-relaxed text-base overflow-text">
-                    {{ $page->description }}
-                </p>
-            </div>
-        </section>
-
-        {{-- ALL IMAGES --}}
-        <section class="bg-gray-50 px-4 py-8">
-            <div class="max-w-[420px] mx-auto">
-
-                {{-- <h2 class="text-2xl font-bold text-center mb-6 text-gray-900">
-                    صور المنتج
-                </h2> --}}
-
-                <div class="grid grid-cols-1 gap-3">
-                    @foreach ($page->images as $order => $path)
-                        <button type="button" onclick="openImageModal('{{ asset($path) }}')"
-                            class="focus:outline-none">
-                            <img src="{{ asset($path) }}" class="w-full object-cover rounded-lg shadow">
-                        </button>
-                    @endforeach
-                </div>
-            </div>
-        </section>
 
         {{-- REVIEWS --}}
         @if ($page->reviews->count())
