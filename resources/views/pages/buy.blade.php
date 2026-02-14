@@ -931,7 +931,7 @@
         };
 
         // Validate while typing
-        phoneInput.addEventListener('input', validatePhone);
+        phoneInput.addEventListener('blur', validatePhone);
 
         // Final check on form submit
         form.addEventListener('submit', (e) => {
