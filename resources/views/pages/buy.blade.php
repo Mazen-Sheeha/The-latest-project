@@ -247,6 +247,15 @@
             height: 55px;
             filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
         }
+
+        #phoneInput.border-red-500 {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2;
+        }
+
+        #phoneInput.border-green-500 {
+            border-color: #22c55e !important;
+        }
     </style>
 </head>
 
@@ -602,8 +611,14 @@
                             value="{{ $page->sale_price ?? $page->original_price }}" />
                         <input name="full_name" placeholder="الاسم بالكامل" required
                             class="w-full px-4 py-3 border rounded-lg">
-                        <input name="phone" placeholder="رقم الهاتف" required
-                            class="w-full px-4 py-3 border rounded-lg">
+                        <div class="space-y-1" dir="rtl">
+                            <input name="phone" id="phoneInput" dir="rtl"
+                                placeholder="رقم الهاتف (مثال: 0501234567)" required
+                                class="w-full px-4 py-3 border rounded-lg transition-colors duration-300 outline-none"
+                                type="tel">
+                            <p id="phoneError" class="text-red-500 text-xs hidden">يرجى إدخال رقم هاتف إماراتي صحيح
+                                (05xxxxxxxx)</p>
+                        </div>
                         <select name="government" required class="w-full px-4 py-3 border rounded-lg bg-white">
                             <option value="Abu Dhabi" selected>Abu Dhabi / أبو ظبي</option>
                             <option value="Dubai">Dubai / دبي</option>
@@ -880,7 +895,6 @@
     }
 </script>
 
-
 <script>
     const statements = @json($texts);
 
@@ -890,6 +904,50 @@
     const totalWidth = container.scrollWidth;
     const speed = 30; // pixels per second
     container.style.animationDuration = `${totalWidth / speed}s`;
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const phoneInput = document.getElementById('phoneInput');
+        const phoneError = document.getElementById('phoneError');
+        const form = document.querySelector('form[action*="submitOrder"]');
+
+        // UAE Mobile Pattern: Starts with 05 (or 5 or +9715) followed by 8 digits
+        const uaePattern = /^(?:\+971|00971|0)?(?:5[024568])\d{7}$/;
+
+        const validatePhone = () => {
+            const value = phoneInput.value.replace(/\s+/g, ''); // remove spaces
+            if (uaePattern.test(value)) {
+                phoneInput.classList.remove('border-red-500');
+                phoneInput.classList.add('border-green-500');
+                phoneError.classList.add('hidden');
+                return true;
+            } else {
+                phoneInput.classList.add('border-red-500');
+                phoneInput.classList.remove('border-green-500');
+                phoneError.classList.remove('hidden');
+                return false;
+            }
+        };
+
+        // Validate while typing
+        phoneInput.addEventListener('input', validatePhone);
+
+        // Final check on form submit
+        form.addEventListener('submit', (e) => {
+            if (!validatePhone()) {
+                e.preventDefault(); // Stop form from sending
+                phoneInput.focus();
+
+                // Re-enable button if your previous script disabled it
+                const btn = document.getElementById('submitBtn');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = 'تأكيد الطلب';
+                }
+            }
+        });
+    });
 </script>
 
 </html>
