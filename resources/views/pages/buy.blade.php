@@ -17,16 +17,77 @@
 
     {{-- Tracking Pixels --}}
     @if ($page->meta_pixel)
-        {!! $page->meta_pixel !!}
+        <!-- Meta Pixel Blueprint -->
+        <script>
+            ! function(f, b, e, v, n, t, s) {
+                if (f.fbq) return;
+                n = f.fbq = function() {
+                    n.callMethod ?
+                        n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+                };
+                if (!f._fbq) f._fbq = n;
+                n.push = n;
+                n.loaded = !0;
+                n.version = '2.0';
+                n.queue = [];
+                t = b.createElement(e);
+                t.async = !0;
+                t.src = v;
+                s = b.getElementsByTagName(e)[0];
+                s.parentNode.insertBefore(t, s)
+            }(window, document, 'script',
+                'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', '{{ $page->meta_pixel }}');
+            fbq('track', 'PageView');
+        </script>
+        <noscript><img height="1" width="1" style="display:none"
+                src="https://www.facebook.com/tr?id={{ $page->meta_pixel }}&ev=PageView&noscript=1" /></noscript>
+        <!-- End Meta Pixel Blueprint -->
+    @endif
+
+    @if ($page->google_ads_pixel)
+        <!-- Google Ads Pixel Blueprint -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $page->google_ads_pixel }}"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+
+            function gtag() {
+                dataLayer.push(arguments);
+            }
+            gtag('js', new Date());
+            gtag('config', '{{ $page->google_ads_pixel }}');
+        </script>
+        <!-- End Google Ads Pixel Blueprint -->
+    @endif
+
+    @if ($page->google_analytics)
+        <!-- Google Analytics Blueprint -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $page->google_analytics }}"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+
+            function gtag() {
+                dataLayer.push(arguments);
+            }
+            gtag('js', new Date());
+            gtag('config', '{{ $page->google_analytics }}');
+        </script>
+        <!-- End Google Analytics Blueprint -->
     @endif
     @if ($page->tiktok_pixel)
+        <!-- Tiktok Pixel Code -->
         {!! $page->tiktok_pixel !!}
+        <!-- End TikTok Pixel Code -->
     @endif
     @if ($page->snapchat_pixel)
+        <!-- SnapChat Pixel Code -->
         {!! $page->snapchat_pixel !!}
+        <!-- End SnapChat Pixel Code -->
     @endif
     @if ($page->twitter_pixel)
+        <!-- Twitter Pixel Code -->
         {!! $page->twitter_pixel !!}
+        <!-- End Twitter Pixel Code -->
     @endif
 
     @php
@@ -579,25 +640,52 @@
                 <div class="p-4 sm:p-6 space-y-5">
                     <h2 class="text-2xl font-bold text-center">اطلب الأن</h2>
 
+                    @php
+                        function darkenColor($hex, $percent = 25)
+                        {
+                            $hex = str_replace('#', '', $hex);
+
+                            if (strlen($hex) == 3) {
+                                $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+                            }
+
+                            $r = hexdec(substr($hex, 0, 2));
+                            $g = hexdec(substr($hex, 2, 2));
+                            $b = hexdec(substr($hex, 4, 2));
+
+                            $r = max(0, min(255, $r - ($r * $percent) / 100));
+                            $g = max(0, min(255, $g - ($g * $percent) / 100));
+                            $b = max(0, min(255, $b - ($b * $percent) / 100));
+
+                            return sprintf('#%02x%02x%02x', $r, $g, $b);
+                        }
+
+                        $offerColor = isLightColor($page->theme_color)
+                            ? darkenColor($page->theme_color, 35) // darker if light
+                            : $page->theme_color;
+                    @endphp
                     @if (!empty($page->offers))
                         <div class="space-y-3" id="offersContainer">
                             @foreach ($page->offers as $offer)
-                                <div class="offer-item flex items-center gap-3 border rounded-lg p-3 cursor-pointer hover:border-[{{ $page->theme_color }}]"
+                                <div class="offer-item flex items-center gap-3 border rounded-lg p-3 cursor-pointer hover:border-[{{ $offerColor }}]"
                                     data-quantity="{{ $offer['quantity'] }}" data-price="{{ $offer['price'] }}">
+
                                     <div class="flex justify-between w-full">
+
                                         <div class="font-bold">
-                                            اشتري <span
-                                                class="text-[{{ $page->theme_color }}]">{{ $offer['quantity'] }}</span>
+                                            اشتري
+                                            <span class="text-[{{ $offerColor }}]">{{ $offer['quantity'] }}</span>
                                             ب
-                                            <span class="text-[{{ $page->theme_color }}]">{{ $offer['price'] }}
-                                                د.إ</span>
+                                            <span class="text-[{{ $offerColor }}]">{{ $offer['price'] }} د.إ</span>
                                         </div>
+
                                         @if ($offer['label'])
                                             <div
-                                                class="bg-[{{ $page->theme_color }}] text-[{{ $contrastColor }}] px-2 py-1 text-xs rounded-full">
+                                                class="bg-[{{ $offerColor }}] text-[{{ isLightColor($offerColor) ? '#000' : '#fff' }}] px-2 py-1 text-xs rounded-full">
                                                 {{ $offer['label'] }}
                                             </div>
                                         @endif
+
                                     </div>
                                 </div>
                             @endforeach

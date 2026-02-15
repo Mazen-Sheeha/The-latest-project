@@ -36,6 +36,8 @@ class Page extends Model
         'tiktok_pixel',
         'snapchat_pixel',
         'twitter_pixel',
+        'google_ads_pixel',
+        'google_analytics',
     ];
 
     protected $casts = [

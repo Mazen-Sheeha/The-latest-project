@@ -198,7 +198,7 @@ class PageService
             ? response()->json(['success' => true, 'message' => 'تم حذف الصفحة بنجاح'])
             : redirect()->route('pages.index')->with('success', 'تم حذف الصفحة بنجاح');
     }
-    
+
     /**
      * =============================
      * Validation Logic
@@ -248,6 +248,13 @@ class PageService
 
             'features' => 'sometimes|array',
             'whatsapp_phone' => ['nullable', 'string', 'max:32'],
+
+            'meta_pixel' => ['nullable', 'string'],
+            'tiktok_pixel' => ['nullable', 'string'],
+            'snapchat_pixel' => ['nullable', 'string'],
+            'twitter_pixel' => ['nullable', 'string'],
+            'google_analytics' => ['nullable', 'string'],
+            'google_ads_pixel' => ['nullable', 'string'],
         ]);
 
         if ($request->hasFile('images')) {
@@ -314,6 +321,8 @@ class PageService
             'tiktok_pixel' => ['nullable', 'string'],
             'snapchat_pixel' => ['nullable', 'string'],
             'twitter_pixel' => ['nullable', 'string'],
+            'google_analytics' => ['nullable', 'string'],
+            'google_ads_pixel' => ['nullable', 'string'],
         ]);
 
         if ($request->hasFile('images')) {
