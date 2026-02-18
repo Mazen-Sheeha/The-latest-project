@@ -121,10 +121,13 @@
         $contrastColor = isLightColor($page->theme_color) ? '#000000' : '#ffffff';
     @endphp
 
-
     <style>
         * {
             font-family: 'Almarai', sans-serif;
+        }
+
+        html {
+            scroll-behavior: smooth;
         }
 
         .top-text {
@@ -369,12 +372,19 @@
             }
         @endphp
 
+        <p id="buy-text" class="buy-popup"> </p>
+
+        @if (!empty($page->images) && count($page->images))
+            @php $firstImage = $page->images[0]; @endphp
+
+            <button type="button" onclick="openImageModal('{{ asset($firstImage) }}')" class="focus:outline-none">
+                <img src="{{ asset($firstImage) }}" class="w-full object-cover rounded-lg shadow">
+            </button>
+        @endif
+
         <div class="w-full p-4 bg-[{{ $page->theme_color }}] text-center">
             <p id="topFeatureText" class="top-text">{{ $texts[0] }}</p>
         </div>
-
-
-        <p id="buy-text" class="buy-popup"> </p>
 
         {{-- HERO --}}
         <section class="bg-white px-4 pt-6 pb-4 border-b">
@@ -486,6 +496,98 @@
                 </p>
             </div>
         </section>
+
+        {{-- ORDER MODAL --}}
+        <div class="bg-white w-full max-w-sm sm:max-w-md md:max-w-lg relative my-8" id="orderForm">
+            <div class="p-4 sm:p-6 space-y-5">
+                <h2 class="text-2xl font-bold text-center">اطلب الأن</h2>
+
+                @php
+                    function darkenColor($hex, $percent = 25)
+                    {
+                        $hex = str_replace('#', '', $hex);
+
+                        if (strlen($hex) == 3) {
+                            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+                        }
+
+                        $r = hexdec(substr($hex, 0, 2));
+                        $g = hexdec(substr($hex, 2, 2));
+                        $b = hexdec(substr($hex, 4, 2));
+
+                        $r = max(0, min(255, $r - ($r * $percent) / 100));
+                        $g = max(0, min(255, $g - ($g * $percent) / 100));
+                        $b = max(0, min(255, $b - ($b * $percent) / 100));
+
+                        return sprintf('#%02x%02x%02x', $r, $g, $b);
+                    }
+
+                    $offerColor = isLightColor($page->theme_color)
+                        ? darkenColor($page->theme_color, 35) // darker if light
+                        : $page->theme_color;
+                @endphp
+                @if (!empty($page->offers))
+                    <div class="space-y-3" id="offersContainer">
+                        @foreach ($page->offers as $offer)
+                            <div class="offer-item flex items-center gap-3 border rounded-lg p-3 cursor-pointer hover:border-[{{ $offerColor }}]"
+                                data-quantity="{{ $offer['quantity'] }}" data-price="{{ $offer['price'] }}">
+
+                                <div class="flex justify-between w-full">
+
+                                    <div class="font-bold">
+                                        اشتري
+                                        <span class="text-[{{ $offerColor }}]">{{ $offer['quantity'] }}</span>
+                                        ب
+                                        <span class="text-[{{ $offerColor }}]">{{ $offer['price'] }} د.إ</span>
+                                    </div>
+
+                                    @if ($offer['label'])
+                                        <div
+                                            class="bg-[{{ $offerColor }}] text-[{{ isLightColor($offerColor) ? '#000' : '#fff' }}] px-2 py-1 text-xs rounded-full">
+                                            {{ $offer['label'] }}
+                                        </div>
+                                    @endif
+
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('pages.submitOrder', $page->slug) }}" class="space-y-3">
+                    @csrf
+                    <input type="hidden" name="quantity" id="orderQuantity" value="1">
+                    <input type="hidden" name="offer_price" id="offer_price"
+                        value="{{ $page->sale_price ?? $page->original_price }}" />
+                    <input name="full_name" placeholder="الاسم بالكامل" required
+                        class="w-full px-4 py-3 border rounded-lg">
+                    <div class="space-y-1" dir="rtl">
+                        <input name="phone" id="phoneInput" dir="rtl"
+                            placeholder="رقم الهاتف (مثال: 0501234567)" required
+                            class="w-full px-4 py-3 border rounded-lg transition-colors duration-300 outline-none"
+                            type="tel">
+                        <p id="phoneError" class="text-red-500 text-xs hidden">يرجى إدخال رقم هاتف إماراتي صحيح
+                            (05xxxxxxxx)</p>
+                    </div>
+                    <select name="government" required class="w-full px-4 py-3 border rounded-lg bg-white">
+                        <option value="Abu Dhabi" selected>Abu Dhabi / أبو ظبي</option>
+                        <option value="Dubai">Dubai / دبي</option>
+                        <option value="Sharjah">Sharjah / الشارقة</option>
+                        <option value="Ajman">Ajman / عجمان</option>
+                        <option value="Al Ain">Al Ain / العين</option>
+                        <option value="Fujairah">Fujairah / الفجيرة</option>
+                        <option value="Umm Al-Quwain">Umm Al-Quwain / أم القيوين</option>
+                        <option value="Ras Al Khaimah">Ras Al Khaimah / رأس الخيمة</option>
+                    </select>
+                    <textarea name="address" placeholder="العنوان بالتفصيل" required rows="3"
+                        class="w-full px-4 py-3 border rounded-lg resize-none"></textarea>
+                    <button type="submit" id="submitBtn" class="w-full font-bold py-3 rounded-lg text-lg"
+                        style="background-color: {{ $page->theme_color }}; color: {{ $contrastColor }};">
+                        تأكيد الطلب
+                    </button>
+                </form>
+            </div>
+        </div>
 
         {{-- ALL IMAGES --}}
         <section class="bg-gray-50 px-4 py-8">
@@ -622,110 +724,12 @@
         {{-- STICKY ORDER BUTTON --}}
         <div id="sticky-order"
             class="fixed bottom-0 inset-x-0 z-40 bg-white border-t shadow-lg p-3 transition-transform duration-300 ease-in-out">
-            <button onclick="openOrderModal()" class="w-full max-w-md mx-auto block font-bold py-4 rounded-xl text-xl"
+            <button class="w-full max-w-md mx-auto block font-bold py-4 rounded-xl text-xl"
                 style="background-color: {{ $page->theme_color }}; color: {{ $contrastColor }};">
-                اطلب الأن
+                <a href="#orderForm">
+                    اطلب الأن
+                </a>
             </button>
-        </div>
-
-
-        {{-- ORDER MODAL --}}
-        <div id="orderModal"
-            class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 p-4 overflow-y-auto"
-            onclick="closeOrderModal()">
-            <div class="bg-white w-full max-w-sm sm:max-w-md md:max-w-lg rounded-xl shadow-xl relative my-8"
-                onclick="event.stopPropagation()">
-                <button onclick="closeOrderModal()"
-                    class="absolute right-4 top-4 text-gray-400 text-2xl hover:text-gray-600">&times;</button>
-                <div class="p-4 sm:p-6 space-y-5">
-                    <h2 class="text-2xl font-bold text-center">اطلب الأن</h2>
-
-                    @php
-                        function darkenColor($hex, $percent = 25)
-                        {
-                            $hex = str_replace('#', '', $hex);
-
-                            if (strlen($hex) == 3) {
-                                $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
-                            }
-
-                            $r = hexdec(substr($hex, 0, 2));
-                            $g = hexdec(substr($hex, 2, 2));
-                            $b = hexdec(substr($hex, 4, 2));
-
-                            $r = max(0, min(255, $r - ($r * $percent) / 100));
-                            $g = max(0, min(255, $g - ($g * $percent) / 100));
-                            $b = max(0, min(255, $b - ($b * $percent) / 100));
-
-                            return sprintf('#%02x%02x%02x', $r, $g, $b);
-                        }
-
-                        $offerColor = isLightColor($page->theme_color)
-                            ? darkenColor($page->theme_color, 35) // darker if light
-                            : $page->theme_color;
-                    @endphp
-                    @if (!empty($page->offers))
-                        <div class="space-y-3" id="offersContainer">
-                            @foreach ($page->offers as $offer)
-                                <div class="offer-item flex items-center gap-3 border rounded-lg p-3 cursor-pointer hover:border-[{{ $offerColor }}]"
-                                    data-quantity="{{ $offer['quantity'] }}" data-price="{{ $offer['price'] }}">
-
-                                    <div class="flex justify-between w-full">
-
-                                        <div class="font-bold">
-                                            اشتري
-                                            <span class="text-[{{ $offerColor }}]">{{ $offer['quantity'] }}</span>
-                                            ب
-                                            <span class="text-[{{ $offerColor }}]">{{ $offer['price'] }} د.إ</span>
-                                        </div>
-
-                                        @if ($offer['label'])
-                                            <div
-                                                class="bg-[{{ $offerColor }}] text-[{{ isLightColor($offerColor) ? '#000' : '#fff' }}] px-2 py-1 text-xs rounded-full">
-                                                {{ $offer['label'] }}
-                                            </div>
-                                        @endif
-
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @endif
-
-                    <form method="POST" action="{{ route('pages.submitOrder', $page->slug) }}" class="space-y-3">
-                        @csrf
-                        <input type="hidden" name="quantity" id="orderQuantity" value="1">
-                        <input type="hidden" name="offer_price" id="offer_price"
-                            value="{{ $page->sale_price ?? $page->original_price }}" />
-                        <input name="full_name" placeholder="الاسم بالكامل" required
-                            class="w-full px-4 py-3 border rounded-lg">
-                        <div class="space-y-1" dir="rtl">
-                            <input name="phone" id="phoneInput" dir="rtl"
-                                placeholder="رقم الهاتف (مثال: 0501234567)" required
-                                class="w-full px-4 py-3 border rounded-lg transition-colors duration-300 outline-none"
-                                type="tel">
-                            <p id="phoneError" class="text-red-500 text-xs hidden">يرجى إدخال رقم هاتف إماراتي صحيح
-                                (05xxxxxxxx)</p>
-                        </div>
-                        <select name="government" required class="w-full px-4 py-3 border rounded-lg bg-white">
-                            <option value="Abu Dhabi" selected>Abu Dhabi / أبو ظبي</option>
-                            <option value="Dubai">Dubai / دبي</option>
-                            <option value="Sharjah">Sharjah / الشارقة</option>
-                            <option value="Ajman">Ajman / عجمان</option>
-                            <option value="Al Ain">Al Ain / العين</option>
-                            <option value="Fujairah">Fujairah / الفجيرة</option>
-                            <option value="Umm Al-Quwain">Umm Al-Quwain / أم القيوين</option>
-                            <option value="Ras Al Khaimah">Ras Al Khaimah / رأس الخيمة</option>
-                        </select>
-                        <textarea name="address" placeholder="العنوان بالتفصيل" required rows="3"
-                            class="w-full px-4 py-3 border rounded-lg resize-none"></textarea>
-                        <button type="submit" id="submitBtn" class="w-full font-bold py-3 rounded-lg text-lg"
-                            style="background-color: {{ $page->theme_color }}; color: {{ $contrastColor }};">
-                            تأكيد الطلب
-                        </button>
-                    </form>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -776,28 +780,6 @@
         tick();
         setInterval(tick, 1000);
     });
-</script>
-
-<script>
-    let modalOpen = false;
-
-    function openOrderModal() {
-        const modal = document.getElementById('orderModal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        modalOpen = true;
-        const sticky = document.getElementById('sticky-order');
-        if (sticky) sticky.classList.add('hidden');
-    }
-
-    function closeOrderModal() {
-        const modal = document.getElementById('orderModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        modalOpen = false;
-        const sticky = document.getElementById('sticky-order');
-        if (sticky) sticky.classList.remove('hidden');
-    }
 </script>
 
 <script>

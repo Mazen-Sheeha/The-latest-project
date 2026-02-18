@@ -194,7 +194,7 @@
 
 
                         <input type="checkbox" name="selected_upsell_products[]" value="{{ $product->id }}"
-                            class="hidden product-checkbox">
+                            class="hidden product-checkbox" {{ $isSingle ? 'checked' : '' }}>
 
                         {{-- image --}}
                         <div
@@ -347,6 +347,34 @@
                 title.style.color = "#1f2937";
             }
         }
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+
+            const isSingle = {{ $isSingle ? 'true' : 'false' }};
+            if (!isSingle) return;
+
+            const card = document.querySelector('.product-card');
+            if (!card) return;
+
+            const checkbox = card.querySelector('.product-checkbox');
+            const plusBtn = card.querySelector('.plus-btn');
+            const plusIcon = card.querySelector('.plus-icon');
+            const addedText = card.querySelector('.product-added');
+            const title = card.querySelector('.product-title');
+
+            checkbox.checked = true;
+
+            card.style.borderColor = "{{ $page->theme_color }}";
+            card.style.background = "{{ $page->theme_color }}10";
+
+            plusBtn.style.borderColor = "{{ $page->theme_color }}";
+            plusIcon.style.color = "{{ $page->theme_color }}";
+
+            addedText.style.opacity = "1";
+            title.style.color = "{{ $page->theme_color }}";
+        });
     </script>
 
 </body>
