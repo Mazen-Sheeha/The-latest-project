@@ -97,4 +97,10 @@ class Page extends Model
     {
         return $this->belongsTo(Domain::class);
     }
+
+    public function pixels(): BelongsToMany
+    {
+        return $this->belongsToMany(Pixel::class, 'page_pixel', 'page_id', 'pixel_id')
+            ->withTimestamps();
+    }
 }

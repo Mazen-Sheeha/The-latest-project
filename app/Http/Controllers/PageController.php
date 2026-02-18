@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Domain;
 use App\Models\Order;
 use App\Models\Page;
+use App\Models\Pixel;
 use App\Models\Product;
 use App\Services\EasyOrderService;
 use App\Services\PageService;
@@ -32,12 +33,12 @@ class PageController extends Controller
         $domain = request()->currentDomain();
 
         if ($domain === null) {
-            $page = Page::with('product', 'reviews')
+            $page = Page::with('product', 'reviews', 'pixels')
                 ->where('slug', $slug)
                 ->where('is_active', true)
                 ->firstOrFail();
         } else {
-            $page = Page::with('product', 'reviews')
+            $page = Page::with('product', 'reviews', 'pixels')
                 ->where('slug', $slug)
                 ->where('domain_id', $domain->id)
                 ->where('is_active', true)
@@ -151,6 +152,7 @@ class PageController extends Controller
         return redirect()->route('pages.buy', [
             'page' => $page,
             'success' => 1,
+            'sellPrice' => $sellPrice
         ]);
     }
 
@@ -219,7 +221,8 @@ class PageController extends Controller
     {
         $products = Product::all();
         $domains = Domain::all();
-        return view('pages.create', compact('products', 'domains'));
+        $pixels = Pixel::where('is_active', true)->get();
+        return view('pages.create', compact('products', 'domains', 'pixels'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -236,7 +239,10 @@ class PageController extends Controller
     {
         $products = Product::all();
         $domains = Domain::all();
-        return $this->pageService->edit($page, $products, $domains);
+        $pixels = Pixel::where('is_active', true)->get();
+        // Eager load the pixels relationship for the edit form
+        $page->load('pixels');
+        return $this->pageService->edit($page, $products, $domains, $pixels);
     }
 
     public function update(Request $request, Page $page): RedirectResponse

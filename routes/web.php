@@ -10,6 +10,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PixelController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ShippingCompanyController;
 use App\Http\Controllers\StatisticController;
@@ -92,6 +93,11 @@ Route::middleware("auth")->group(function () {
         Route::delete('/pages/{page}/image', [PageController::class, 'deleteImage'])->name('pages.image.delete');
     });
 
+    // Pixels Routes
+    Route::middleware("RedirectIfCannot:access-pages")->group(function () {
+        Route::resource('/pixels', PixelController::class);
+    });
+
 });
 
 Route::get('/test-domain', function () {
@@ -99,10 +105,10 @@ Route::get('/test-domain', function () {
 });
 
 // Route::middleware('resolveDomain')->group(function () {
-    Route::get('buy/{page:slug}', [PageController::class, 'showBuyPage'])->name('pages.buy');
-    Route::get('buy/upsell/{slug}/{orderId?}', [PageController::class, 'showUpsellPage'])->name('pages.showUpsellPage');
-    Route::post('buy/{page:slug}', [PageController::class, 'submitOrder'])->name('pages.submitOrder');
-    Route::post('buy/upsell/submit', [PageController::class, 'submitOrderFromUpsellPage'])->name('pages.submitOrderFromUpsellPage');
+Route::get('buy/{page:slug}', [PageController::class, 'showBuyPage'])->name('pages.buy');
+Route::get('buy/upsell/{slug}/{orderId?}', [PageController::class, 'showUpsellPage'])->name('pages.showUpsellPage');
+Route::post('buy/{page:slug}', [PageController::class, 'submitOrder'])->name('pages.submitOrder');
+Route::post('buy/upsell/submit', [PageController::class, 'submitOrderFromUpsellPage'])->name('pages.submitOrderFromUpsellPage');
 // });
 
 // Necessary Data To Migrate

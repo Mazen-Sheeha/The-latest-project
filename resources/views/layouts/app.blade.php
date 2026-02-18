@@ -222,6 +222,18 @@
                                     </div>
                                 </div>
                             @endcan
+
+                            @can('access-pages')
+                                <div class="menu-item @if (request()->is('pixels*')) active @endif">
+                                    <div class="menu-link flex items-center grow cursor-pointer border border-transparent gap-[10px] ps-[10px] pe-[10px] py-[6px]"
+                                        tabindex="0">
+                                        <a href="{{ route('pixels.index') }}"
+                                            class="menu-title text-sm font-medium text-gray-800 menu-item-active:text-primary menu-link-hover:!text-primary">
+                                            البكسلات
+                                        </a>
+                                    </div>
+                                </div>
+                            @endcan
                         </div>
                         <!-- End of Sidebar Menu -->
                     </div>
