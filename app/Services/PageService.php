@@ -259,6 +259,9 @@ class PageService
             'upsell_products' => ['nullable', 'array'],
             // 'upsell_products.*' => ['exists:products,id'],
 
+            'moving_banner_text' => ['nullable', 'array'],
+            'top_feature_text' => ['nullable', 'array'],
+
             'features' => 'sometimes|array',
             'whatsapp_phone' => ['nullable', 'string', 'max:32'],
             'pixels' => ['nullable', 'array'],
@@ -328,6 +331,9 @@ class PageService
             // ================= UPSELL PRODUCTS =================
             'upsell_products' => ['nullable', 'array'],
             // 'upsell_products.*' => ['exists:products,id'],
+
+            'moving_banner_text' => ['nullable', 'array'],
+            'top_feature_text' => ['nullable', 'array'],
 
             'features' => 'sometimes|array',
             'whatsapp_phone' => ['nullable', 'string', 'max:32'],

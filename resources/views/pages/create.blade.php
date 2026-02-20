@@ -248,6 +248,71 @@
                         </div>
                     </div>
 
+                    {{-- ================= CUSTOM TEXT DISPLAY ================= --}}
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>النصوص المعروضة في الصفحة</h3>
+                        </div>
+
+                        <div class="p-4 space-y-4">
+                            <div>
+                                <label class="form-label">نصوص الشريط المتحرك</label>
+                                <div id="movingBannerTextsContainer" class="space-y-2">
+                                    <div class="flex gap-2">
+                                        <input type="text" name="moving_banner_text[]" class="input w-full"
+                                            placeholder="أدخل النص الذي سيظهر في الشريط المتحرك">
+                                        <button type="button" onclick="addMovingBannerText()" class="btn btn-primary">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="form-label">نصوص الميزة العلوية</label>
+                                <div id="topFeatureTextsContainer" class="space-y-2">
+                                    <div class="flex gap-2">
+                                        <input type="text" name="top_feature_text[]" class="input w-full"
+                                            placeholder="أدخل النص الذي سيظهر تحت الصورة">
+                                        <button type="button" onclick="addTopFeatureText()" class="btn btn-primary">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <script>
+                            function addMovingBannerText() {
+                                const container = document.getElementById('movingBannerTextsContainer');
+                                const div = document.createElement('div');
+                                div.className = 'flex gap-2';
+                                div.innerHTML = `
+                                    <input type="text" name="moving_banner_text[]" class="input w-full"
+                                        placeholder="أدخل النص الذي سيظهر في الشريط المتحرك">
+                                    <button type="button" onclick="this.parentElement.remove()" class="btn btn-danger">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                `;
+                                container.appendChild(div);
+                            }
+
+                            function addTopFeatureText() {
+                                const container = document.getElementById('topFeatureTextsContainer');
+                                const div = document.createElement('div');
+                                div.className = 'flex gap-2';
+                                div.innerHTML = `
+                                    <input type="text" name="top_feature_text[]" class="input w-full"
+                                        placeholder="أدخل النص الذي سيظهر تحت الصورة">
+                                    <button type="button" onclick="this.parentElement.remove()" class="btn btn-danger">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                `;
+                                container.appendChild(div);
+                            }
+                        </script>
+                    </div>
+
                     {{-- ================= IMAGES ================= --}}
                     <div class="card bg-white shadow rounded-lg">
                         <div class="card-header">
@@ -557,13 +622,13 @@
             <select name="upsell_products[${upsellIndex}][product_id]" class="input w-full product-select" required>
                 <option value="">اختر المنتج</option>
                 ${allProducts.map(p => `
-                                                                                                <option value="${p.id}"
-                                                                                                        data-name="${p.name}"
-                                                                                                        data-price="${p.price}"
-                                                                                                        data-image="${p.image ? '{{ asset('') }}' + p.image : '{{ asset('images/productDefault.webp') }}'}">
-                                                                                                    ${p.name}
-                                                                                                </option>
-                                                                                            `).join('')}
+                                                                                                            <option value="${p.id}"
+                                                                                                                    data-name="${p.name}"
+                                                                                                                    data-price="${p.price}"
+                                                                                                                    data-image="${p.image ? '{{ asset('') }}' + p.image : '{{ asset('images/productDefault.webp') }}'}">
+                                                                                                                ${p.name}
+                                                                                                            </option>
+                                                                                                        `).join('')}
             </select>
         </div>
 

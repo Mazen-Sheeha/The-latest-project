@@ -339,38 +339,23 @@
             </a>
         @endif
 
-        <div class="top-moving-banner h-12 p-2">
-            <div class="moving-texts" id="movingTexts">
-            </div>
-        </div>
-
-
         @php
-            $features = $page->features ?? [];
-
-            $map = [
-                'cod' => 'الدفع عند الاستلام',
-                'free_shipping' => 'شحن مجاني',
-                'exchange7' => 'استبدال خلال 7 أيام',
-                'support247' => 'خدمة 24/7',
-                'warranty' => 'ضمان لمدة سنة',
-                'same_day' => 'توصيل نفس اليوم',
-            ];
-
-            $texts = [];
-
-            if (!empty($features)) {
-                foreach ($features as $f) {
-                    if (isset($map[$f])) {
-                        $texts[] = $map[$f];
-                    }
-                }
+            $movingTexts = $page->moving_banner_text ?? [];
+            if (!is_array($movingTexts)) {
+                $movingTexts = [$movingTexts];
             }
-
-            if (empty($texts)) {
-                $texts = ['الدفع عند الاستلام', 'عروضنا لا تتوقف'];
-            }
+            $movingTexts = array_filter($movingTexts);
         @endphp
+
+        @if (!empty($movingTexts))
+            <div class="top-moving-banner h-12 p-2">
+                <div class="moving-texts" id="movingTexts">
+                    @foreach ($movingTexts as $text)
+                        <span>{{ $text }}</span>
+                    @endforeach
+                </div>
+            </div>
+        @endif
 
         <p id="buy-text" class="buy-popup"> </p>
 
@@ -382,9 +367,19 @@
             </button>
         @endif
 
-        <div class="w-full p-4 bg-[{{ $page->theme_color }}] text-center">
-            <p id="topFeatureText" class="top-text">{{ $texts[0] }}</p>
-        </div>
+        @php
+            $topFeatureTexts = $page->top_feature_text ?? [];
+            if (!is_array($topFeatureTexts)) {
+                $topFeatureTexts = [$topFeatureTexts];
+            }
+            $topFeatureTexts = array_filter($topFeatureTexts);
+        @endphp
+
+        @if (!empty($topFeatureTexts))
+            <div class="w-full p-4 bg-[{{ $page->theme_color }}] text-center overflow-hidden">
+                <p id="topFeatureText" class="top-text transition-all duration-500"></p>
+            </div>
+        @endif
 
         {{-- HERO --}}
         <section class="bg-white px-4 pt-6 pb-4 border-b">
@@ -929,51 +924,59 @@
 </script>
 
 <script>
-    const texts = @json($texts);
-    let i = 0;
     const el = document.getElementById("topFeatureText");
 
-    if (texts.length > 1) {
-        setInterval(() => {
+    if (el) {
+        const texts = @json($topFeatureTexts ?? []);
 
-            // fade out left
-            el.classList.add("fade-out");
+        if (Array.isArray(texts) && texts.length > 0) {
 
-            setTimeout(() => {
-                // switch text
-                i = (i + 1) % texts.length;
-                el.innerText = texts[i];
+            let i = 0;
+            el.innerText = texts[0]; // initial text
 
-                // start from right
-                el.classList.remove("fade-out");
-                el.classList.add("prepare-in");
+            if (texts.length > 1) {
 
-                // small delay then fade in
-                setTimeout(() => {
-                    el.classList.remove("prepare-in");
-                    el.classList.add("fade-in");
+                setInterval(() => {
+
+                    // fade out
+                    el.classList.remove("fade-in");
+                    el.classList.add("fade-out");
 
                     setTimeout(() => {
-                        el.classList.remove("fade-in");
-                    }, 450);
 
-                }, 50);
+                        // change text
+                        i = (i + 1) % texts.length;
+                        el.innerText = texts[i];
 
-            }, 450);
+                        // reset animation
+                        el.classList.remove("fade-out");
+                        el.classList.add("fade-in");
 
-        }, 2500);
+                        setTimeout(() => {
+                            el.classList.remove("fade-in");
+                        }, 500);
+
+                    }, 500);
+
+                }, 3000);
+            }
+        }
     }
 </script>
 
 <script>
-    const statements = @json($texts);
+    const customMovingTexts = @json($page->moving_banner_text ?? []);
+    const movingTextsArray = Array.isArray(customMovingTexts) ? customMovingTexts : [customMovingTexts];
+    const filteredMovingTexts = movingTextsArray.filter(text => text);
 
-    const container = document.getElementById('movingTexts');
-    container.innerHTML = statements.map(text => `<span>${text}</span>`).join('              ');
-    // calculate duration based on text width
-    const totalWidth = container.scrollWidth;
-    const speed = 30; // pixels per second
-    container.style.animationDuration = `${totalWidth / speed}s`;
+    if (filteredMovingTexts.length > 0) {
+        const container = document.getElementById('movingTexts');
+        container.innerHTML = filteredMovingTexts.map(text => `<span>${text}</span>`).join('');
+        // calculate duration based on text width
+        const totalWidth = container.scrollWidth;
+        const speed = 30; // pixels per second
+        container.style.animationDuration = `${totalWidth / speed}s`;
+    }
 </script>
 
 <script>

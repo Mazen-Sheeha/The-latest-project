@@ -291,6 +291,109 @@
                     </div>
                 </div>
 
+                {{-- ================= CUSTOM TEXT DISPLAY ================= --}}
+                <div class="card bg-white shadow rounded-lg">
+                    <div class="card-header">
+                        <h3 class="card-title">النصوص المعروضة في الصفحة</h3>
+                    </div>
+
+                    <div class="card-body p-6 space-y-4">
+                        <div>
+                            <label class="form-label">نصوص الشريط المتحرك</label>
+                            <div id="movingBannerTextsContainer" class="space-y-2">
+                                @php
+                                    $movingTexts = $page->moving_banner_text ?? [];
+                                    if (!is_array($movingTexts)) {
+                                        $movingTexts = [$movingTexts];
+                                    }
+                                    if (empty($movingTexts)) {
+                                        $movingTexts = [''];
+                                    }
+                                @endphp
+                                @foreach ($movingTexts as $index => $text)
+                                    <div class="flex gap-2">
+                                        <input type="text" name="moving_banner_text[]" class="input w-full"
+                                            value="{{ $text }}"
+                                            placeholder="أدخل النص الذي سيظهر في الشريط المتحرك">
+                                        @if ($index == 0)
+                                            <button type="button" onclick="addMovingBannerText()"
+                                                class="btn btn-primary">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        @else
+                                            <button type="button" onclick="this.parentElement.remove()"
+                                                class="btn btn-danger">
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="form-label">نصوص الميزة العلوية</label>
+                            <div id="topFeatureTextsContainer" class="space-y-2">
+                                @php
+                                    $topFeatureTexts = $page->top_feature_text ?? [];
+                                    if (!is_array($topFeatureTexts)) {
+                                        $topFeatureTexts = [$topFeatureTexts];
+                                    }
+                                    if (empty($topFeatureTexts)) {
+                                        $topFeatureTexts = [''];
+                                    }
+                                @endphp
+                                @foreach ($topFeatureTexts as $index => $text)
+                                    <div class="flex gap-2">
+                                        <input type="text" name="top_feature_text[]" class="input w-full"
+                                            value="{{ $text }}" placeholder="أدخل النص الذي سيظهر تحت الصورة">
+                                        @if ($index == 0)
+                                            <button type="button" onclick="addTopFeatureText()" class="btn btn-primary">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        @else
+                                            <button type="button" onclick="this.parentElement.remove()"
+                                                class="btn btn-danger">
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+
+                    <script>
+                        function addMovingBannerText() {
+                            const container = document.getElementById('movingBannerTextsContainer');
+                            const div = document.createElement('div');
+                            div.className = 'flex gap-2';
+                            div.innerHTML = `
+                                <input type="text" name="moving_banner_text[]" class="input w-full"
+                                    placeholder="أدخل النص الذي سيظهر في الشريط المتحرك">
+                                <button type="button" onclick="this.parentElement.remove()" class="btn btn-danger">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                            `;
+                            container.appendChild(div);
+                        }
+
+                        function addTopFeatureText() {
+                            const container = document.getElementById('topFeatureTextsContainer');
+                            const div = document.createElement('div');
+                            div.className = 'flex gap-2';
+                            div.innerHTML = `
+                                <input type="text" name="top_feature_text[]" class="input w-full"
+                                    placeholder="أدخل النص الذي سيظهر تحت الصورة">
+                                <button type="button" onclick="this.parentElement.remove()" class="btn btn-danger">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                            `;
+                            container.appendChild(div);
+                        }
+                    </script>
+                </div>
+
                 {{-- ================= IMAGES ================= --}}
                 <div class="card bg-white shadow rounded-lg">
                     <div class="card-header">
@@ -742,13 +845,13 @@
             <select name="upsell_products[${upsellIndex}][product_id]" class="input w-full product-select" required>
                 <option value="">اختر المنتج</option>
                 ${allProducts.map(p => `
-                                                        <option value="${p.id}"
-                                                                data-name="${p.name}"
-                                                                data-price="${p.price}"
-                                                                data-image="${p.image ? '{{ asset('') }}' + p.image : '{{ asset('images/productDefault.webp') }}'}">
-                                                            ${p.name}
-                                                        </option>
-                                                    `).join('')}
+                                                                    <option value="${p.id}"
+                                                                            data-name="${p.name}"
+                                                                            data-price="${p.price}"
+                                                                            data-image="${p.image ? '{{ asset('') }}' + p.image : '{{ asset('images/productDefault.webp') }}'}">
+                                                                        ${p.name}
+                                                                    </option>
+                                                                `).join('')}
             </select>
         </div>
 
