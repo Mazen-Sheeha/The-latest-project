@@ -16,8 +16,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&display=swap" rel="stylesheet">
 
     {{-- Tracking Pixels --}}
-    @if ($page->meta_pixel)
-        <!-- Meta Pixel Blueprint -->
+    @php
+        $pixels = $page->pixels()->where('is_active', true)->get()->groupBy('type');
+    @endphp
+
+    {{-- META --}}
+    @foreach ($pixels->get('meta', collect()) as $pixel)
         <script>
             ! function(f, b, e, v, n, t, s) {
                 if (f.fbq) return;
@@ -35,19 +39,24 @@
                 t.src = v;
                 s = b.getElementsByTagName(e)[0];
                 s.parentNode.insertBefore(t, s)
-            }(window, document, 'script',
-                'https://connect.facebook.net/en_US/fbevents.js');
-            fbq('init', '{{ $page->meta_pixel }}');
-            fbq('track', 'PageView');
+            }(window,
+                document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', '{{ $pixel->pixel_id }}');
+            fbq('track', 'ViewContent', {
+                content_name: '{{ $page->title }}',
+                content_ids: ['{{ $product->id }}'],
+                content_type: 'product',
+                value: {{ $page->sale_price ?? $page->original_price }},
+                currency: 'AED'
+            });
         </script>
         <noscript><img height="1" width="1" style="display:none"
-                src="https://www.facebook.com/tr?id={{ $page->meta_pixel }}&ev=PageView&noscript=1" /></noscript>
-        <!-- End Meta Pixel Blueprint -->
-    @endif
+                src="https://www.facebook.com/tr?id={{ $pixel->pixel_id }}&ev=PageView&noscript=1" /></noscript>
+    @endforeach
 
-    @if ($page->google_ads_pixel)
-        <!-- Google Ads Pixel Blueprint -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $page->google_ads_pixel }}"></script>
+    {{-- GOOGLE ADS --}}
+    @foreach ($pixels->get('google_ads', collect()) as $pixel)
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $pixel->pixel_id }}"></script>
         <script>
             window.dataLayer = window.dataLayer || [];
 
@@ -55,14 +64,13 @@
                 dataLayer.push(arguments);
             }
             gtag('js', new Date());
-            gtag('config', '{{ $page->google_ads_pixel }}');
+            gtag('config', '{{ $pixel->pixel_id }}');
         </script>
-        <!-- End Google Ads Pixel Blueprint -->
-    @endif
+    @endforeach
 
-    @if ($page->google_analytics)
-        <!-- Google Analytics Blueprint -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $page->google_analytics }}"></script>
+    {{-- GOOGLE ANALYTICS --}}
+    @foreach ($pixels->get('google_analytics', collect()) as $pixel)
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $pixel->pixel_id }}"></script>
         <script>
             window.dataLayer = window.dataLayer || [];
 
@@ -70,25 +78,103 @@
                 dataLayer.push(arguments);
             }
             gtag('js', new Date());
-            gtag('config', '{{ $page->google_analytics }}');
+            gtag('config', '{{ $pixel->pixel_id }}');
+            gtag('event', 'view_item', {
+                items: [{
+                    item_id: '{{ $product->id }}',
+                    item_name: '{{ $product->name }}',
+                    price: {{ $page->sale_price ?? $page->original_price }}
+                }]
+            });
         </script>
-        <!-- End Google Analytics Blueprint -->
-    @endif
-    @if ($page->tiktok_pixel)
-        <!-- Tiktok Pixel Code -->
-        {!! $page->tiktok_pixel !!}
-        <!-- End TikTok Pixel Code -->
-    @endif
-    @if ($page->snapchat_pixel)
-        <!-- SnapChat Pixel Code -->
-        {!! $page->snapchat_pixel !!}
-        <!-- End SnapChat Pixel Code -->
-    @endif
-    @if ($page->twitter_pixel)
-        <!-- Twitter Pixel Code -->
-        {!! $page->twitter_pixel !!}
-        <!-- End Twitter Pixel Code -->
-    @endif
+    @endforeach
+
+    {{-- TIKTOK --}}
+    @foreach ($pixels->get('tiktok', collect()) as $pixel)
+        @if ($pixel->code)
+            {!! $pixel->code !!}
+        @else
+            <script>
+                ! function(w, d, t) {
+                    w.TiktokAnalyticsObject = t;
+                    var ttq = w[t] = w[t] || [];
+                    ttq.methods = ["page", "track", "identify", "instances", "debug", "on", "off", "once", "ready", "alias",
+                        "group", "enableCookie", "disableCookie"
+                    ], ttq.setAndDefer = function(t, e) {
+                        t[e] = function() {
+                            t.push([e].concat(Array.prototype.slice.call(arguments, 0)))
+                        }
+                    };
+                    for (var i = 0; i < ttq.methods.length; i++) ttq.setAndDefer(ttq, ttq.methods[i]);
+                    ttq.instance = function(t) {
+                        for (var e = ttq._i[t] || [], n = 0; n < ttq.methods.length; n++) ttq.setAndDefer(e, ttq.methods[n]);
+                        return e
+                    }, ttq.load = function(e, n) {
+                        var i = "https://analytics.tiktok.com/i18n/pixel/events.js";
+                        ttq._i = ttq._i || {}, ttq._i[e] = [], ttq._i[e]._u = i, ttq._t = ttq._t || {}, ttq._t[e] = +new Date,
+                            ttq._o = ttq._o || {}, ttq._o[e] = n || {};
+                        n = document.createElement("script");
+                        n.type = "text/javascript", n.async = !0, n.src = i + "?sdkid=" + e + "&lib=" + t;
+                        e = document.getElementsByTagName("script")[0];
+                        e.parentNode.insertBefore(n, e)
+                    };
+                    ttq.load('{{ $pixel->pixel_id }}');
+                    ttq.page();
+                }(window, document, 'ttq');
+            </script>
+        @endif
+    @endforeach
+
+    {{-- SNAPCHAT --}}
+    @foreach ($pixels->get('snapchat', collect()) as $pixel)
+        @if ($pixel->code)
+            {!! $pixel->code !!}
+        @else
+            <script>
+                (function(e, t, n) {
+                    if (e.snaptr) return;
+                    var a = e.snaptr = function() {
+                        a.handleRequest ? a.handleRequest.apply(a, arguments) : a.queue.push(arguments)
+                    };
+                    a.queue = [];
+                    var s = 'script';
+                    r = t.createElement(s);
+                    r.async = !0;
+                    r.src = n;
+                    var u = t.getElementsByTagName(s)[0];
+                    u.parentNode.insertBefore(r, u);
+                })
+                (window, document, 'https://sc-static.net/scevent.min.js');
+                snaptr('init', '{{ $pixel->pixel_id }}');
+                snaptr('track', 'PAGE_VIEW');
+            </script>
+        @endif
+    @endforeach
+
+    {{-- TWITTER --}}
+    @foreach ($pixels->get('twitter', collect()) as $pixel)
+        @if ($pixel->code)
+            {!! $pixel->code !!}
+        @else
+            <script>
+                ! function(e, t, n, s, u, a) {
+                    e.twq || (s = e.twq = function() {
+                            s.exe ? s.exe.apply(s, arguments) : s.queue.push(arguments);
+                        }, s.version = '1.1', s.queue = [], u = t.createElement(n), u.async = !0, u.src =
+                        'https://static.ads-twitter.com/uwt.js', a = t.getElementsByTagName(n)[0], a.parentNode.insertBefore(u,
+                            a))
+                }(window, document, 'script');
+                twq('config', '{{ $pixel->pixel_id }}');
+            </script>
+        @endif
+    @endforeach
+
+    {{-- OTHER / CUSTOM CODE --}}
+    @foreach ($pixels->get('other', collect()) as $pixel)
+        @if ($pixel->code)
+            {!! $pixel->code !!}
+        @endif
+    @endforeach
 
     @php
         function hexToRgb($hex, $returnArray = false)
@@ -747,6 +833,59 @@
 
 </body>
 
+@if (request()->query('success'))
+    <script>
+        const purchaseValue = {{ request()->query('sellPrice') }};
+        const currency = 'AED';
+        const transactionId = {{ request()->query('order_id') }};
+        const productName = @json($product->name);
+
+        // Meta Purchase
+        if (typeof fbq !== 'undefined') {
+            fbq('track', 'Purchase', {
+                value: purchaseValue,
+                currency: currency
+            });
+        }
+
+        // Google Purchase
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'purchase', {
+                transaction_id: transactionId,
+                value: purchaseValue,
+                currency: currency,
+                items: [{
+                    item_name: productName
+                }]
+            });
+        }
+
+        // TikTok Purchase
+        if (typeof ttq !== 'undefined') {
+            ttq.track('CompletePayment', {
+                content_name: productName,
+                value: purchaseValue,
+                currency: currency
+            });
+        }
+
+        // Snapchat Purchase
+        if (typeof snaptr !== 'undefined') {
+            snaptr('track', 'PURCHASE', {
+                price: purchaseValue,
+                currency: currency
+            });
+        }
+
+        // Twitter (X) Purchase
+        if (typeof twq !== 'undefined') {
+            twq('event', 'tw-purchase', {
+                value: purchaseValue,
+                currency: currency
+            });
+        }
+    </script>
+@endif
 <script>
     // Countdown Logic
     document.addEventListener('DOMContentLoaded', () => {

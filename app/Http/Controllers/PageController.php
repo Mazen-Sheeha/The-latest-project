@@ -64,12 +64,12 @@ class PageController extends Controller
         $domain = request()->currentDomain();
 
         if ($domain === null) {
-            $page = Page::with('product', 'reviews')
+            $page = Page::with('product', 'reviews', 'pixels')
                 ->where('slug', $slug)
                 ->where('is_active', true)
                 ->firstOrFail();
         } else {
-            $page = Page::with('product', 'reviews')
+            $page = Page::with('product', 'reviews', 'pixels')
                 ->where('slug', $slug)
                 ->where('domain_id', $domain->id)
                 ->where('is_active', true)
@@ -149,10 +149,12 @@ class PageController extends Controller
         $sellPrice = $request->input('offer_price', null) ?? $page->sale_price ?? $page->original_price;
         $order = $easyOrderService->createFromPage($request, $page->product, $sellPrice, $quantity);
 
+        Log::info('Order created successfully', ['final_price' => $sellPrice, 'order_id' => $order->id]);
         return redirect()->route('pages.buy', [
             'page' => $page,
             'success' => 1,
-            'sellPrice' => $sellPrice
+            'sellPrice' => $sellPrice,
+            'order_id' => $order->id
         ]);
     }
 
@@ -203,9 +205,23 @@ class PageController extends Controller
             }
         }
 
+        $upsellTotal = $page->upsellProducts()
+            ->whereIn('product_id', $upsellProductIds)
+            ->get()
+            ->sum(function ($product) {
+                return $product->pivot->price ?? $product->price;
+            });
+
+        $finalPrice = $sellPrice + $upsellTotal;
+
+        Log::info('Order created successfully from Upesll', ['final_price' => $finalPrice, 'order_id' => $order->id]);
+
+
         return redirect()->route('pages.buy', [
             'page' => $page,
             'success' => 1,
+            'sellPrice' => $finalPrice,
+            'order_id' => $order->id
         ]);
     }
 
