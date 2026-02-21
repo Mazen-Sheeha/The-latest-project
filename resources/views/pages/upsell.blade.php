@@ -16,7 +16,18 @@
     @endphp
 
     {{-- META --}}
-    @foreach ($pixels->get('meta', collect()) as $pixel)
+    @php
+        $metaPixels = $pixels->get('meta', collect());
+        $upsellProductsData = $page->upsellProducts->map(
+            fn($p) => [
+                'id' => $p->id,
+                'name' => $p->pivot->name ?? $p->name,
+                'price' => $p->pivot->price ?? $p->price,
+            ],
+        );
+    @endphp
+
+    @if ($metaPixels->isNotEmpty())
         <script>
             ! function(f, b, e, v, n, t, s) {
                 if (f.fbq) return;
@@ -36,12 +47,26 @@
                 s.parentNode.insertBefore(t, s)
             }(window,
                 document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
-            fbq('init', '{{ $pixel->pixel_id }}');
-            fbq('track', 'PageView');
         </script>
-        <noscript><img height="1" width="1" style="display:none"
-                src="https://www.facebook.com/tr?id={{ $pixel->pixel_id }}&ev=PageView&noscript=1" /></noscript>
-    @endforeach
+        @foreach ($metaPixels as $pixel)
+            <script>
+                fbq('init', '{{ $pixel->pixel_id }}');
+            </script>
+            <noscript><img height="1" width="1" style="display:none"
+                    src="https://www.facebook.com/tr?id={{ $pixel->pixel_id }}&ev=PageView&noscript=1" /></noscript>
+        @endforeach
+        <script>
+            fbq('track', 'PageView');
+            fbq('track', 'ViewContent', {
+                content_type: 'product',
+                content_ids: {!! $upsellProductsData->pluck('id')->toJson() !!},
+                contents: {!! $upsellProductsData->map(fn($p) => ['id' => $p['id'], 'quantity' => 1, 'item_price' => $p['price']])->toJson() !!},
+                value: {{ $upsellProductsData->sum('price') }},
+                currency: 'AED',
+                content_name: 'Upsell Offers - {{ addslashes($page->title) }}'
+            });
+        </script>
+    @endif
 
     {{-- GOOGLE ADS --}}
     @foreach ($pixels->get('google_ads', collect()) as $pixel)
