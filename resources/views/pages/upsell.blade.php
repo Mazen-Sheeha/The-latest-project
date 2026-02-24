@@ -264,6 +264,9 @@
                 <input type="hidden" name="address" value="{{ $orderData['address'] ?? '' }}">
                 <input type="hidden" name="quantity" value="{{ $orderData['quantity'] ?? 1 }}">
                 <input type="hidden" name="offer_price" value="{{ $offerPrice ?? $page->product->price }}">
+                @if (!empty($orderIndexString))
+                    <input type="hidden" name="order_index_string" value="{{ $orderIndexString }}">
+                @endif
             @endif
 
             {{-- Scrollable Products List --}}

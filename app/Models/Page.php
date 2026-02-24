@@ -107,4 +107,9 @@ class Page extends Model
         return $this->belongsToMany(Pixel::class, 'page_pixel', 'page_id', 'pixel_id')
             ->withTimestamps();
     }
+
+    public function cartUsers(): HasMany
+    {
+        return $this->hasMany(CartUser::class);
+    }
 }

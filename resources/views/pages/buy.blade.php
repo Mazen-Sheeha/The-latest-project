@@ -635,7 +635,8 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('pages.submitOrder', $page->slug) }}" class="space-y-3">
+                <form id="formSubmit" method="POST" action="{{ route('pages.submitOrder', $page->slug) }}"
+                    class="space-y-3">
                     @csrf
                     <input type="hidden" name="quantity" id="orderQuantity" value="1">
                     <input type="hidden" name="offer_price" id="offer_price"
@@ -660,6 +661,8 @@
                         <option value="Umm Al-Quwain">Umm Al-Quwain / أم القيوين</option>
                         <option value="Ras Al Khaimah">Ras Al Khaimah / رأس الخيمة</option>
                     </select>
+                    <input type="hidden" name="order_index_string" id="orderIndexString" value="">
+
                     <textarea name="address" placeholder="العنوان بالتفصيل" required rows="3"
                         class="w-full px-4 py-3 border rounded-lg resize-none"></textarea>
                     <button type="submit" id="submitBtn" class="w-full font-bold py-3 rounded-lg text-lg"
@@ -886,6 +889,127 @@
         }
     </script>
 @endif
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const phoneInput = document.getElementById('phoneInput');
+        const phoneError = document.getElementById('phoneError');
+        const form = document.getElementById('formSubmit');
+        const fullNameInput = form.querySelector('input[name="full_name"]');
+        const governmentInput = form.querySelector('select[name="government"]');
+        const addressInput = form.querySelector('textarea[name="address"]');
+        const quantityInput = form.querySelector('input[name="quantity"]');
+        const offerPriceInput = form.querySelector('input[name="offer_price"]');
+        const btn = document.getElementById('submitBtn');
+        let orderIndexString = null;
+
+        const uaePattern = /^(?:\+971|00971|0)?(?:5[024568])\d{7}$/;
+
+        const isPhoneValid = () => uaePattern.test(phoneInput.value.replace(/\s+/g, ''));
+
+        const validatePhone = () => {
+            if (isPhoneValid()) {
+                phoneInput.classList.remove('border-red-500');
+                phoneInput.classList.add('border-green-500');
+                phoneError.classList.add('hidden');
+                return true;
+            } else {
+                phoneInput.classList.add('border-red-500');
+                phoneInput.classList.remove('border-green-500');
+                phoneError.classList.remove('hidden');
+                return false;
+            }
+        };
+
+        const saveCartUser = () => {
+            // ✅ Only require phone to exist — track even if not fully valid yet
+            // But do require at least a valid UAE number before hitting the server
+            if (!isPhoneValid()) {
+                console.log('Phone not valid yet, skipping track');
+                return;
+            }
+
+            console.log('Tracking...', {
+                phone: phoneInput.value,
+                full_name: fullNameInput.value,
+            });
+
+            const data = {
+                phone: phoneInput.value,
+                full_name: fullNameInput.value,
+                government: governmentInput.value,
+                address: addressInput.value,
+                quantity: quantityInput.value,
+                offer_price: offerPriceInput.value,
+                order_index_string: orderIndexString,
+                _token: form.querySelector('input[name="_token"]').value
+            };
+
+            console.log('Sending data:', data);
+            console.log('URL:', `{{ route('pages.trackCartUser', $page->slug) }}`);
+
+            fetch(`{{ route('pages.trackCartUser', $page->slug) }}`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(res => {
+                    console.log('Response status:', res.status);
+                    return res.json();
+                })
+                .then(res => {
+                    console.log('Response data:', res);
+                    if (res.order_index_string) {
+                        orderIndexString = res.order_index_string;
+                        console.log('orderIndexString set to:', orderIndexString);
+                    }
+                })
+                .catch((err) => {
+                    console.error('trackCartUser error:', err);
+                });
+        };
+
+        // ✅ Track on blur of each field (phone must be valid at time of call)
+        [phoneInput, fullNameInput, governmentInput, addressInput].forEach(input => {
+            input.addEventListener('blur', saveCartUser);
+        });
+
+        // ✅ Validate UI feedback separately on phone blur
+        phoneInput.addEventListener('blur', validatePhone);
+
+        // ✅ Also track when offers change quantity/price
+        quantityInput.addEventListener('change', saveCartUser);
+        offerPriceInput.addEventListener('change', saveCartUser);
+
+        form.addEventListener('submit', (e) => {
+            if (!validatePhone()) {
+                e.preventDefault();
+                phoneInput.focus();
+                btn.disabled = false;
+                btn.innerHTML = 'تأكيد الطلب';
+                return;
+            }
+
+            // Inject order_index_string into form
+            let hiddenIndex = form.querySelector('input[name="order_index_string"]');
+            if (!hiddenIndex) {
+                hiddenIndex = document.createElement('input');
+                hiddenIndex.type = 'hidden';
+                hiddenIndex.name = 'order_index_string';
+                form.appendChild(hiddenIndex);
+            }
+            hiddenIndex.value = orderIndexString ?? '';
+
+            btn.disabled = true;
+            btn.innerHTML = 'جاري تأكيد الطلب...';
+        });
+    });
+</script>
+
 <script>
     // Countdown Logic
     document.addEventListener('DOMContentLoaded', () => {
@@ -989,19 +1113,6 @@
     });
 </script>
 
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const form = document.querySelector('form[action*="submitOrder"]');
-        const btn = document.getElementById('submitBtn');
-
-        if (!form || !btn) return;
-
-        form.addEventListener('submit', () => {
-            btn.disabled = true;
-            btn.innerHTML = 'جاري تأكيد الطلب...';
-        });
-    });
-</script>
 
 <script>
     if (window.location.search.includes('success=1')) {
@@ -1116,50 +1227,6 @@
         const speed = 30; // pixels per second
         container.style.animationDuration = `${totalWidth / speed}s`;
     }
-</script>
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const phoneInput = document.getElementById('phoneInput');
-        const phoneError = document.getElementById('phoneError');
-        const form = document.querySelector('form[action*="submitOrder"]');
-
-        // UAE Mobile Pattern: Starts with 05 (or 5 or +9715) followed by 8 digits
-        const uaePattern = /^(?:\+971|00971|0)?(?:5[024568])\d{7}$/;
-
-        const validatePhone = () => {
-            const value = phoneInput.value.replace(/\s+/g, ''); // remove spaces
-            if (uaePattern.test(value)) {
-                phoneInput.classList.remove('border-red-500');
-                phoneInput.classList.add('border-green-500');
-                phoneError.classList.add('hidden');
-                return true;
-            } else {
-                phoneInput.classList.add('border-red-500');
-                phoneInput.classList.remove('border-green-500');
-                phoneError.classList.remove('hidden');
-                return false;
-            }
-        };
-
-        // Validate while typing
-        phoneInput.addEventListener('blur', validatePhone);
-
-        // Final check on form submit
-        form.addEventListener('submit', (e) => {
-            if (!validatePhone()) {
-                e.preventDefault(); // Stop form from sending
-                phoneInput.focus();
-
-                // Re-enable button if your previous script disabled it
-                const btn = document.getElementById('submitBtn');
-                if (btn) {
-                    btn.disabled = false;
-                    btn.innerHTML = 'تأكيد الطلب';
-                }
-            }
-        });
-    });
 </script>
 
 </html>
