@@ -16,8 +16,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&display=swap" rel="stylesheet">
 
     {{-- Tracking Pixels --}}
-    @if ($page->meta_pixel)
-        <!-- Meta Pixel Blueprint -->
+    @php
+        $pixels = $page->pixels()->where('is_active', true)->get()->groupBy('type');
+    @endphp
+
+    {{-- META --}}
+    @foreach ($pixels->get('meta', collect()) as $pixel)
         <script>
             ! function(f, b, e, v, n, t, s) {
                 if (f.fbq) return;
@@ -35,19 +39,24 @@
                 t.src = v;
                 s = b.getElementsByTagName(e)[0];
                 s.parentNode.insertBefore(t, s)
-            }(window, document, 'script',
-                'https://connect.facebook.net/en_US/fbevents.js');
-            fbq('init', '{{ $page->meta_pixel }}');
-            fbq('track', 'PageView');
+            }(window,
+                document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', '{{ $pixel->pixel_id }}');
+            fbq('track', 'ViewContent', {
+                content_name: '{{ $page->title }}',
+                content_ids: ['{{ $product->id }}'],
+                content_type: 'product',
+                value: {{ $page->sale_price ?? $page->original_price }},
+                currency: 'AED'
+            });
         </script>
         <noscript><img height="1" width="1" style="display:none"
-                src="https://www.facebook.com/tr?id={{ $page->meta_pixel }}&ev=PageView&noscript=1" /></noscript>
-        <!-- End Meta Pixel Blueprint -->
-    @endif
+                src="https://www.facebook.com/tr?id={{ $pixel->pixel_id }}&ev=PageView&noscript=1" /></noscript>
+    @endforeach
 
-    @if ($page->google_ads_pixel)
-        <!-- Google Ads Pixel Blueprint -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $page->google_ads_pixel }}"></script>
+    {{-- GOOGLE ADS --}}
+    @foreach ($pixels->get('google_ads', collect()) as $pixel)
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $pixel->pixel_id }}"></script>
         <script>
             window.dataLayer = window.dataLayer || [];
 
@@ -55,14 +64,13 @@
                 dataLayer.push(arguments);
             }
             gtag('js', new Date());
-            gtag('config', '{{ $page->google_ads_pixel }}');
+            gtag('config', '{{ $pixel->pixel_id }}');
         </script>
-        <!-- End Google Ads Pixel Blueprint -->
-    @endif
+    @endforeach
 
-    @if ($page->google_analytics)
-        <!-- Google Analytics Blueprint -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $page->google_analytics }}"></script>
+    {{-- GOOGLE ANALYTICS --}}
+    @foreach ($pixels->get('google_analytics', collect()) as $pixel)
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $pixel->pixel_id }}"></script>
         <script>
             window.dataLayer = window.dataLayer || [];
 
@@ -70,25 +78,103 @@
                 dataLayer.push(arguments);
             }
             gtag('js', new Date());
-            gtag('config', '{{ $page->google_analytics }}');
+            gtag('config', '{{ $pixel->pixel_id }}');
+            gtag('event', 'view_item', {
+                items: [{
+                    item_id: '{{ $product->id }}',
+                    item_name: '{{ $product->name }}',
+                    price: {{ $page->sale_price ?? $page->original_price }}
+                }]
+            });
         </script>
-        <!-- End Google Analytics Blueprint -->
-    @endif
-    @if ($page->tiktok_pixel)
-        <!-- Tiktok Pixel Code -->
-        {!! $page->tiktok_pixel !!}
-        <!-- End TikTok Pixel Code -->
-    @endif
-    @if ($page->snapchat_pixel)
-        <!-- SnapChat Pixel Code -->
-        {!! $page->snapchat_pixel !!}
-        <!-- End SnapChat Pixel Code -->
-    @endif
-    @if ($page->twitter_pixel)
-        <!-- Twitter Pixel Code -->
-        {!! $page->twitter_pixel !!}
-        <!-- End Twitter Pixel Code -->
-    @endif
+    @endforeach
+
+    {{-- TIKTOK --}}
+    @foreach ($pixels->get('tiktok', collect()) as $pixel)
+        @if ($pixel->code)
+            {!! $pixel->code !!}
+        @else
+            <script>
+                ! function(w, d, t) {
+                    w.TiktokAnalyticsObject = t;
+                    var ttq = w[t] = w[t] || [];
+                    ttq.methods = ["page", "track", "identify", "instances", "debug", "on", "off", "once", "ready", "alias",
+                        "group", "enableCookie", "disableCookie"
+                    ], ttq.setAndDefer = function(t, e) {
+                        t[e] = function() {
+                            t.push([e].concat(Array.prototype.slice.call(arguments, 0)))
+                        }
+                    };
+                    for (var i = 0; i < ttq.methods.length; i++) ttq.setAndDefer(ttq, ttq.methods[i]);
+                    ttq.instance = function(t) {
+                        for (var e = ttq._i[t] || [], n = 0; n < ttq.methods.length; n++) ttq.setAndDefer(e, ttq.methods[n]);
+                        return e
+                    }, ttq.load = function(e, n) {
+                        var i = "https://analytics.tiktok.com/i18n/pixel/events.js";
+                        ttq._i = ttq._i || {}, ttq._i[e] = [], ttq._i[e]._u = i, ttq._t = ttq._t || {}, ttq._t[e] = +new Date,
+                            ttq._o = ttq._o || {}, ttq._o[e] = n || {};
+                        n = document.createElement("script");
+                        n.type = "text/javascript", n.async = !0, n.src = i + "?sdkid=" + e + "&lib=" + t;
+                        e = document.getElementsByTagName("script")[0];
+                        e.parentNode.insertBefore(n, e)
+                    };
+                    ttq.load('{{ $pixel->pixel_id }}');
+                    ttq.page();
+                }(window, document, 'ttq');
+            </script>
+        @endif
+    @endforeach
+
+    {{-- SNAPCHAT --}}
+    @foreach ($pixels->get('snapchat', collect()) as $pixel)
+        @if ($pixel->code)
+            {!! $pixel->code !!}
+        @else
+            <script>
+                (function(e, t, n) {
+                    if (e.snaptr) return;
+                    var a = e.snaptr = function() {
+                        a.handleRequest ? a.handleRequest.apply(a, arguments) : a.queue.push(arguments)
+                    };
+                    a.queue = [];
+                    var s = 'script';
+                    r = t.createElement(s);
+                    r.async = !0;
+                    r.src = n;
+                    var u = t.getElementsByTagName(s)[0];
+                    u.parentNode.insertBefore(r, u);
+                })
+                (window, document, 'https://sc-static.net/scevent.min.js');
+                snaptr('init', '{{ $pixel->pixel_id }}');
+                snaptr('track', 'PAGE_VIEW');
+            </script>
+        @endif
+    @endforeach
+
+    {{-- TWITTER --}}
+    @foreach ($pixels->get('twitter', collect()) as $pixel)
+        @if ($pixel->code)
+            {!! $pixel->code !!}
+        @else
+            <script>
+                ! function(e, t, n, s, u, a) {
+                    e.twq || (s = e.twq = function() {
+                            s.exe ? s.exe.apply(s, arguments) : s.queue.push(arguments);
+                        }, s.version = '1.1', s.queue = [], u = t.createElement(n), u.async = !0, u.src =
+                        'https://static.ads-twitter.com/uwt.js', a = t.getElementsByTagName(n)[0], a.parentNode.insertBefore(u,
+                            a))
+                }(window, document, 'script');
+                twq('config', '{{ $pixel->pixel_id }}');
+            </script>
+        @endif
+    @endforeach
+
+    {{-- OTHER / CUSTOM CODE --}}
+    @foreach ($pixels->get('other', collect()) as $pixel)
+        @if ($pixel->code)
+            {!! $pixel->code !!}
+        @endif
+    @endforeach
 
     @php
         function hexToRgb($hex, $returnArray = false)
@@ -121,10 +207,13 @@
         $contrastColor = isLightColor($page->theme_color) ? '#000000' : '#ffffff';
     @endphp
 
-
     <style>
         * {
             font-family: 'Almarai', sans-serif;
+        }
+
+        html {
+            scroll-behavior: smooth;
         }
 
         .top-text {
@@ -336,45 +425,47 @@
             </a>
         @endif
 
-        <div class="top-moving-banner h-12 p-2">
-            <div class="moving-texts" id="movingTexts">
-            </div>
-        </div>
-
-
         @php
-            $features = $page->features ?? [];
-
-            $map = [
-                'cod' => 'الدفع عند الاستلام',
-                'free_shipping' => 'شحن مجاني',
-                'exchange7' => 'استبدال خلال 7 أيام',
-                'support247' => 'خدمة 24/7',
-                'warranty' => 'ضمان لمدة سنة',
-                'same_day' => 'توصيل نفس اليوم',
-            ];
-
-            $texts = [];
-
-            if (!empty($features)) {
-                foreach ($features as $f) {
-                    if (isset($map[$f])) {
-                        $texts[] = $map[$f];
-                    }
-                }
+            $movingTexts = $page->moving_banner_text ?? [];
+            if (!is_array($movingTexts)) {
+                $movingTexts = [$movingTexts];
             }
-
-            if (empty($texts)) {
-                $texts = ['الدفع عند الاستلام', 'عروضنا لا تتوقف'];
-            }
+            $movingTexts = array_filter($movingTexts);
         @endphp
 
-        <div class="w-full p-4 bg-[{{ $page->theme_color }}] text-center">
-            <p id="topFeatureText" class="top-text">{{ $texts[0] }}</p>
-        </div>
-
+        @if (!empty($movingTexts))
+            <div class="top-moving-banner h-12 p-2">
+                <div class="moving-texts" id="movingTexts">
+                    @foreach ($movingTexts as $text)
+                        <span>{{ $text }}</span>
+                    @endforeach
+                </div>
+            </div>
+        @endif
 
         <p id="buy-text" class="buy-popup"> </p>
+
+        @if (!empty($page->images) && count($page->images))
+            @php $firstImage = $page->images[0]; @endphp
+
+            <button type="button" onclick="openImageModal('{{ asset($firstImage) }}')" class="focus:outline-none">
+                <img src="{{ asset($firstImage) }}" class="w-full object-cover rounded-lg shadow">
+            </button>
+        @endif
+
+        @php
+            $topFeatureTexts = $page->top_feature_text ?? [];
+            if (!is_array($topFeatureTexts)) {
+                $topFeatureTexts = [$topFeatureTexts];
+            }
+            $topFeatureTexts = array_filter($topFeatureTexts);
+        @endphp
+
+        @if (!empty($topFeatureTexts))
+            <div class="w-full p-4 bg-[{{ $page->theme_color }}] text-center overflow-hidden">
+                <p id="topFeatureText" class="top-text transition-all duration-500"></p>
+            </div>
+        @endif
 
         {{-- HERO --}}
         <section class="bg-white px-4 pt-6 pb-4 border-b">
@@ -486,6 +577,101 @@
                 </p>
             </div>
         </section>
+
+        {{-- ORDER MODAL --}}
+        <div class="bg-white w-full max-w-sm sm:max-w-md md:max-w-lg relative my-8" id="orderForm">
+            <div class="p-4 sm:p-6 space-y-5">
+                <h2 class="text-2xl font-bold text-center">اطلب الأن</h2>
+
+                @php
+                    function darkenColor($hex, $percent = 25)
+                    {
+                        $hex = str_replace('#', '', $hex);
+
+                        if (strlen($hex) == 3) {
+                            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+                        }
+
+                        $r = hexdec(substr($hex, 0, 2));
+                        $g = hexdec(substr($hex, 2, 2));
+                        $b = hexdec(substr($hex, 4, 2));
+
+                        $r = max(0, min(255, $r - ($r * $percent) / 100));
+                        $g = max(0, min(255, $g - ($g * $percent) / 100));
+                        $b = max(0, min(255, $b - ($b * $percent) / 100));
+
+                        return sprintf('#%02x%02x%02x', $r, $g, $b);
+                    }
+
+                    $offerColor = isLightColor($page->theme_color)
+                        ? darkenColor($page->theme_color, 35) // darker if light
+                        : $page->theme_color;
+                @endphp
+                @if (!empty($page->offers))
+                    <div class="space-y-3" id="offersContainer">
+                        @foreach ($page->offers as $offer)
+                            <div class="offer-item flex items-center gap-3 border rounded-lg p-3 cursor-pointer hover:border-[{{ $offerColor }}]"
+                                data-quantity="{{ $offer['quantity'] }}" data-price="{{ $offer['price'] }}">
+
+                                <div class="flex justify-between w-full">
+
+                                    <div class="font-bold">
+                                        اشتري
+                                        <span class="text-[{{ $offerColor }}]">{{ $offer['quantity'] }}</span>
+                                        ب
+                                        <span class="text-[{{ $offerColor }}]">{{ $offer['price'] }} د.إ</span>
+                                    </div>
+
+                                    @if ($offer['label'])
+                                        <div
+                                            class="bg-[{{ $offerColor }}] text-[{{ isLightColor($offerColor) ? '#000' : '#fff' }}] px-2 py-1 text-xs rounded-full">
+                                            {{ $offer['label'] }}
+                                        </div>
+                                    @endif
+
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
+                <form id="formSubmit" method="POST" action="{{ route('pages.submitOrder', $page->slug) }}"
+                    class="space-y-3">
+                    @csrf
+                    <input type="hidden" name="quantity" id="orderQuantity" value="1">
+                    <input type="hidden" name="offer_price" id="offer_price"
+                        value="{{ $page->sale_price ?? $page->original_price }}" />
+                    <input name="full_name" placeholder="الاسم بالكامل" required
+                        class="w-full px-4 py-3 border rounded-lg">
+                    <div class="space-y-1" dir="rtl">
+                        <input name="phone" id="phoneInput" dir="rtl"
+                            placeholder="رقم الهاتف (مثال: 0501234567)" required
+                            class="w-full px-4 py-3 border rounded-lg transition-colors duration-300 outline-none"
+                            type="tel">
+                        <p id="phoneError" class="text-red-500 text-xs hidden">يرجى إدخال رقم هاتف إماراتي صحيح
+                            (05xxxxxxxx)</p>
+                    </div>
+                    <select name="government" required class="w-full px-4 py-3 border rounded-lg bg-white">
+                        <option value="Abu Dhabi" selected>Abu Dhabi / أبو ظبي</option>
+                        <option value="Dubai">Dubai / دبي</option>
+                        <option value="Sharjah">Sharjah / الشارقة</option>
+                        <option value="Ajman">Ajman / عجمان</option>
+                        <option value="Al Ain">Al Ain / العين</option>
+                        <option value="Fujairah">Fujairah / الفجيرة</option>
+                        <option value="Umm Al-Quwain">Umm Al-Quwain / أم القيوين</option>
+                        <option value="Ras Al Khaimah">Ras Al Khaimah / رأس الخيمة</option>
+                    </select>
+                    <input type="hidden" name="order_index_string" id="orderIndexString" value="">
+
+                    <textarea name="address" placeholder="العنوان بالتفصيل" required rows="3"
+                        class="w-full px-4 py-3 border rounded-lg resize-none"></textarea>
+                    <button type="submit" id="submitBtn" class="w-full font-bold py-3 rounded-lg text-lg"
+                        style="background-color: {{ $page->theme_color }}; color: {{ $contrastColor }};">
+                        تأكيد الطلب
+                    </button>
+                </form>
+            </div>
+        </div>
 
         {{-- ALL IMAGES --}}
         <section class="bg-gray-50 px-4 py-8">
@@ -622,110 +808,12 @@
         {{-- STICKY ORDER BUTTON --}}
         <div id="sticky-order"
             class="fixed bottom-0 inset-x-0 z-40 bg-white border-t shadow-lg p-3 transition-transform duration-300 ease-in-out">
-            <button onclick="openOrderModal()" class="w-full max-w-md mx-auto block font-bold py-4 rounded-xl text-xl"
+            <button class="w-full max-w-md mx-auto block font-bold py-4 rounded-xl text-xl"
                 style="background-color: {{ $page->theme_color }}; color: {{ $contrastColor }};">
-                اطلب الأن
+                <a href="#orderForm">
+                    اطلب الأن
+                </a>
             </button>
-        </div>
-
-
-        {{-- ORDER MODAL --}}
-        <div id="orderModal"
-            class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 p-4 overflow-y-auto"
-            onclick="closeOrderModal()">
-            <div class="bg-white w-full max-w-sm sm:max-w-md md:max-w-lg rounded-xl shadow-xl relative my-8"
-                onclick="event.stopPropagation()">
-                <button onclick="closeOrderModal()"
-                    class="absolute right-4 top-4 text-gray-400 text-2xl hover:text-gray-600">&times;</button>
-                <div class="p-4 sm:p-6 space-y-5">
-                    <h2 class="text-2xl font-bold text-center">اطلب الأن</h2>
-
-                    @php
-                        function darkenColor($hex, $percent = 25)
-                        {
-                            $hex = str_replace('#', '', $hex);
-
-                            if (strlen($hex) == 3) {
-                                $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
-                            }
-
-                            $r = hexdec(substr($hex, 0, 2));
-                            $g = hexdec(substr($hex, 2, 2));
-                            $b = hexdec(substr($hex, 4, 2));
-
-                            $r = max(0, min(255, $r - ($r * $percent) / 100));
-                            $g = max(0, min(255, $g - ($g * $percent) / 100));
-                            $b = max(0, min(255, $b - ($b * $percent) / 100));
-
-                            return sprintf('#%02x%02x%02x', $r, $g, $b);
-                        }
-
-                        $offerColor = isLightColor($page->theme_color)
-                            ? darkenColor($page->theme_color, 35) // darker if light
-                            : $page->theme_color;
-                    @endphp
-                    @if (!empty($page->offers))
-                        <div class="space-y-3" id="offersContainer">
-                            @foreach ($page->offers as $offer)
-                                <div class="offer-item flex items-center gap-3 border rounded-lg p-3 cursor-pointer hover:border-[{{ $offerColor }}]"
-                                    data-quantity="{{ $offer['quantity'] }}" data-price="{{ $offer['price'] }}">
-
-                                    <div class="flex justify-between w-full">
-
-                                        <div class="font-bold">
-                                            اشتري
-                                            <span class="text-[{{ $offerColor }}]">{{ $offer['quantity'] }}</span>
-                                            ب
-                                            <span class="text-[{{ $offerColor }}]">{{ $offer['price'] }} د.إ</span>
-                                        </div>
-
-                                        @if ($offer['label'])
-                                            <div
-                                                class="bg-[{{ $offerColor }}] text-[{{ isLightColor($offerColor) ? '#000' : '#fff' }}] px-2 py-1 text-xs rounded-full">
-                                                {{ $offer['label'] }}
-                                            </div>
-                                        @endif
-
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @endif
-
-                    <form method="POST" action="{{ route('pages.submitOrder', $page->slug) }}" class="space-y-3">
-                        @csrf
-                        <input type="hidden" name="quantity" id="orderQuantity" value="1">
-                        <input type="hidden" name="offer_price" id="offer_price"
-                            value="{{ $page->sale_price ?? $page->original_price }}" />
-                        <input name="full_name" placeholder="الاسم بالكامل" required
-                            class="w-full px-4 py-3 border rounded-lg">
-                        <div class="space-y-1" dir="rtl">
-                            <input name="phone" id="phoneInput" dir="rtl"
-                                placeholder="رقم الهاتف (مثال: 0501234567)" required
-                                class="w-full px-4 py-3 border rounded-lg transition-colors duration-300 outline-none"
-                                type="tel">
-                            <p id="phoneError" class="text-red-500 text-xs hidden">يرجى إدخال رقم هاتف إماراتي صحيح
-                                (05xxxxxxxx)</p>
-                        </div>
-                        <select name="government" required class="w-full px-4 py-3 border rounded-lg bg-white">
-                            <option value="Abu Dhabi" selected>Abu Dhabi / أبو ظبي</option>
-                            <option value="Dubai">Dubai / دبي</option>
-                            <option value="Sharjah">Sharjah / الشارقة</option>
-                            <option value="Ajman">Ajman / عجمان</option>
-                            <option value="Al Ain">Al Ain / العين</option>
-                            <option value="Fujairah">Fujairah / الفجيرة</option>
-                            <option value="Umm Al-Quwain">Umm Al-Quwain / أم القيوين</option>
-                            <option value="Ras Al Khaimah">Ras Al Khaimah / رأس الخيمة</option>
-                        </select>
-                        <textarea name="address" placeholder="العنوان بالتفصيل" required rows="3"
-                            class="w-full px-4 py-3 border rounded-lg resize-none"></textarea>
-                        <button type="submit" id="submitBtn" class="w-full font-bold py-3 rounded-lg text-lg"
-                            style="background-color: {{ $page->theme_color }}; color: {{ $contrastColor }};">
-                            تأكيد الطلب
-                        </button>
-                    </form>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -747,6 +835,180 @@
     @endif
 
 </body>
+
+@if (request()->query('success'))
+    <script>
+        const purchaseValue = {{ request()->query('sellPrice') }};
+        const currency = 'AED';
+        const transactionId = {{ request()->query('order_id') }};
+        const productName = @json($product->name);
+
+        // Meta Purchase
+        if (typeof fbq !== 'undefined') {
+            fbq('track', 'Purchase', {
+                value: purchaseValue,
+                currency: currency
+            });
+        }
+
+        // Google Purchase
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'purchase', {
+                transaction_id: transactionId,
+                value: purchaseValue,
+                currency: currency,
+                items: [{
+                    item_name: productName
+                }]
+            });
+        }
+
+        // TikTok Purchase
+        if (typeof ttq !== 'undefined') {
+            ttq.track('CompletePayment', {
+                content_name: productName,
+                value: purchaseValue,
+                currency: currency
+            });
+        }
+
+        // Snapchat Purchase
+        if (typeof snaptr !== 'undefined') {
+            snaptr('track', 'PURCHASE', {
+                price: purchaseValue,
+                currency: currency
+            });
+        }
+
+        // Twitter (X) Purchase
+        if (typeof twq !== 'undefined') {
+            twq('event', 'tw-purchase', {
+                value: purchaseValue,
+                currency: currency
+            });
+        }
+    </script>
+@endif
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const phoneInput = document.getElementById('phoneInput');
+        const phoneError = document.getElementById('phoneError');
+        const form = document.getElementById('formSubmit');
+        const fullNameInput = form.querySelector('input[name="full_name"]');
+        const governmentInput = form.querySelector('select[name="government"]');
+        const addressInput = form.querySelector('textarea[name="address"]');
+        const quantityInput = form.querySelector('input[name="quantity"]');
+        const offerPriceInput = form.querySelector('input[name="offer_price"]');
+        const btn = document.getElementById('submitBtn');
+        let orderIndexString = null;
+
+        const uaePattern = /^(?:\+971|00971|0)?(?:5[024568])\d{7}$/;
+
+        const isPhoneValid = () => uaePattern.test(phoneInput.value.replace(/\s+/g, ''));
+
+        const validatePhone = () => {
+            if (isPhoneValid()) {
+                phoneInput.classList.remove('border-red-500');
+                phoneInput.classList.add('border-green-500');
+                phoneError.classList.add('hidden');
+                return true;
+            } else {
+                phoneInput.classList.add('border-red-500');
+                phoneInput.classList.remove('border-green-500');
+                phoneError.classList.remove('hidden');
+                return false;
+            }
+        };
+
+        const saveCartUser = () => {
+            // ✅ Only require phone to exist — track even if not fully valid yet
+            // But do require at least a valid UAE number before hitting the server
+            if (!isPhoneValid()) {
+                console.log('Phone not valid yet, skipping track');
+                return;
+            }
+
+            console.log('Tracking...', {
+                phone: phoneInput.value,
+                full_name: fullNameInput.value,
+            });
+
+            const data = {
+                phone: phoneInput.value,
+                full_name: fullNameInput.value,
+                government: governmentInput.value,
+                address: addressInput.value,
+                quantity: quantityInput.value,
+                offer_price: offerPriceInput.value,
+                order_index_string: orderIndexString,
+                _token: form.querySelector('input[name="_token"]').value
+            };
+
+            console.log('Sending data:', data);
+            console.log('URL:', `{{ route('pages.trackCartUser', $page->slug) }}`);
+
+            fetch(`{{ route('pages.trackCartUser', $page->slug) }}`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(res => {
+                    console.log('Response status:', res.status);
+                    return res.json();
+                })
+                .then(res => {
+                    console.log('Response data:', res);
+                    if (res.order_index_string) {
+                        orderIndexString = res.order_index_string;
+                        console.log('orderIndexString set to:', orderIndexString);
+                    }
+                })
+                .catch((err) => {
+                    console.error('trackCartUser error:', err);
+                });
+        };
+
+        // ✅ Track on blur of each field (phone must be valid at time of call)
+        [phoneInput, fullNameInput, governmentInput, addressInput].forEach(input => {
+            input.addEventListener('blur', saveCartUser);
+        });
+
+        // ✅ Validate UI feedback separately on phone blur
+        phoneInput.addEventListener('blur', validatePhone);
+
+        // ✅ Also track when offers change quantity/price
+        quantityInput.addEventListener('change', saveCartUser);
+        offerPriceInput.addEventListener('change', saveCartUser);
+
+        form.addEventListener('submit', (e) => {
+            if (!validatePhone()) {
+                e.preventDefault();
+                phoneInput.focus();
+                btn.disabled = false;
+                btn.innerHTML = 'تأكيد الطلب';
+                return;
+            }
+
+            // Inject order_index_string into form
+            let hiddenIndex = form.querySelector('input[name="order_index_string"]');
+            if (!hiddenIndex) {
+                hiddenIndex = document.createElement('input');
+                hiddenIndex.type = 'hidden';
+                hiddenIndex.name = 'order_index_string';
+                form.appendChild(hiddenIndex);
+            }
+            hiddenIndex.value = orderIndexString ?? '';
+
+            btn.disabled = true;
+            btn.innerHTML = 'جاري تأكيد الطلب...';
+        });
+    });
+</script>
 
 <script>
     // Countdown Logic
@@ -776,28 +1038,6 @@
         tick();
         setInterval(tick, 1000);
     });
-</script>
-
-<script>
-    let modalOpen = false;
-
-    function openOrderModal() {
-        const modal = document.getElementById('orderModal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        modalOpen = true;
-        const sticky = document.getElementById('sticky-order');
-        if (sticky) sticky.classList.add('hidden');
-    }
-
-    function closeOrderModal() {
-        const modal = document.getElementById('orderModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        modalOpen = false;
-        const sticky = document.getElementById('sticky-order');
-        if (sticky) sticky.classList.remove('hidden');
-    }
 </script>
 
 <script>
@@ -873,19 +1113,6 @@
     });
 </script>
 
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const form = document.querySelector('form[action*="submitOrder"]');
-        const btn = document.getElementById('submitBtn');
-
-        if (!form || !btn) return;
-
-        form.addEventListener('submit', () => {
-            btn.disabled = true;
-            btn.innerHTML = 'جاري تأكيد الطلب...';
-        });
-    });
-</script>
 
 <script>
     if (window.location.search.includes('success=1')) {
@@ -947,95 +1174,59 @@
 </script>
 
 <script>
-    const texts = @json($texts);
-    let i = 0;
     const el = document.getElementById("topFeatureText");
 
-    if (texts.length > 1) {
-        setInterval(() => {
+    if (el) {
+        const texts = @json($topFeatureTexts ?? []);
 
-            // fade out left
-            el.classList.add("fade-out");
+        if (Array.isArray(texts) && texts.length > 0) {
 
-            setTimeout(() => {
-                // switch text
-                i = (i + 1) % texts.length;
-                el.innerText = texts[i];
+            let i = 0;
+            el.innerText = texts[0]; // initial text
 
-                // start from right
-                el.classList.remove("fade-out");
-                el.classList.add("prepare-in");
+            if (texts.length > 1) {
 
-                // small delay then fade in
-                setTimeout(() => {
-                    el.classList.remove("prepare-in");
-                    el.classList.add("fade-in");
+                setInterval(() => {
+
+                    // fade out
+                    el.classList.remove("fade-in");
+                    el.classList.add("fade-out");
 
                     setTimeout(() => {
-                        el.classList.remove("fade-in");
-                    }, 450);
 
-                }, 50);
+                        // change text
+                        i = (i + 1) % texts.length;
+                        el.innerText = texts[i];
 
-            }, 450);
+                        // reset animation
+                        el.classList.remove("fade-out");
+                        el.classList.add("fade-in");
 
-        }, 2500);
+                        setTimeout(() => {
+                            el.classList.remove("fade-in");
+                        }, 500);
+
+                    }, 500);
+
+                }, 3000);
+            }
+        }
     }
 </script>
 
 <script>
-    const statements = @json($texts);
+    const customMovingTexts = @json($page->moving_banner_text ?? []);
+    const movingTextsArray = Array.isArray(customMovingTexts) ? customMovingTexts : [customMovingTexts];
+    const filteredMovingTexts = movingTextsArray.filter(text => text);
 
-    const container = document.getElementById('movingTexts');
-    container.innerHTML = statements.map(text => `<span>${text}</span>`).join('              ');
-    // calculate duration based on text width
-    const totalWidth = container.scrollWidth;
-    const speed = 30; // pixels per second
-    container.style.animationDuration = `${totalWidth / speed}s`;
-</script>
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const phoneInput = document.getElementById('phoneInput');
-        const phoneError = document.getElementById('phoneError');
-        const form = document.querySelector('form[action*="submitOrder"]');
-
-        // UAE Mobile Pattern: Starts with 05 (or 5 or +9715) followed by 8 digits
-        const uaePattern = /^(?:\+971|00971|0)?(?:5[024568])\d{7}$/;
-
-        const validatePhone = () => {
-            const value = phoneInput.value.replace(/\s+/g, ''); // remove spaces
-            if (uaePattern.test(value)) {
-                phoneInput.classList.remove('border-red-500');
-                phoneInput.classList.add('border-green-500');
-                phoneError.classList.add('hidden');
-                return true;
-            } else {
-                phoneInput.classList.add('border-red-500');
-                phoneInput.classList.remove('border-green-500');
-                phoneError.classList.remove('hidden');
-                return false;
-            }
-        };
-
-        // Validate while typing
-        phoneInput.addEventListener('blur', validatePhone);
-
-        // Final check on form submit
-        form.addEventListener('submit', (e) => {
-            if (!validatePhone()) {
-                e.preventDefault(); // Stop form from sending
-                phoneInput.focus();
-
-                // Re-enable button if your previous script disabled it
-                const btn = document.getElementById('submitBtn');
-                if (btn) {
-                    btn.disabled = false;
-                    btn.innerHTML = 'تأكيد الطلب';
-                }
-            }
-        });
-    });
+    if (filteredMovingTexts.length > 0) {
+        const container = document.getElementById('movingTexts');
+        container.innerHTML = filteredMovingTexts.map(text => `<span>${text}</span>`).join('');
+        // calculate duration based on text width
+        const totalWidth = container.scrollWidth;
+        const speed = 30; // pixels per second
+        container.style.animationDuration = `${totalWidth / speed}s`;
+    }
 </script>
 
 </html>

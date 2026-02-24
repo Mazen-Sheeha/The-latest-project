@@ -11,8 +11,23 @@
 
 
     {{-- Tracking Pixels --}}
-    @if ($page->meta_pixel)
-        <!-- Meta Pixel Blueprint -->
+    @php
+        $pixels = $page->pixels->where('is_active', true)->groupBy('type');
+    @endphp
+
+    {{-- META --}}
+    @php
+        $metaPixels = $pixels->get('meta', collect());
+        $upsellProductsData = $page->upsellProducts->map(
+            fn($p) => [
+                'id' => $p->id,
+                'name' => $p->pivot->name ?? $p->name,
+                'price' => $p->pivot->price ?? $p->price,
+            ],
+        );
+    @endphp
+
+    @if ($metaPixels->isNotEmpty())
         <script>
             ! function(f, b, e, v, n, t, s) {
                 if (f.fbq) return;
@@ -30,19 +45,32 @@
                 t.src = v;
                 s = b.getElementsByTagName(e)[0];
                 s.parentNode.insertBefore(t, s)
-            }(window, document, 'script',
-                'https://connect.facebook.net/en_US/fbevents.js');
-            fbq('init', '{{ $page->meta_pixel }}');
+            }(window,
+                document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+        </script>
+        @foreach ($metaPixels as $pixel)
+            <script>
+                fbq('init', '{{ $pixel->pixel_id }}');
+            </script>
+            <noscript><img height="1" width="1" style="display:none"
+                    src="https://www.facebook.com/tr?id={{ $pixel->pixel_id }}&ev=PageView&noscript=1" /></noscript>
+        @endforeach
+        <script>
             fbq('track', 'PageView');
+            fbq('track', 'ViewContent', {
+                content_type: 'product',
+                content_ids: {!! $upsellProductsData->pluck('id')->toJson() !!},
+                contents: {!! $upsellProductsData->map(fn($p) => ['id' => $p['id'], 'quantity' => 1, 'item_price' => $p['price']])->toJson() !!},
+                value: {{ $upsellProductsData->sum('price') }},
+                currency: 'AED',
+                content_name: 'Upsell Offers - {{ addslashes($page->title) }}'
+            });
         </script>
-        <noscript><img height="1" width="1" style="display:none"
-                src="https://www.facebook.com/tr?id={{ $page->meta_pixel }}&ev=PageView&noscript=1" /></noscript>
-        <!-- End Meta Pixel Blueprint -->
     @endif
 
-    @if ($page->google_ads_pixel)
-        <!-- Google Ads Pixel Blueprint -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $page->google_ads_pixel }}"></script>
+    {{-- GOOGLE ADS --}}
+    @foreach ($pixels->get('google_ads', collect()) as $pixel)
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $pixel->pixel_id }}"></script>
         <script>
             window.dataLayer = window.dataLayer || [];
 
@@ -50,14 +78,13 @@
                 dataLayer.push(arguments);
             }
             gtag('js', new Date());
-            gtag('config', '{{ $page->google_ads_pixel }}');
+            gtag('config', '{{ $pixel->pixel_id }}');
         </script>
-        <!-- End Google Ads Pixel Blueprint -->
-    @endif
+    @endforeach
 
-    @if ($page->google_analytics)
-        <!-- Google Analytics Blueprint -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $page->google_analytics }}"></script>
+    {{-- GOOGLE ANALYTICS --}}
+    @foreach ($pixels->get('google_analytics', collect()) as $pixel)
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $pixel->pixel_id }}"></script>
         <script>
             window.dataLayer = window.dataLayer || [];
 
@@ -65,25 +92,96 @@
                 dataLayer.push(arguments);
             }
             gtag('js', new Date());
-            gtag('config', '{{ $page->google_analytics }}');
+            gtag('config', '{{ $pixel->pixel_id }}');
         </script>
-        <!-- End Google Analytics Blueprint -->
-    @endif
-    @if ($page->tiktok_pixel)
-        <!-- Tiktok Pixel Code -->
-        {!! $page->tiktok_pixel !!}
-        <!-- End TikTok Pixel Code -->
-    @endif
-    @if ($page->snapchat_pixel)
-        <!-- SnapChat Pixel Code -->
-        {!! $page->snapchat_pixel !!}
-        <!-- End SnapChat Pixel Code -->
-    @endif
-    @if ($page->twitter_pixel)
-        <!-- Twitter Pixel Code -->
-        {!! $page->twitter_pixel !!}
-        <!-- End Twitter Pixel Code -->
-    @endif
+    @endforeach
+
+    {{-- TIKTOK --}}
+    @foreach ($pixels->get('tiktok', collect()) as $pixel)
+        @if ($pixel->code)
+            {!! $pixel->code !!}
+        @else
+            <script>
+                ! function(w, d, t) {
+                    w.TiktokAnalyticsObject = t;
+                    var ttq = w[t] = w[t] || [];
+                    ttq.methods = ["page", "track", "identify", "instances", "debug", "on", "off", "once", "ready", "alias",
+                        "group", "enableCookie", "disableCookie"
+                    ], ttq.setAndDefer = function(t, e) {
+                        t[e] = function() {
+                            t.push([e].concat(Array.prototype.slice.call(arguments, 0)))
+                        }
+                    };
+                    for (var i = 0; i < ttq.methods.length; i++) ttq.setAndDefer(ttq, ttq.methods[i]);
+                    ttq.instance = function(t) {
+                        for (var e = ttq._i[t] || [], n = 0; n < ttq.methods.length; n++) ttq.setAndDefer(e, ttq.methods[n]);
+                        return e
+                    }, ttq.load = function(e, n) {
+                        var i = "https://analytics.tiktok.com/i18n/pixel/events.js";
+                        ttq._i = ttq._i || {}, ttq._i[e] = [], ttq._i[e]._u = i, ttq._t = ttq._t || {}, ttq._t[e] = +new Date,
+                            ttq._o = ttq._o || {}, ttq._o[e] = n || {};
+                        n = document.createElement("script");
+                        n.type = "text/javascript", n.async = !0, n.src = i + "?sdkid=" + e + "&lib=" + t;
+                        e = document.getElementsByTagName("script")[0];
+                        e.parentNode.insertBefore(n, e)
+                    };
+                    ttq.load('{{ $pixel->pixel_id }}');
+                    ttq.page();
+                }(window, document, 'ttq');
+            </script>
+        @endif
+    @endforeach
+
+    {{-- SNAPCHAT --}}
+    @foreach ($pixels->get('snapchat', collect()) as $pixel)
+        @if ($pixel->code)
+            {!! $pixel->code !!}
+        @else
+            <script>
+                (function(e, t, n) {
+                    if (e.snaptr) return;
+                    var a = e.snaptr = function() {
+                        a.handleRequest ? a.handleRequest.apply(a, arguments) : a.queue.push(arguments)
+                    };
+                    a.queue = [];
+                    var s = 'script';
+                    r = t.createElement(s);
+                    r.async = !0;
+                    r.src = n;
+                    var u = t.getElementsByTagName(s)[0];
+                    u.parentNode.insertBefore(r, u);
+                })
+                (window, document, 'https://sc-static.net/scevent.min.js');
+                snaptr('init', '{{ $pixel->pixel_id }}');
+                snaptr('track', 'PAGE_VIEW');
+            </script>
+        @endif
+    @endforeach
+
+    {{-- TWITTER --}}
+    @foreach ($pixels->get('twitter', collect()) as $pixel)
+        @if ($pixel->code)
+            {!! $pixel->code !!}
+        @else
+            <script>
+                ! function(e, t, n, s, u, a) {
+                    e.twq || (s = e.twq = function() {
+                            s.exe ? s.exe.apply(s, arguments) : s.queue.push(arguments);
+                        }, s.version = '1.1', s.queue = [], u = t.createElement(n), u.async = !0, u.src =
+                        'https://static.ads-twitter.com/uwt.js', a = t.getElementsByTagName(n)[0], a.parentNode.insertBefore(u,
+                            a))
+                }(window, document, 'script');
+                twq('config', '{{ $pixel->pixel_id }}');
+            </script>
+        @endif
+    @endforeach
+
+    {{-- OTHER / CUSTOM --}}
+    @foreach ($pixels->get('other', collect()) as $pixel)
+        @if ($pixel->code)
+            {!! $pixel->code !!}
+        @endif
+    @endforeach
 
     <style>
         * {
@@ -166,6 +264,9 @@
                 <input type="hidden" name="address" value="{{ $orderData['address'] ?? '' }}">
                 <input type="hidden" name="quantity" value="{{ $orderData['quantity'] ?? 1 }}">
                 <input type="hidden" name="offer_price" value="{{ $offerPrice ?? $page->product->price }}">
+                @if (!empty($orderIndexString))
+                    <input type="hidden" name="order_index_string" value="{{ $orderIndexString }}">
+                @endif
             @endif
 
             {{-- Scrollable Products List --}}
@@ -194,7 +295,7 @@
 
 
                         <input type="checkbox" name="selected_upsell_products[]" value="{{ $product->id }}"
-                            class="hidden product-checkbox">
+                            class="hidden product-checkbox" {{ $isSingle ? 'checked' : '' }}>
 
                         {{-- image --}}
                         <div
@@ -347,6 +448,34 @@
                 title.style.color = "#1f2937";
             }
         }
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+
+            const isSingle = {{ $isSingle ? 'true' : 'false' }};
+            if (!isSingle) return;
+
+            const card = document.querySelector('.product-card');
+            if (!card) return;
+
+            const checkbox = card.querySelector('.product-checkbox');
+            const plusBtn = card.querySelector('.plus-btn');
+            const plusIcon = card.querySelector('.plus-icon');
+            const addedText = card.querySelector('.product-added');
+            const title = card.querySelector('.product-title');
+
+            checkbox.checked = true;
+
+            card.style.borderColor = "{{ $page->theme_color }}";
+            card.style.background = "{{ $page->theme_color }}10";
+
+            plusBtn.style.borderColor = "{{ $page->theme_color }}";
+            plusIcon.style.color = "{{ $page->theme_color }}";
+
+            addedText.style.opacity = "1";
+            title.style.color = "{{ $page->theme_color }}";
+        });
     </script>
 
 </body>

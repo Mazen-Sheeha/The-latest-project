@@ -5,23 +5,27 @@ namespace App\Http\Controllers;
 use App\Models\Domain;
 use App\Models\Order;
 use App\Models\Page;
+use App\Models\Pixel;
 use App\Models\Product;
+use App\Services\CartUserService;
 use App\Services\EasyOrderService;
 use App\Services\PageService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class PageController extends Controller
 {
     protected PageService $pageService;
+    protected CartUserService $cartUserService;
 
-    public function __construct(PageService $pageService)
+    public function __construct(PageService $pageService, CartUserService $cartUserService)
     {
         $this->pageService = $pageService;
+        $this->cartUserService = $cartUserService;
     }
 
     // -----------------------------------
@@ -32,12 +36,12 @@ class PageController extends Controller
         $domain = request()->currentDomain();
 
         if ($domain === null) {
-            $page = Page::with('product', 'reviews')
+            $page = Page::with('product', 'reviews', 'pixels')
                 ->where('slug', $slug)
                 ->where('is_active', true)
                 ->firstOrFail();
         } else {
-            $page = Page::with('product', 'reviews')
+            $page = Page::with('product', 'reviews', 'pixels')
                 ->where('slug', $slug)
                 ->where('domain_id', $domain->id)
                 ->where('is_active', true)
@@ -63,12 +67,12 @@ class PageController extends Controller
         $domain = request()->currentDomain();
 
         if ($domain === null) {
-            $page = Page::with('product', 'reviews')
+            $page = Page::with('product', 'reviews', 'pixels')
                 ->where('slug', $slug)
                 ->where('is_active', true)
                 ->firstOrFail();
         } else {
-            $page = Page::with('product', 'reviews')
+            $page = Page::with('product', 'reviews', 'pixels')
                 ->where('slug', $slug)
                 ->where('domain_id', $domain->id)
                 ->where('is_active', true)
@@ -83,12 +87,16 @@ class PageController extends Controller
         $order = null;
         $orderData = null;
 
+        $orderIndexString = null;
         if ($orderId > 0) {
             $order = Order::findOrFail($orderId);
         } else {
             // Get order data from session (from buy page form)
             $orderData = session('order_data');
             $orderOfferPrice = session('offer_price');
+            if (isset($orderData['order_index_string'])) {
+                $orderIndexString = $orderData['order_index_string'];
+            }
         }
 
         return view('pages.upsell', [
@@ -96,6 +104,7 @@ class PageController extends Controller
             'order' => $order,
             'orderData' => $orderData,
             'offerPrice' => $orderOfferPrice ?? null,
+            'orderIndexString' => $orderIndexString,
         ]);
     }
 
@@ -131,11 +140,17 @@ class PageController extends Controller
                 ->firstOrFail();
         }
 
+        $cartUser = null;
+        if ($request->input('order_index_string')) {
+            $cartUser = $this->cartUserService->findByOrderIndex($request->input('order_index_string'));
+        }
+
         if ($page->upsellProducts->count() > 0) {
             session([
-                'order_data' => $request->only('full_name', 'phone', 'government', 'address', 'quantity'),
+                'order_data' => $request->only('full_name', 'phone', 'government', 'address', 'quantity', 'order_index_string'),
                 'page_id' => $page->id,
                 'offer_price' => $request->input('offer_price', null) ?? $page->sale_price ?? $page->original_price,
+                'orderIndexString' => $request->input('order_index_string'),
             ]);
 
             return redirect()->route('pages.showUpsellPage', [
@@ -148,9 +163,16 @@ class PageController extends Controller
         $sellPrice = $request->input('offer_price', null) ?? $page->sale_price ?? $page->original_price;
         $order = $easyOrderService->createFromPage($request, $page->product, $sellPrice, $quantity);
 
+        if ($cartUser) {
+            $this->cartUserService->deleteAfterPurchase($cartUser->order_index_string);
+        }
+
+        Log::info('Order created successfully', ['final_price' => $sellPrice, 'order_id' => $order->id]);
         return redirect()->route('pages.buy', [
             'page' => $page,
             'success' => 1,
+            'sellPrice' => $sellPrice,
+            'order_id' => $order->id
         ]);
     }
 
@@ -201,9 +223,25 @@ class PageController extends Controller
             }
         }
 
+        $upsellTotal = $page->upsellProducts()
+            ->whereIn('product_id', $upsellProductIds)
+            ->get()
+            ->sum(function ($product) {
+                return $product->pivot->price ?? $product->price;
+            });
+
+        $finalPrice = $sellPrice + $upsellTotal;
+
+        Log::info('Order created successfully from Upesll', ['final_price' => $finalPrice, 'order_id' => $order->id]);
+
+
+        $this->cartUserService->deleteAfterPurchase($request->input('order_index_string'));
+
         return redirect()->route('pages.buy', [
             'page' => $page,
             'success' => 1,
+            'sellPrice' => $finalPrice,
+            'order_id' => $order->id
         ]);
     }
 
@@ -219,7 +257,8 @@ class PageController extends Controller
     {
         $products = Product::all();
         $domains = Domain::all();
-        return view('pages.create', compact('products', 'domains'));
+        $pixels = Pixel::where('is_active', true)->get();
+        return view('pages.create', compact('products', 'domains', 'pixels'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -236,7 +275,10 @@ class PageController extends Controller
     {
         $products = Product::all();
         $domains = Domain::all();
-        return $this->pageService->edit($page, $products, $domains);
+        $pixels = Pixel::where('is_active', true)->get();
+        // Eager load the pixels relationship for the edit form
+        $page->load('pixels');
+        return $this->pageService->edit($page, $products, $domains, $pixels);
     }
 
     public function update(Request $request, Page $page): RedirectResponse

@@ -108,6 +108,11 @@ class PageService
             $page->upsellProducts()->sync($upsellData);
         }
 
+        // Sync pixels (many-to-many relationship)
+        if ($request->filled('pixels')) {
+            $page->pixels()->sync($request->pixels);
+        }
+
         return redirect()->route('pages.index')->with('success', 'تم إنشاء صفحة البيع بنجاح');
     }
     public function show(Page $page): View
@@ -115,10 +120,10 @@ class PageService
         return view('pages.show', compact('page'));
     }
 
-    public function edit(Page $page, Collection $products, Collection $domains): View
+    public function edit(Page $page, Collection $products, Collection $domains, Collection $pixels): View
     {
         $upsellProductIds = $page->upsellProducts->toArray();
-        return view('pages.edit', compact('page', 'products', 'upsellProductIds', 'domains'));
+        return view('pages.edit', compact('page', 'products', 'upsellProductIds', 'domains', 'pixels'));
     }
 
     public function update(Request $request, Page $page): RedirectResponse
@@ -169,6 +174,14 @@ class PageService
                 }
                 // ... (rest of review update logic using 'direct_public' for new uploads)
             }
+        }
+
+        // Sync pixels (many-to-many relationship)
+        if ($request->has('pixels')) {
+            $page->pixels()->sync($request->pixels);
+        } else {
+            // If no pixels selected, detach all
+            $page->pixels()->detach();
         }
 
         return redirect()->route('pages.index')->with('success', 'تم تحديث صفحة البيع بنجاح');
@@ -246,9 +259,13 @@ class PageService
             'upsell_products' => ['nullable', 'array'],
             // 'upsell_products.*' => ['exists:products,id'],
 
+            'moving_banner_text' => ['nullable', 'array'],
+            'top_feature_text' => ['nullable', 'array'],
+
             'features' => 'sometimes|array',
             'whatsapp_phone' => ['nullable', 'string', 'max:32'],
-
+            'pixels' => ['nullable', 'array'],
+            'pixels.*' => ['required', 'integer', 'exists:pixels,id'],
             'meta_pixel' => ['nullable', 'string'],
             'tiktok_pixel' => ['nullable', 'string'],
             'snapchat_pixel' => ['nullable', 'string'],
@@ -315,8 +332,13 @@ class PageService
             'upsell_products' => ['nullable', 'array'],
             // 'upsell_products.*' => ['exists:products,id'],
 
+            'moving_banner_text' => ['nullable', 'array'],
+            'top_feature_text' => ['nullable', 'array'],
+
             'features' => 'sometimes|array',
             'whatsapp_phone' => ['nullable', 'string', 'max:32'],
+            'pixels' => ['nullable', 'array'],
+            'pixels.*' => ['required', 'integer', 'exists:pixels,id'],
             'meta_pixel' => ['nullable', 'string'],
             'tiktok_pixel' => ['nullable', 'string'],
             'snapchat_pixel' => ['nullable', 'string'],

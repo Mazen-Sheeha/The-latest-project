@@ -38,6 +38,8 @@ class Page extends Model
         'twitter_pixel',
         'google_ads_pixel',
         'google_analytics',
+        'moving_banner_text',
+        'top_feature_text',
     ];
 
     protected $casts = [
@@ -51,6 +53,8 @@ class Page extends Model
         'is_active' => 'boolean',
         'features' => 'array',
         'offers' => 'array',
+        'moving_banner_text' => 'array',
+        'top_feature_text' => 'array',
     ];
 
     // public function getRouteKeyName()
@@ -96,5 +100,16 @@ class Page extends Model
     public function domain(): BelongsTo
     {
         return $this->belongsTo(Domain::class);
+    }
+
+    public function pixels(): BelongsToMany
+    {
+        return $this->belongsToMany(Pixel::class, 'page_pixel', 'page_id', 'pixel_id')
+            ->withTimestamps();
+    }
+
+    public function cartUsers(): HasMany
+    {
+        return $this->hasMany(CartUser::class);
     }
 }

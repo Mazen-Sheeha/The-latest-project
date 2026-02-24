@@ -104,6 +104,15 @@
                                         </a>
                                     </div>
                                 </div>
+                                <div class="menu-item @if (request()->is('cart-users*')) active @endif">
+                                    <div class="menu-link flex items-center grow cursor-pointer border border-transparent gap-[10px] ps-[10px] pe-[10px] py-[6px]"
+                                        tabindex="0">
+                                        <a href="{{ route('cart_users.index') }}"
+                                            class="menu-title text-sm font-medium text-gray-800 menu-item-active:text-primary menu-link-hover:!text-primary">
+                                            السلة المتروكة
+                                        </a>
+                                    </div>
+                                </div>
                             @endcan
                             @can('access-products')
                                 <div class="menu-item @if (request()->is('products*')) active @endif">
@@ -218,6 +227,18 @@
                                         <a href="{{ route('domains.index') }}"
                                             class="menu-title text-sm font-medium text-gray-800 menu-item-active:text-primary menu-link-hover:!text-primary">
                                             دومينات الصفحات
+                                        </a>
+                                    </div>
+                                </div>
+                            @endcan
+
+                            @can('access-pages')
+                                <div class="menu-item @if (request()->is('pixels*')) active @endif">
+                                    <div class="menu-link flex items-center grow cursor-pointer border border-transparent gap-[10px] ps-[10px] pe-[10px] py-[6px]"
+                                        tabindex="0">
+                                        <a href="{{ route('pixels.index') }}"
+                                            class="menu-title text-sm font-medium text-gray-800 menu-item-active:text-primary menu-link-hover:!text-primary">
+                                            البكسلات
                                         </a>
                                     </div>
                                 </div>

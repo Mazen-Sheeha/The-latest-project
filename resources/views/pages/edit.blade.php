@@ -12,6 +12,10 @@
     <span>تعديل صفحة {{ $page->name }}</span>
 @endsection
 
+@php
+    use App\Models\Pixel;
+@endphp
+
 @section('content')
     <div class="space-y-6">
 
@@ -96,44 +100,39 @@
 
                     {{-- Pixels Section --}}
                     <div class="border-t pt-4 mt-4">
-                        <h4 class="form-label font-bold mb-4">بكسلات التتبع (Tracking Pixels)</h4>
-                        <div class="grid md:grid-cols-2 gap-4">
-
-                            <div>
-                                <label class="form-label">Meta Pixel / Facebook ID</label>
-                                <textarea name="meta_pixel" class="input w-full" rows="3" placeholder="Example: 123456789012345 (Meta Pixel ID)">{{ old('meta_pixel', $page->meta_pixel) }}</textarea>
-                            </div>
-
-                            <div>
-                                <label class="form-label">Google Ads ID</label>
-                                <textarea name="google_ads_pixel" class="input w-full" rows="3"
-                                    placeholder="Example: AW-123456789 (Google Ads Conversion ID)">{{ old('google_ads_pixel', $page->google_ads_pixel) }}</textarea>
-                            </div>
-
-                            <div>
-                                <label class="form-label">Google Analytics ID</label>
-                                <textarea name="google_analytics" class="input w-full" rows="3"
-                                    placeholder="Example: G-ABCD1234EF or UA-12345678-1">{{ old('google_analytics', $page->google_analytics) }}</textarea>
-                            </div>
-
-                            <div>
-                                <label class="form-label">TikTok Pixel ID</label>
-                                <textarea name="tiktok_pixel" class="input w-full" rows="3"
-                                    placeholder="Example: C123ABC456DEF789G0 (TikTok Pixel ID)">{{ old('tiktok_pixel', $page->tiktok_pixel) }}</textarea>
-                            </div>
-
-                            <div>
-                                <label class="form-label">Snapchat Pixel ID</label>
-                                <textarea name="snapchat_pixel" class="input w-full" rows="3"
-                                    placeholder="Example: abc12345-6789-4def-9012-abcdef345678">{{ old('snapchat_pixel', $page->snapchat_pixel) }}</textarea>
-                            </div>
-
-                            <div>
-                                <label class="form-label">Twitter Pixel ID</label>
-                                <textarea name="twitter_pixel" class="input w-full" rows="3" placeholder="Example: o1234 (Twitter/X Pixel ID)">{{ old('twitter_pixel', $page->twitter_pixel) }}</textarea>
-                            </div>
-
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="form-label font-bold mb-0">بكسلات التتبع (Tracking Pixels)</h4>
+                            <a href="{{ route('pixels.create') }}" class="btn btn-sm btn-light" target="_blank">
+                                + إضافة بكسل جديد
+                            </a>
                         </div>
+
+                        @if (isset($pixels) && $pixels->count() > 0)
+                            <div class="grid md:grid-cols-2 gap-4">
+                                @foreach ($pixels as $pixel)
+                                    <label
+                                        class="border p-4 rounded cursor-pointer hover:bg-gray-50 flex items-start gap-3">
+                                        <input type="checkbox" name="pixels[]" value="{{ $pixel->id }}"
+                                            {{ $page->pixels->contains($pixel->id) ? 'checked' : '' }} class="mt-1">
+                                        <div>
+                                            <div class="font-semibold">{{ $pixel->name }}</div>
+                                            <div class="text-xs text-gray-500">
+                                                {{ Pixel::getTypes()[$pixel->type] ?? $pixel->type }} -
+                                                {{ $pixel->pixel_id }}
+                                            </div>
+                                        </div>
+                                    </label>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="text-center py-4 text-gray-500">
+                                <p>لا توجد بكسلات مضافة. </p>
+                                <a href="{{ route('pixels.create') }}" class="text-blue-600 hover:underline"
+                                    target="_blank">
+                                    أضف بكسل جديد
+                                </a>
+                            </div>
+                        @endif
                     </div>
                     <div class="card-body p-6 space-y-4">
                         <label class="flex items-center gap-2">
@@ -290,6 +289,109 @@
                         </label>
 
                     </div>
+                </div>
+
+                {{-- ================= CUSTOM TEXT DISPLAY ================= --}}
+                <div class="card bg-white shadow rounded-lg">
+                    <div class="card-header">
+                        <h3 class="card-title">النصوص المعروضة في الصفحة</h3>
+                    </div>
+
+                    <div class="card-body p-6 space-y-4">
+                        <div>
+                            <label class="form-label">نصوص الشريط المتحرك</label>
+                            <div id="movingBannerTextsContainer" class="space-y-2">
+                                @php
+                                    $movingTexts = $page->moving_banner_text ?? [];
+                                    if (!is_array($movingTexts)) {
+                                        $movingTexts = [$movingTexts];
+                                    }
+                                    if (empty($movingTexts)) {
+                                        $movingTexts = [''];
+                                    }
+                                @endphp
+                                @foreach ($movingTexts as $index => $text)
+                                    <div class="flex gap-2">
+                                        <input type="text" name="moving_banner_text[]" class="input w-full"
+                                            value="{{ $text }}"
+                                            placeholder="أدخل النص الذي سيظهر في الشريط المتحرك">
+                                        @if ($index == 0)
+                                            <button type="button" onclick="addMovingBannerText()"
+                                                class="btn btn-primary">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        @else
+                                            <button type="button" onclick="this.parentElement.remove()"
+                                                class="btn btn-danger">
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="form-label">نصوص الميزة العلوية</label>
+                            <div id="topFeatureTextsContainer" class="space-y-2">
+                                @php
+                                    $topFeatureTexts = $page->top_feature_text ?? [];
+                                    if (!is_array($topFeatureTexts)) {
+                                        $topFeatureTexts = [$topFeatureTexts];
+                                    }
+                                    if (empty($topFeatureTexts)) {
+                                        $topFeatureTexts = [''];
+                                    }
+                                @endphp
+                                @foreach ($topFeatureTexts as $index => $text)
+                                    <div class="flex gap-2">
+                                        <input type="text" name="top_feature_text[]" class="input w-full"
+                                            value="{{ $text }}" placeholder="أدخل النص الذي سيظهر تحت الصورة">
+                                        @if ($index == 0)
+                                            <button type="button" onclick="addTopFeatureText()" class="btn btn-primary">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        @else
+                                            <button type="button" onclick="this.parentElement.remove()"
+                                                class="btn btn-danger">
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+
+                    <script>
+                        function addMovingBannerText() {
+                            const container = document.getElementById('movingBannerTextsContainer');
+                            const div = document.createElement('div');
+                            div.className = 'flex gap-2';
+                            div.innerHTML = `
+                                <input type="text" name="moving_banner_text[]" class="input w-full"
+                                    placeholder="أدخل النص الذي سيظهر في الشريط المتحرك">
+                                <button type="button" onclick="this.parentElement.remove()" class="btn btn-danger">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                            `;
+                            container.appendChild(div);
+                        }
+
+                        function addTopFeatureText() {
+                            const container = document.getElementById('topFeatureTextsContainer');
+                            const div = document.createElement('div');
+                            div.className = 'flex gap-2';
+                            div.innerHTML = `
+                                <input type="text" name="top_feature_text[]" class="input w-full"
+                                    placeholder="أدخل النص الذي سيظهر تحت الصورة">
+                                <button type="button" onclick="this.parentElement.remove()" class="btn btn-danger">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                            `;
+                            container.appendChild(div);
+                        }
+                    </script>
                 </div>
 
                 {{-- ================= IMAGES ================= --}}
@@ -743,13 +845,13 @@
             <select name="upsell_products[${upsellIndex}][product_id]" class="input w-full product-select" required>
                 <option value="">اختر المنتج</option>
                 ${allProducts.map(p => `
-                                                <option value="${p.id}"
-                                                        data-name="${p.name}"
-                                                        data-price="${p.price}"
-                                                        data-image="${p.image ? '{{ asset('') }}' + p.image : '{{ asset('images/productDefault.webp') }}'}">
-                                                    ${p.name}
-                                                </option>
-                                            `).join('')}
+                                                                    <option value="${p.id}"
+                                                                            data-name="${p.name}"
+                                                                            data-price="${p.price}"
+                                                                            data-image="${p.image ? '{{ asset('') }}' + p.image : '{{ asset('images/productDefault.webp') }}'}">
+                                                                        ${p.name}
+                                                                    </option>
+                                                                `).join('')}
             </select>
         </div>
 

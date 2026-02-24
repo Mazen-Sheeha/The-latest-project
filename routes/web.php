@@ -5,11 +5,13 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BlockedNumberController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CampaignController;
+use App\Http\Controllers\CartUserController;
 use App\Http\Controllers\DomainController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PixelController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ShippingCompanyController;
 use App\Http\Controllers\StatisticController;
@@ -52,6 +54,10 @@ Route::middleware("auth")->group(function () {
     Route::middleware("RedirectIfCannot:access-orders")->group(function () {
         Route::resource("/orders", OrderController::class)
             ->only(['index', 'show', 'edit', 'update', 'create', 'store', 'destroy']);
+        Route::get('/cart-users', [CartUserController::class, 'index'])->name('cart_users.index');
+        Route::delete('cart-users/{cartUser}', [CartUserController::class, 'destroy'])->name('cart-users.destroy');
+        Route::delete('cart-users', [CartUserController::class, 'destroyAll'])->name('cart-users.destroyAll');
+
         Route::get('/notifications/fetch', [NotificationController::class, 'fetch'])->name('notifications.fetch');
         Route::controller(OrderController::class)->group(function () {
             Route::get('/orders/export/excel', 'export')->name('orders.export');
@@ -92,6 +98,11 @@ Route::middleware("auth")->group(function () {
         Route::delete('/pages/{page}/image', [PageController::class, 'deleteImage'])->name('pages.image.delete');
     });
 
+    // Pixels Routes
+    Route::middleware("RedirectIfCannot:access-pages")->group(function () {
+        Route::resource('/pixels', PixelController::class);
+    });
+
 });
 
 Route::get('/test-domain', function () {
@@ -99,10 +110,11 @@ Route::get('/test-domain', function () {
 });
 
 // Route::middleware('resolveDomain')->group(function () {
-    Route::get('buy/{page:slug}', [PageController::class, 'showBuyPage'])->name('pages.buy');
-    Route::get('buy/upsell/{slug}/{orderId?}', [PageController::class, 'showUpsellPage'])->name('pages.showUpsellPage');
-    Route::post('buy/{page:slug}', [PageController::class, 'submitOrder'])->name('pages.submitOrder');
-    Route::post('buy/upsell/submit', [PageController::class, 'submitOrderFromUpsellPage'])->name('pages.submitOrderFromUpsellPage');
+Route::get('buy/{page:slug}', [PageController::class, 'showBuyPage'])->name('pages.buy');
+Route::get('buy/upsell/{slug}/{orderId?}', [PageController::class, 'showUpsellPage'])->name('pages.showUpsellPage');
+Route::post('buy/{page:slug}', [PageController::class, 'submitOrder'])->name('pages.submitOrder');
+Route::post('buy/{page:slug}/track-cart-user', [CartUserController::class, 'trackCartUser'])->name('pages.trackCartUser');
+Route::post('buy/upsell/submit', [PageController::class, 'submitOrderFromUpsellPage'])->name('pages.submitOrderFromUpsellPage');
 // });
 
 // Necessary Data To Migrate
