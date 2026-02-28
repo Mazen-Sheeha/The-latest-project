@@ -248,9 +248,14 @@ class PageController extends Controller
     // -----------------------------------
     // Admin CRUD
     // -----------------------------------
-    public function index(): View
+    public function index(Request $request): View
     {
-        return $this->pageService->index();
+        $pages = $this->pageService->index($request);
+        $domains = Domain::orderBy('domain')->get();
+        $products = Product::orderBy('name')->get();
+        $pixels = Pixel::orderBy('name')->get();
+
+        return view('pages.index', compact('pages', 'domains', 'products', 'pixels'));
     }
 
     public function create(): View

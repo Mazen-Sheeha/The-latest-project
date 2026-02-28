@@ -8,6 +8,7 @@ use App\Models\Product;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -16,10 +17,41 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class PageService
 {
-    public function index(): View
+    public function index(Request $request): LengthAwarePaginator
     {
-        $pages = Page::latest()->paginate(15);
-        return view('pages.index', compact('pages'));
+        $query = Page::query()
+            ->with(['product', 'domain', 'pixels']);
+
+        // Search by name or title
+        if ($search = $request->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                    ->orWhere('title', 'LIKE', "%{$search}%")
+                    ->orWhere('slug', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // Filter by domain
+        if ($domainId = $request->get('domain_id')) {
+            $query->where('domain_id', $domainId);
+        }
+
+        // Filter by product
+        if ($productId = $request->get('product_id')) {
+            $query->where('product_id', $productId);
+        }
+
+        // Filter by pixel
+        if ($pixelId = $request->get('pixel_id')) {
+            $query->whereHas('pixels', fn($q) => $q->where('pixels.id', $pixelId));
+        }
+
+        // Filter by status
+        if ($request->filled('is_active')) {
+            $query->where('is_active', $request->get('is_active'));
+        }
+
+        return $query->latest()->paginate(20)->withQueryString();
     }
 
     public function create(): View
