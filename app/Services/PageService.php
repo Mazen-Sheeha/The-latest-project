@@ -212,6 +212,52 @@ class PageService
             : redirect()->route('pages.index')->with('success', 'تم حذف الصفحة بنجاح');
     }
 
+    public function duplicate(Page $page): Page
+    {
+        $newPage = $page->replicate();
+        $newPage->name = $page->name . ' (نسخة)';
+        $newPage->slug = $this->uniqueSlug($page->slug);
+        $newPage->is_active = false;
+        $newPage->save();
+
+        if ($page->pixels->isNotEmpty()) {
+            $newPage->pixels()->sync($page->pixels->pluck('id')->toArray());
+        }
+
+        foreach ($page->reviews as $review) {
+            $newReview = $review->replicate();
+            $newReview->page_id = $newPage->id;
+            $newReview->save();
+        }
+
+        if ($page->upsellProducts->isNotEmpty()) {
+            $upsellSync = [];
+            foreach ($page->upsellProducts as $product) {
+                $upsellSync[$product->id] = [
+                    'name' => $product->pivot->name,
+                    'price' => $product->pivot->price,
+                    'image' => $product->pivot->image,
+                ];
+            }
+            $newPage->upsellProducts()->sync($upsellSync);
+        }
+
+        return $newPage;
+    }
+
+    private function uniqueSlug(string $baseSlug): string
+    {
+        $slug = $baseSlug . '-copy';
+        $count = 1;
+
+        while (Page::where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-copy-' . $count;
+            $count++;
+        }
+
+        return $slug;
+    }
+
     /**
      * =============================
      * Validation Logic

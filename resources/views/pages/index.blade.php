@@ -118,6 +118,20 @@
                                                     </a>
                                                 </div>
 
+                                                {{-- Duplicate --}}
+                                                <div class="menu-item">
+                                                    <form action="{{ route('pages.duplicate', $page->id) }}"
+                                                        method="POST">
+                                                        @csrf
+                                                        <button type="submit" class="menu-link w-full">
+                                                            <span class="menu-icon">
+                                                                <i class="ki-filled ki-copy"></i>
+                                                            </span>
+                                                            <span class="menu-title">تكرار</span>
+                                                        </button>
+                                                    </form>
+                                                </div>
+
                                                 {{-- Delete --}}
                                                 <form class="menu-item delete-form"
                                                     action="{{ route('pages.destroy', $page->id) }}" method="POST">

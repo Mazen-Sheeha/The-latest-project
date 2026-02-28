@@ -334,4 +334,20 @@ class PageController extends Controller
 
         return redirect()->back()->with('success', 'تم تحديث حالة الصفحة بنجاح');
     }
+
+    public function duplicate(Page $page)
+    {
+        try {
+            $newPage = $this->pageService->duplicate($page);
+
+            return redirect()
+                ->route('pages.index')
+                ->with('success', "تم تكرار الصفحة بنجاح: {$newPage->name}");
+
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('pages.index')
+                ->with('error', 'حدث خطأ أثناء تكرار الصفحة');
+        }
+    }
 }

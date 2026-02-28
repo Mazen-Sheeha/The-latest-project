@@ -96,6 +96,7 @@ Route::middleware("auth")->group(function () {
         Route::patch('/pages/{page}/toggle-active', [PageController::class, 'toggleActive'])->name('pages.toggleActive');
         Route::resource('/pages', PageController::class);
         Route::delete('/pages/{page}/image', [PageController::class, 'deleteImage'])->name('pages.image.delete');
+        Route::post('pages/{page}/duplicate', [PageController::class, 'duplicate'])->name('pages.duplicate');
     });
 
     // Pixels Routes
