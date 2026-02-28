@@ -12,6 +12,109 @@
     <span>تعديل صفحة {{ $page->name }}</span>
 @endsection
 
+@section('style')
+    <style>
+        .ts-wrapper.multi .ts-control {
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 6px 10px;
+            background: #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            gap: 5px;
+        }
+
+        .ts-wrapper.multi.focus .ts-control {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+        }
+
+        .ts-wrapper.multi .ts-control .item {
+            background: linear-gradient(135deg, #6366f1, #818cf8);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 3px 8px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .ts-wrapper.multi .ts-control .item .remove {
+            color: rgba(255, 255, 255, 0.7);
+            border-left: 1px solid rgba(255, 255, 255, 0.3);
+            padding-left: 5px;
+            margin-left: 3px;
+        }
+
+        .ts-wrapper.multi .ts-control .item .remove:hover {
+            color: #fff;
+        }
+
+        .ts-dropdown {
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .ts-dropdown .ts-dropdown-content {
+            padding: 6px;
+        }
+
+        .ts-dropdown .optgroup-header {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #9ca3af;
+            padding: 8px 10px 4px;
+            margin-top: 4px;
+        }
+
+        .ts-dropdown .option {
+            border-radius: 7px;
+            padding: 8px 10px;
+            font-size: 13.5px;
+            color: #374151;
+            transition: background 0.15s;
+        }
+
+        .ts-dropdown .option:hover,
+        .ts-dropdown .option.active {
+            background: #f0f0ff;
+            color: #4f46e5;
+        }
+
+        .ts-dropdown .option.selected {
+            background: #eef2ff;
+            color: #4f46e5;
+            font-weight: 500;
+        }
+
+        .ts-dropdown .option.selected::after {
+            content: '✓';
+            float: left;
+            color: #6366f1;
+            font-size: 12px;
+        }
+
+        .pixels-count-badge {
+            font-size: 11px;
+            background: #eef2ff;
+            color: #6366f1;
+            border-radius: 20px;
+            padding: 2px 8px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .pixels-count-badge.visible {
+            display: inline-block;
+        }
+    </style>
+@endsection
+
 @php
     use App\Models\Pixel;
 @endphp
@@ -121,28 +224,36 @@
                         </div>
 
                         @if (isset($pixels) && $pixels->count() > 0)
-                            <div class="grid md:grid-cols-2 gap-4">
-                                @foreach ($pixels as $pixel)
-                                    <label
-                                        class="border p-4 rounded cursor-pointer hover:bg-gray-50 flex items-start gap-3">
-                                        <input type="checkbox" name="pixels[]" value="{{ $pixel->id }}"
-                                            {{ $page->pixels->contains($pixel->id) ? 'checked' : '' }} class="mt-1">
-                                        <div>
-                                            <div class="font-semibold">{{ $pixel->name }}</div>
-                                            <div class="text-xs text-gray-500">
-                                                {{ Pixel::getTypes()[$pixel->type] ?? $pixel->type }} -
-                                                {{ $pixel->pixel_id }}
-                                            </div>
-                                        </div>
-                                    </label>
-                                @endforeach
+                            @php
+                                $groupedPixels = $pixels->groupBy('type');
+                                $pixelTypes = Pixel::getTypes();
+                                $selectedPixelIds = old('pixels', $page->pixels->pluck('id')->toArray());
+                            @endphp
+
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="pixels-count-badge" id="pixels-count-badge"></span>
                             </div>
+
+                            <select name="pixels[]" multiple id="pixels-select">
+                                @foreach ($groupedPixels as $type => $typePixels)
+                                    <optgroup label="{{ $pixelTypes[$type] ?? $type }}">
+                                        @foreach ($typePixels as $pixel)
+                                            <option value="{{ $pixel->id }}"
+                                                {{ in_array($pixel->id, $selectedPixelIds) ? 'selected' : '' }}>
+                                                {{ $pixel->name }} — {{ $pixel->pixel_id }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                @endforeach
+                            </select>
+
+                            <p class="text-xs text-gray-400 mt-2">يمكنك اختيار أكثر من بكسل</p>
                         @else
-                            <div class="text-center py-4 text-gray-500">
-                                <p>لا توجد بكسلات مضافة. </p>
-                                <a href="{{ route('pixels.create') }}" class="text-blue-600 hover:underline"
-                                    target="_blank">
-                                    أضف بكسل جديد
+                            <div class="text-center p-12 text-gray-400 border border-dashed rounded-xl">
+                                <p class="text-sm">لا توجد بكسلات مضافة.</p>
+                                <a href="{{ route('pixels.create') }}"
+                                    class="text-indigo-500 hover:underline text-sm font-medium" target="_blank">
+                                    + أضف بكسل جديد
                                 </a>
                             </div>
                         @endif
@@ -607,6 +718,40 @@
 @section('script')
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const pixelSelectEl = document.getElementById('pixels-select');
+            if (!pixelSelectEl) return;
+
+            const pixelSelect = new TomSelect('#pixels-select', {
+                plugins: ['remove_button'],
+                placeholder: 'اختر البكسلات...',
+                maxOptions: null,
+                onInitialize() {
+                    updatePixelBadge(this);
+                },
+                onChange() {
+                    updatePixelBadge(this);
+                },
+            });
+
+            function updatePixelBadge(ts) {
+                const badge = document.getElementById('pixels-count-badge');
+                if (!badge) return;
+                const count = ts.items.length;
+                if (count > 0) {
+                    badge.textContent = `${count} مختار`;
+                    badge.classList.add('visible');
+                } else {
+                    badge.classList.remove('visible');
+                }
+            }
+        });
+    </script>
+
     <script>
         const preview = document.getElementById('preview');
         const orderInput = document.getElementById('images-order');
@@ -865,13 +1010,13 @@
             <select name="upsell_products[${upsellIndex}][product_id]" class="input w-full product-select" required>
                 <option value="">اختر المنتج</option>
                 ${allProducts.map(p => `
-                                                                                                                                                                                <option value="${p.id}"
-                                                                                                                                                                                        data-name="${p.name}"
-                                                                                                                                                                                        data-price="${p.price}"
-                                                                                                                                                                                        data-image="${p.image ? '{{ asset('') }}' + p.image : '{{ asset('images/productDefault.webp') }}'}">
-                                                                                                                                                                                    ${p.name}
-                                                                                                                                                                                </option>
-                                                                                                                                                                            `).join('')}
+                                                                                                                                                                                                                    <option value="${p.id}"
+                                                                                                                                                                                                                            data-name="${p.name}"
+                                                                                                                                                                                                                            data-price="${p.price}"
+                                                                                                                                                                                                                            data-image="${p.image ? '{{ asset('') }}' + p.image : '{{ asset('images/productDefault.webp') }}'}">
+                                                                                                                                                                                                                        ${p.name}
+                                                                                                                                                                                                                    </option>
+                                                                                                                                                                                                                `).join('')}
             </select>
         </div>
 
