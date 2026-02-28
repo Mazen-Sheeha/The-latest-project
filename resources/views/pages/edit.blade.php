@@ -42,7 +42,13 @@
                         </div>
 
                         <div>
-                            <label class="form-label">الموقع / الدومين *</label>
+                            <label class="form-label">عنوان صفحة البيع (header)</label>
+                            <input name="title" class="input" required value="{{ old('title', $page->title) }}" />
+                        </div>
+
+                        <div>
+                            <label class="form-label">الموقع
+                                / الدومين *</label>
                             <select name="domain_id" class="input w-full" required>
                                 <option value="">اختر الدومين</option>
                                 @foreach ($domains as $domain)
@@ -52,12 +58,6 @@
                                     </option>
                                 @endforeach
                             </select>
-                        </div>
-
-                        <div>
-                            <label class="form-label">لون الصفحة</label>
-                            <input type="color" name="theme_color" class="input w-24 h-10 p-0 border rounded"
-                                value="{{ old('theme_color', $page->theme_color ?? '#0d6efd') }}">
                         </div>
 
                         <div>
@@ -74,11 +74,24 @@
                         </div>
 
                         <div>
+                            <label class="form-label">لون الصفحة</label>
+                            <input type="color" name="theme_color" class="input w-24 h-10 p-0 border rounded"
+                                value="{{ old('theme_color', $page->theme_color ?? '#0d6efd') }}">
+                        </div>
+
+                        <div>
                             <label class="form-label">رقم واتساب (اختياري)</label>
                             <input name="whatsapp_phone" class="input w-full"
                                 value="{{ old('whatsapp_phone', $page->whatsapp_phone) }}"
                                 placeholder="مثال: +971501234567">
                         </div>
+
+                        <div>
+                            <label class="form-label">الرسالة في صفحة الواتساب (اختياري)</label>
+                            <input name="whatsapp_label" class="input w-full"
+                                value="{{ old('whatsapp_label', $page->whatsapp_label) }}">
+                        </div>
+
 
                         <div>
                             <label class="form-label">السعر الأصلي</label>
@@ -134,6 +147,7 @@
                             </div>
                         @endif
                     </div>
+
                     <div class="card-body p-6 space-y-4">
                         <label class="flex items-center gap-2">
                             <input type="checkbox" id="has-sale" {{ $page->sale_price ? 'checked' : '' }}>
@@ -229,7 +243,7 @@
                         <h3 class="card-title">الإحصائيات</h3>
                     </div>
 
-                    <div class="card-body p-6 grid md:grid-cols-2 gap-4">
+                    <div class="card-body p-6 grid md:grid-cols-3 gap-4">
                         <div>
                             <label class="form-label">عدد المبيعات</label>
                             <input type="number" name="items_sold_count" class="input w-full"
@@ -240,6 +254,12 @@
                             <label class="form-label">عدد التقييمات</label>
                             <input type="number" name="reviews_count" class="input w-full"
                                 value="{{ old('reviews_count', $page->reviews_count ?? 0) }}">
+                        </div>
+
+                        <div>
+                            <label class="form-label">عدد المخزون</label>
+                            <input type="number" name="stock_count" class="input w-full"
+                                value="{{ old('stock_count', $page->stock_count ?? 0) }}">
                         </div>
                     </div>
                 </div>
@@ -845,13 +865,13 @@
             <select name="upsell_products[${upsellIndex}][product_id]" class="input w-full product-select" required>
                 <option value="">اختر المنتج</option>
                 ${allProducts.map(p => `
-                                                                    <option value="${p.id}"
-                                                                            data-name="${p.name}"
-                                                                            data-price="${p.price}"
-                                                                            data-image="${p.image ? '{{ asset('') }}' + p.image : '{{ asset('images/productDefault.webp') }}'}">
-                                                                        ${p.name}
-                                                                    </option>
-                                                                `).join('')}
+                                                                                                                                                                                <option value="${p.id}"
+                                                                                                                                                                                        data-name="${p.name}"
+                                                                                                                                                                                        data-price="${p.price}"
+                                                                                                                                                                                        data-image="${p.image ? '{{ asset('') }}' + p.image : '{{ asset('images/productDefault.webp') }}'}">
+                                                                                                                                                                                    ${p.name}
+                                                                                                                                                                                </option>
+                                                                                                                                                                            `).join('')}
             </select>
         </div>
 

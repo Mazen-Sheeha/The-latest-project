@@ -26,7 +26,7 @@ if (!function_exists('pageUrl')) {
 
         // Local override
         if (app()->environment('local')) {
-            $domain = '127.0.0.1:8001';
+            $domain = '127.0.0.1:8000';
         }
 
         // Build full URL

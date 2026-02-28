@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Page extends Model
 {
@@ -40,6 +39,8 @@ class Page extends Model
         'google_analytics',
         'moving_banner_text',
         'top_feature_text',
+        'stock_count',
+        'whatsapp_label'
     ];
 
     protected $casts = [

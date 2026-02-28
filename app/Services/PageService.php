@@ -244,6 +244,7 @@ class PageService
             // ================= STATS =================
             'items_sold_count' => ['nullable', 'integer', 'min:0'],
             'reviews_count' => ['nullable', 'integer', 'min:0'],
+            'stock_count' => ['nullable', 'integer', 'min:0'],
 
             // ================= IMAGES =================
             'images_order' => ['nullable', 'string'],
@@ -264,6 +265,7 @@ class PageService
 
             'features' => 'sometimes|array',
             'whatsapp_phone' => ['nullable', 'string', 'max:32'],
+            'whatsapp_label' => ['nullable', 'string'],
             'pixels' => ['nullable', 'array'],
             'pixels.*' => ['required', 'integer', 'exists:pixels,id'],
             'meta_pixel' => ['nullable', 'string'],
@@ -317,6 +319,7 @@ class PageService
             // ================= STATS =================
             'items_sold_count' => ['nullable', 'integer', 'min:0'],
             'reviews_count' => ['nullable', 'integer', 'min:0'],
+            'stock_count' => ['nullable', 'integer', 'min:0'],
 
             // ================= IMAGES =================
             'images_order' => ['nullable', 'string'],
@@ -337,6 +340,7 @@ class PageService
 
             'features' => 'sometimes|array',
             'whatsapp_phone' => ['nullable', 'string', 'max:32'],
+            'whatsapp_label' => ['nullable', 'string'],
             'pixels' => ['nullable', 'array'],
             'pixels.*' => ['required', 'integer', 'exists:pixels,id'],
             'meta_pixel' => ['nullable', 'string'],

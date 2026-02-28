@@ -417,10 +417,29 @@
             $wa_clean = $wa ? preg_replace('/[^0-9]/', '', $wa) : '1234567890';
         @endphp
 
-        {{-- WhatsApp Button - Now inside the relative container --}}
         @if ($wa)
-            <a href="https://wa.me/{{ $wa_clean }}" target="_blank" class="whatsapp-float">
-                <span class="label">تحدث معنا</span>
+            @php
+                $utmSource = request()->query('utm_source');
+                $utmCampaign = request()->query('utm_campaign');
+
+                $utmText = '';
+
+                if ($utmSource || $utmCampaign) {
+                    $utmText = '(' . trim(($utmSource ?? '') . ' - ' . ($utmCampaign ?? ''), ' -') . ')';
+                }
+
+                $baseMessage = $page->whatsapp_label ?? '';
+
+                $message = str_replace('__UTM__', $utmText, $baseMessage);
+            @endphp
+
+            <a href="https://wa.me/{{ $wa_clean }}?text={{ urlencode($message) }}" target="_blank"
+                class="whatsapp-float">
+
+                <span class="label">
+                    تحدث معنا
+                </span>
+
                 <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" />
             </a>
         @endif
@@ -513,7 +532,7 @@
                         </span>
                     </div>
                     <span>
-                        {{ number_format($page->product->sales_number ?? 0) }} بيعت حتى الآن
+                        {{ number_format($page->items_sold_count ?? 0) }} بيعت حتى الآن
                     </span>
                 </div>
             </div>
@@ -526,7 +545,7 @@
                 <div class="text-lg font-bold text-gray-900">
                     عجل! فقط
                     <span class="inline-block bg-gray-200 px-3 py-1 rounded-md mx-1">
-                        {{ $page->product->stock - $page->product->sales_number }}
+                        {{ $page->stock_count ? $page->stock_count : $page->product->stock - $page->product->sales_number }}
                     </span>
                     متبقية في المخزون
                 </div>
