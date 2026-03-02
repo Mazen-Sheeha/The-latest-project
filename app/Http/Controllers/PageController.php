@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Page\StorePageRequest;
+use App\Http\Requests\Page\UpdatePageRequest;
 use App\Models\Domain;
 use App\Models\Order;
 use App\Models\Page;
@@ -266,9 +268,10 @@ class PageController extends Controller
         return view('pages.create', compact('products', 'domains', 'pixels'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StorePageRequest $request): RedirectResponse
     {
-        return $this->pageService->store($request);
+        $validatedData = $request->validated();
+        return $this->pageService->store($validatedData);
     }
 
     public function show(Page $page): View
@@ -281,14 +284,14 @@ class PageController extends Controller
         $products = Product::all();
         $domains = Domain::all();
         $pixels = Pixel::where('is_active', true)->get();
-        // Eager load the pixels relationship for the edit form
         $page->load('pixels');
         return $this->pageService->edit($page, $products, $domains, $pixels);
     }
 
-    public function update(Request $request, Page $page): RedirectResponse
+    public function update(UpdatePageRequest $request, Page $page): RedirectResponse
     {
-        return $this->pageService->update($request, $page);
+        $validatedData = $request->validated();
+        return $this->pageService->update($validatedData, $page);
     }
 
     public function destroy(Page $page): JsonResponse|RedirectResponse
@@ -326,6 +329,62 @@ class PageController extends Controller
             'success' => true,
             'message' => 'تم حذف الصورة بنجاح',
             'images' => $images
+        ]);
+    }
+
+    // -----------------------------------
+// Helper: Delete any image by path
+// -----------------------------------
+    public function deleteAnyImage(Request $request, Page $page)
+    {
+        $request->validate([
+            'path' => 'required|string',
+        ]);
+
+        $path = $request->input('path');
+
+        if (!Storage::disk('direct_public')->exists($path)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'الصورة غير موجودة',
+            ], 404);
+        }
+
+        Storage::disk('direct_public')->delete($path);
+
+        $images = $page->images ?? [];
+        $images = array_values(array_filter($images, fn($img) => $img !== $path));
+        $page->images = $images;
+
+        $offers = $page->offers ?? [];
+
+        foreach ($offers as &$offer) {
+            if (isset($offer['image']) && $offer['image'] === $path) {
+                $offer['image'] = null;
+            }
+        }
+
+        $page->offers = $offers;
+
+        $page->reviews()
+            ->where('reviewer_image', $path)
+            ->update(['reviewer_image' => null]);
+
+        $page->upsellProducts()
+            ->wherePivot('image', $path)
+            ->updateExistingPivot(
+                $page->upsellProducts()
+                    ->wherePivot('image', $path)
+                    ->pluck('products.id')
+                    ->toArray(),
+                ['image' => null]
+            );
+
+        $page->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم حذف الصورة بنجاح',
         ]);
     }
 

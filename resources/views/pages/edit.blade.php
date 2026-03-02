@@ -193,6 +193,11 @@
                             <label class="form-label">الرسالة في صفحة الواتساب (اختياري)</label>
                             <input name="whatsapp_label" class="input w-full"
                                 value="{{ old('whatsapp_label', $page->whatsapp_label) }}">
+
+                            <small class="text-gray-500 text-sm mt-1 block">
+                                يمكنك استخدام <strong>__UTM__</strong> لإضافة مصدر الحملة تلقائياً
+                                (utm_source و utm_campaign) داخل الرسالة.
+                            </small>
                         </div>
 
 
@@ -335,9 +340,16 @@
                                                 <div class="flex gap-3">
                                                     <input type="file" name="offers[{{ $index }}][image]"
                                                         class="input w-full offer-image-input" accept="image/*">
-                                                    <img class="offer-image-preview w-20 h-20 rounded border object-cover"
-                                                        src="{{ isset($offer['image']) && $offer['image'] ? asset($offer['image']) : 'https://via.placeholder.com/80' }}"
-                                                        alt="Offer Image">
+                                                    <div class="relative">
+                                                        <button type="button" class="bg-red-600 text-white p-4"
+                                                            title="حذف الصورة"
+                                                            onclick="deleteImage(this, '{{ $offer['image'] }}')">
+                                                            Delete
+                                                        </button>
+                                                        <img class="offer-image-preview w-20 h-20 rounded border object-cover"
+                                                            src="{{ isset($offer['image']) && $offer['image'] ? asset($offer['image']) : 'https://via.placeholder.com/80' }}"
+                                                            alt="Offer Image">
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -559,8 +571,10 @@
                                         </span>
                                     </div>
 
-                                    <button type="button" onclick="deleteImage({{ $loop->index }})"
-                                        class="btn btn-danger self-start">حذف</button>
+                                    <button type="button" onclick="deleteImage(this, @js($img))"
+                                        class="btn btn-danger self-start">
+                                        حذف
+                                    </button>
                                 </div>
                             @endforeach
                         </div>
@@ -611,10 +625,16 @@
                                 </select>
 
                                 {{-- Image --}}
-                                <div class="flex items-center gap-3">
+                                <div class="flex items-center gap-3 relative">
                                     @if ($review->reviewer_image)
                                         <img src="{{ asset($review->reviewer_image) }}"
                                             class="w-12 h-12 rounded-full border object-cover">
+
+
+                                        <button type="button" onclick="deleteImage(this, @js($review->reviewer_image))"
+                                            class="btn btn-danger self-start">
+                                            حذف
+                                        </button>
                                     @endif
 
                                     <input type="file" name="reviews[{{ $index }}][reviewer_image]"
@@ -679,13 +699,19 @@
 
                                         <div>
                                             <label class="form-label">صورة المنتج</label>
-                                            <div class="flex gap-3">
+                                            <div class="flex gap-3 relative">
                                                 <input type="file" name="upsell_products[${upsellIndex}][image]"
                                                     class="input w-full product-image-file" accept="image/*">
                                                 <img class="product-image-preview w-20 h-20 rounded border object-cover"
                                                     src="{{ $product->pivot->image ? asset($product->pivot->image) : asset('images/productDefault.webp') }}"
                                                     alt="Product Image">
+                                                <button type="button"
+                                                    onclick="deleteImage(this, @js($product->pivot->image))"
+                                                    class="btn btn-danger self-start">
+                                                    حذف
+                                                </button>
                                             </div>
+
                                         </div>
 
                                         <div>
@@ -861,12 +887,24 @@
 
         <div>
             <label class="form-label text-xs font-bold">صورة العرض (اختياري)</label>
-            <div class="flex gap-3">
-                <input type="file" name="offers[${offerIndex}][image]"
-                       class="input w-full offer-image-input" accept="image/*">
-                <img class="offer-image-preview w-20 h-20 rounded border object-cover"
-                     src="https://via.placeholder.com/80" alt="Offer Image">
-            </div>
+           <div class="relative w-20 h-20 shrink-0">
+    <img class="offer-image-preview w-20 h-20 rounded border object-cover"
+         src="{{ isset($offer['image']) && $offer['image'] ? asset($offer['image']) : 'https://via.placeholder.com/80' }}"
+         alt="Offer Image">
+
+    @if (isset($offer['image']) && $offer['image'])
+        <input type="hidden" name="offers[{{ $index }}][existing_image]" value="{{ $offer['image'] }}"
+               class="offer-existing-image">
+
+        <button type="button"
+                class="offer-image-delete-existing absolute -top-2 -right-2 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full text-xs flex items-center justify-center shadow"
+                data-image="{{ $offer['image'] }}"
+                onclick(deleteImage(this, @js($offer['image'])))
+                title="حذف الصورة">
+            ✕
+        </button>
+    @endif
+</div>
         </div>
     `;
 
@@ -917,28 +955,44 @@
     </script>
 
     <script>
-        function deleteImage(index) {
-            if (!confirm('هل أنت متأكد من حذف هذه الصورة؟')) return;
+        function deleteImage(btn, path) {
+            if (!confirm('هل أنت متأكد من حذف الصورة؟')) return;
 
-            fetch("{{ route('pages.image.delete', $page->id) }}", {
-                    method: 'DELETE',
+            fetch("{{ route('images.delete', $page) }}", {
+                    method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        index
-                    })
+                        path
+                    }),
                 })
                 .then(res => res.json())
                 .then(res => {
-                    if (res.success) {
-                        alert(res.message);
-                        location.reload(); // or remove the image element dynamically
-                    } else {
-                        alert(res.message);
+                    if (!res.success) {
+                        alert(res.message ?? 'حدث خطأ');
+                        return;
                     }
-                });
+
+                    const listItem = btn.closest('[data-index]');
+                    if (listItem) {
+                        listItem.remove();
+                        return;
+                    }
+
+                    const container = btn.closest('.relative');
+                    if (container) {
+                        const img = container.querySelector('img');
+                        if (img) img.src = 'https://via.placeholder.com/80';
+
+                        const hiddenInput = container.querySelector('.offer-existing-image');
+                        if (hiddenInput) hiddenInput.value = '';
+
+                        btn.remove();
+                    }
+                })
+                .catch(() => alert('حدث خطأ في الاتصال'));
         }
     </script>
 
@@ -1010,13 +1064,13 @@
             <select name="upsell_products[${upsellIndex}][product_id]" class="input w-full product-select" required>
                 <option value="">اختر المنتج</option>
                 ${allProducts.map(p => `
-                                                                                                                                                                                                                    <option value="${p.id}"
-                                                                                                                                                                                                                            data-name="${p.name}"
-                                                                                                                                                                                                                            data-price="${p.price}"
-                                                                                                                                                                                                                            data-image="${p.image ? '{{ asset('') }}' + p.image : '{{ asset('images/productDefault.webp') }}'}">
-                                                                                                                                                                                                                        ${p.name}
-                                                                                                                                                                                                                    </option>
-                                                                                                                                                                                                                `).join('')}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        <option value="${p.id}"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                data-name="${p.name}"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                data-price="${p.price}"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                data-image="${p.image ? '{{ asset('') }}' + p.image : '{{ asset('images/productDefault.webp') }}'}">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            ${p.name}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </option>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    `).join('')}
             </select>
         </div>
 

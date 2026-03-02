@@ -8,8 +8,10 @@ use App\Models\Product;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -60,35 +62,32 @@ class PageService
         return view('pages.create', compact('products'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(array $validatedData): RedirectResponse
     {
-        $validated = $this->validateStorePage($request);
-
         $images = [];
-        if ($request->hasFile('images')) {
-            $order = json_decode($request->input('images_order'), true) ?? [];
-            foreach ($request->file('images') as $index => $image) {
+        if (isset($validatedData['images'])) {
+            $order = json_decode($validatedData['images_order'], true) ?? [];
+            foreach ($validatedData['images'] as $index => $image) {
                 $filename = time() . '_' . Str::random(8) . '.' . $image->getClientOriginalExtension();
-                // Changed disk to 'direct_public'
                 $path = $image->storeAs('pages_assets', $filename, 'direct_public');
                 $position = $order[$index] ?? $index;
                 $images[$position] = $path;
             }
             ksort($images);
         }
-        $validated['images'] = $images;
+        $validatedData['images'] = $images;
 
-        if ($request->has('offers') && is_array($request->offers)) {
+        if (isset($validatedData['offers']) && is_array($validatedData['offers'])) {
             $offers = [];
-            foreach ($request->offers as $offerIndex => $offer) {
+            foreach ($validatedData['offers'] as $offer) {
                 if (isset($offer['quantity']) && isset($offer['price'])) {
                     $imagePath = null;
-                    if ($request->hasFile("offers.$offerIndex.image")) {
-                        $image = $request->file("offers.$offerIndex.image");
-                        $filename = time() . '_' . Str::random(8) . '.' . $image->getClientOriginalExtension();
-                        // Changed disk to 'direct_public'
-                        $imagePath = $image->storeAs('offers', $filename, 'direct_public');
+
+                    if (isset($offer['image']) && $offer['image'] instanceof UploadedFile) {
+                        $filename = time() . '_' . Str::random(8) . '.' . $offer['image']->getClientOriginalExtension();
+                        $imagePath = $offer['image']->storeAs('offers', $filename, 'direct_public');
                     }
+
                     $offers[] = [
                         'quantity' => (int) $offer['quantity'],
                         'price' => (float) $offer['price'],
@@ -97,17 +96,16 @@ class PageService
                     ];
                 }
             }
-            $validated['offers'] = $offers;
+            $validatedData['offers'] = $offers;
         }
 
-        $page = Page::create($validated);
+        $page = Page::create($validatedData);
 
-        if ($request->has('reviews')) {
-            foreach ($request->reviews as $review) {
+        if (isset($validatedData['reviews']) && is_array($validatedData['reviews'])) {
+            foreach ($validatedData['reviews'] as $review) {
                 $imagePath = null;
-                if (isset($review['reviewer_image']) && $review['reviewer_image'] instanceof \Illuminate\Http\UploadedFile) {
+                if (isset($review['reviewer_image']) && $review['reviewer_image'] instanceof UploadedFile) {
                     $filename = time() . '_' . Str::random(8) . '.' . $review['reviewer_image']->getClientOriginalExtension();
-                    // Changed disk to 'direct_public'
                     $imagePath = $review['reviewer_image']->storeAs('reviews', $filename, 'direct_public');
                 }
                 $page->reviews()->create([
@@ -119,15 +117,15 @@ class PageService
             }
         }
 
-        if ($request->filled('upsell_products')) {
+        if (isset($validatedData['upsell_products']) && is_array($validatedData['upsell_products'])) {
             $upsellData = [];
-            foreach ($request->upsell_products as $product) {
+            foreach ($validatedData['upsell_products'] as $product) {
                 $productId = $product['product_id'] ?? null;
                 if (!$productId)
                     continue;
 
                 $imagePath = null;
-                if (isset($product['image']) && $product['image'] instanceof \Illuminate\Http\UploadedFile) {
+                if (isset($product['image']) && $product['image'] instanceof UploadedFile) {
                     $filename = time() . '_' . Str::random(8) . '.' . $product['image']->getClientOriginalExtension();
                     $imagePath = $product['image']->storeAs('upsell_products', $filename, 'direct_public');
                 }
@@ -140,9 +138,8 @@ class PageService
             $page->upsellProducts()->sync($upsellData);
         }
 
-        // Sync pixels (many-to-many relationship)
-        if ($request->filled('pixels')) {
-            $page->pixels()->sync($request->pixels);
+        if (isset($validatedData['pixels']) && is_array($validatedData['pixels'])) {
+            $page->pixels()->sync($validatedData['pixels']);
         }
 
         return redirect()->route('pages.index')->with('success', 'تم إنشاء صفحة البيع بنجاح');
@@ -158,16 +155,17 @@ class PageService
         return view('pages.edit', compact('page', 'products', 'upsellProductIds', 'domains', 'pixels'));
     }
 
-    public function update(Request $request, Page $page): RedirectResponse
+    public function update(array $validatedData, Page $page): RedirectResponse
     {
-        $validated = $this->validateUpdatePage($request);
+        Log::info('Updating page with data: ', $validatedData);
+        // ================= IMAGES =================
         $oldImages = $page->images ?? [];
-        $newImages = $request->file('images', []);
+        $newImages = $validatedData['images'] ?? [];
         $finalImages = [];
 
         if (!empty($newImages)) {
+            // Delete old images and upload new ones
             foreach ($oldImages as $img) {
-                // Updated check/delete to 'direct_public'
                 if (Storage::disk('direct_public')->exists($img)) {
                     Storage::disk('direct_public')->delete($img);
                 }
@@ -176,45 +174,195 @@ class PageService
                 $filename = time() . '_' . Str::random(8) . '.' . $image->getClientOriginalExtension();
                 $finalImages[] = $image->storeAs('pages_assets', $filename, 'direct_public');
             }
-        } elseif ($request->filled('images_order')) {
-            $order = json_decode($request->images_order, true) ?? [];
+        } elseif (isset($validatedData['images_order'])) {
+            // Reorder existing images
+            $order = json_decode($validatedData['images_order'], true) ?? [];
             foreach ($order as $index) {
                 if (isset($oldImages[$index])) {
                     $finalImages[] = $oldImages[$index];
                 }
             }
+        } else {
+            // Keep existing images untouched
+            $finalImages = $oldImages;
         }
 
-        if (!empty($finalImages))
-            $validated['images'] = $finalImages;
+        $validatedData['images'] = $finalImages;
 
-        // ... [Offers update logic follows the same pattern using 'direct_public'] ...
+        // ================= OFFERS =================
+        if (isset($validatedData['offers']) && is_array($validatedData['offers'])) {
+            $offers = [];
+            $oldOffers = $page->offers ?? [];
 
-        $page->update($validated);
-
-        // --- Review Update/Delete Logic ---
-        if ($request->has('reviews')) {
-            foreach ($request->reviews as $reviewData) {
-                if (!empty($reviewData['_delete']) && !empty($reviewData['id'])) {
-                    $review = PageReview::find($reviewData['id']);
-                    if ($review && $review->reviewer_image) {
-                        // Changed to storage disk deletion instead of public_path unlink for consistency
-                        Storage::disk('direct_public')->delete($review->reviewer_image);
-                    }
-                    $review?->delete();
+            foreach ($validatedData['offers'] as $index => $offer) {
+                if (!isset($offer['quantity']) || !isset($offer['price'])) {
                     continue;
                 }
-                // ... (rest of review update logic using 'direct_public' for new uploads)
+
+                $imagePath = $oldOffers[$index]['image'] ?? null;
+
+                // New image uploaded — delete old one and store new
+                if (isset($offer['image']) && $offer['image'] instanceof UploadedFile) {
+                    if ($imagePath && Storage::disk('direct_public')->exists($imagePath)) {
+                        Storage::disk('direct_public')->delete($imagePath);
+                    }
+                    $filename = time() . '_' . Str::random(8) . '.' . $offer['image']->getClientOriginalExtension();
+                    $imagePath = $offer['image']->storeAs('offers', $filename, 'direct_public');
+                }
+
+                // Image was deleted via the delete button (hidden input cleared)
+                if (isset($offer['existing_image']) && empty($offer['existing_image']) && $imagePath) {
+                    if (Storage::disk('direct_public')->exists($imagePath)) {
+                        Storage::disk('direct_public')->delete($imagePath);
+                    }
+                    $imagePath = null;
+                }
+
+                $offers[] = [
+                    'quantity' => (int) $offer['quantity'],
+                    'price' => (float) $offer['price'],
+                    'label' => $offer['label'] ?? null,
+                    'image' => $imagePath,
+                ];
+            }
+
+            // Delete images of removed offers
+            foreach ($oldOffers as $oldIndex => $oldOffer) {
+                $stillExists = collect($validatedData['offers'])->has($oldIndex);
+                if (!$stillExists && !empty($oldOffer['image'])) {
+                    if (Storage::disk('direct_public')->exists($oldOffer['image'])) {
+                        Storage::disk('direct_public')->delete($oldOffer['image']);
+                    }
+                }
+            }
+
+            $validatedData['offers'] = $offers;
+        } else {
+            // All offers removed — delete their images
+            foreach ($page->offers ?? [] as $oldOffer) {
+                if (!empty($oldOffer['image']) && Storage::disk('direct_public')->exists($oldOffer['image'])) {
+                    Storage::disk('direct_public')->delete($oldOffer['image']);
+                }
+            }
+            $validatedData['offers'] = [];
+        }
+
+        // ================= REVIEWS =================
+        if (isset($validatedData['reviews']) && is_array($validatedData['reviews'])) {
+            foreach ($validatedData['reviews'] as $reviewData) {
+
+                // Delete marked reviews
+                if (!empty($reviewData['_delete']) && !empty($reviewData['id'])) {
+                    $review = PageReview::find($reviewData['id']);
+                    if ($review) {
+                        if ($review->reviewer_image && Storage::disk('direct_public')->exists($review->reviewer_image)) {
+                            Storage::disk('direct_public')->delete($review->reviewer_image);
+                        }
+                        $review->delete();
+                    }
+                    continue;
+                }
+
+                $imagePath = null;
+                if (isset($reviewData['reviewer_image']) && $reviewData['reviewer_image'] instanceof UploadedFile) {
+                    $filename = time() . '_' . Str::random(8) . '.' . $reviewData['reviewer_image']->getClientOriginalExtension();
+                    $imagePath = $reviewData['reviewer_image']->storeAs('reviews', $filename, 'direct_public');
+                }
+
+                // Update existing review
+                if (!empty($reviewData['id'])) {
+                    $review = PageReview::find($reviewData['id']);
+                    if ($review) {
+                        // Delete old image if new one uploaded
+                        if ($imagePath && $review->reviewer_image && Storage::disk('direct_public')->exists($review->reviewer_image)) {
+                            Storage::disk('direct_public')->delete($review->reviewer_image);
+                        }
+                        $review->update([
+                            'reviewer_name' => $reviewData['reviewer_name'],
+                            'comment' => $reviewData['comment'],
+                            'stars' => $reviewData['stars'],
+                            'reviewer_image' => $imagePath ?? $review->reviewer_image,
+                        ]);
+                    }
+                    continue;
+                }
+
+                // Create new review
+                $page->reviews()->create([
+                    'reviewer_name' => $reviewData['reviewer_name'],
+                    'comment' => $reviewData['comment'],
+                    'stars' => $reviewData['stars'],
+                    'reviewer_image' => $imagePath,
+                ]);
             }
         }
 
-        // Sync pixels (many-to-many relationship)
-        if ($request->has('pixels')) {
-            $page->pixels()->sync($request->pixels);
+        // ================= UPSELL PRODUCTS =================
+        if (isset($validatedData['upsell_products']) && is_array($validatedData['upsell_products'])) {
+            $upsellData = [];
+
+            foreach ($validatedData['upsell_products'] as $product) {
+                $productId = $product['product_id'] ?? null;
+                if (!$productId)
+                    continue;
+
+                // Get existing pivot image if any
+                $existingPivot = $page->upsellProducts->firstWhere('id', $productId);
+                $imagePath = $existingPivot?->pivot->image ?? null;
+
+                if (isset($product['image']) && $product['image'] instanceof UploadedFile) {
+                    // Delete old pivot image
+                    if ($imagePath && Storage::disk('direct_public')->exists($imagePath)) {
+                        Storage::disk('direct_public')->delete($imagePath);
+                    }
+                    $filename = time() . '_' . Str::random(8) . '.' . $product['image']->getClientOriginalExtension();
+                    $imagePath = $product['image']->storeAs('upsell_products', $filename, 'direct_public');
+                }
+
+                $upsellData[$productId] = [
+                    'name' => $product['name'] ?? null,
+                    'image' => $imagePath,
+                    'price' => $product['price'] ?? null,
+                ];
+            }
+
+            // Delete images of removed upsell products
+            foreach ($page->upsellProducts as $existingProduct) {
+                if (!isset($upsellData[$existingProduct->id]) && $existingProduct->pivot->image) {
+                    if (Storage::disk('direct_public')->exists($existingProduct->pivot->image)) {
+                        Storage::disk('direct_public')->delete($existingProduct->pivot->image);
+                    }
+                }
+            }
+
+            $page->upsellProducts()->sync($upsellData);
         } else {
-            // If no pixels selected, detach all
+            // All upsell products removed — delete their images
+            foreach ($page->upsellProducts as $existingProduct) {
+                if ($existingProduct->pivot->image && Storage::disk('direct_public')->exists($existingProduct->pivot->image)) {
+                    Storage::disk('direct_public')->delete($existingProduct->pivot->image);
+                }
+            }
+            $page->upsellProducts()->detach();
+        }
+
+        // ================= PIXELS =================
+        if (isset($validatedData['pixels']) && is_array($validatedData['pixels'])) {
+            $page->pixels()->sync($validatedData['pixels']);
+        } else {
             $page->pixels()->detach();
         }
+
+        // ================= SAVE PAGE =================
+        // Remove relation keys before update to avoid mass assignment issues
+        $pageData = collect($validatedData)->except([
+            'reviews',
+            'upsell_products',
+            'pixels',
+            'images_order',
+        ])->toArray();
+
+        $page->update($pageData);
 
         return redirect()->route('pages.index')->with('success', 'تم تحديث صفحة البيع بنجاح');
     }
@@ -289,156 +437,4 @@ class PageService
 
         return $slug;
     }
-
-    /**
-     * =============================
-     * Validation Logic
-     * =============================
-     */
-    protected function validateStorePage(Request $request): array
-    {
-        $rules = $request->validate([
-            // ================= BASIC INFO =================
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-                'unique:pages,name',
-            ],
-            'slug' => ['required', 'string', 'max:255', 'unique:pages,slug'],
-            'title' => ['required', 'string', 'max:255'],
-            'domain_id' => ['required', 'exists:domains,id'],
-            'description' => ['required', 'string'],
-            'is_active' => ['nullable', 'boolean'],
-            'theme_color' => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'product_id' => ['required', 'exists:products,id'],
-
-            // ================= SALE =================
-            'original_price' => ['nullable', 'numeric', 'min:0'],
-            'sale_price' => ['nullable', 'numeric', 'min:0', 'lte:original_price'],
-            'sale_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'sale_ends_at' => ['nullable', 'date', 'after:today'],
-
-            // ================= STATS =================
-            'items_sold_count' => ['nullable', 'integer', 'min:0'],
-            'reviews_count' => ['nullable', 'integer', 'min:0'],
-            'stock_count' => ['nullable', 'integer', 'min:0'],
-
-            // ================= IMAGES =================
-            'images_order' => ['nullable', 'string'],
-
-            // ================= REVIEWS =================
-            'reviews' => ['nullable', 'array'],
-            'reviews.*.reviewer_name' => ['required', 'string', 'max:255'],
-            'reviews.*.comment' => ['required', 'string'],
-            'reviews.*.stars' => ['required', 'integer', 'min:1', 'max:5'],
-            'reviews.*.reviewer_image' => ['nullable', 'image', 'max:2048'],
-
-            // ================= UPSELL PRODUCTS =================
-            'upsell_products' => ['nullable', 'array'],
-            // 'upsell_products.*' => ['exists:products,id'],
-
-            'moving_banner_text' => ['nullable', 'array'],
-            'top_feature_text' => ['nullable', 'array'],
-
-            'features' => 'sometimes|array',
-            'whatsapp_phone' => ['nullable', 'string', 'max:32'],
-            'whatsapp_label' => ['nullable', 'string'],
-            'pixels' => ['nullable', 'array'],
-            'pixels.*' => ['required', 'integer', 'exists:pixels,id'],
-            'meta_pixel' => ['nullable', 'string'],
-            'tiktok_pixel' => ['nullable', 'string'],
-            'snapchat_pixel' => ['nullable', 'string'],
-            'twitter_pixel' => ['nullable', 'string'],
-            'google_analytics' => ['nullable', 'string'],
-            'google_ads_pixel' => ['nullable', 'string'],
-        ]);
-
-        if ($request->hasFile('images')) {
-            $rules['images'] = ['array'];
-            $rules['images.*'] = [
-                'file',
-                'mimes:jpg,jpeg,png,webp,gif,avif,jfif,bmp,tiff,tif',
-                'max:5120',
-            ];
-        }
-
-        return $rules;
-    }
-    protected function validateUpdatePage(Request $request): array
-    {
-        $rules = $request->validate([
-            // ================= BASIC INFO =================
-            'name' => [
-                'sometimes',
-                'string',
-                'max:255',
-                'unique:pages,name,' . $request->route('page')->id
-            ],
-            'slug' => [
-                'sometimes',
-                'string',
-                'max:255',
-                'unique:pages,slug,' . $request->route('page')->id
-            ],
-            'title' => ['sometimes', 'string', 'max:255'],
-            'domain_id' => ['sometimes', 'exists:domains,id'],
-            'description' => ['nullable', 'string'],
-            'is_active' => ['nullable', 'boolean'],
-            'theme_color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'product_id' => ['sometimes', 'exists:products,id'],
-
-            // ================= SALE =================
-            'original_price' => ['nullable', 'numeric', 'min:0'],
-            'sale_price' => ['nullable', 'numeric', 'min:0', 'lte:original_price'],
-            'sale_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'sale_ends_at' => ['nullable', 'date', 'after:today'],
-
-            // ================= STATS =================
-            'items_sold_count' => ['nullable', 'integer', 'min:0'],
-            'reviews_count' => ['nullable', 'integer', 'min:0'],
-            'stock_count' => ['nullable', 'integer', 'min:0'],
-
-            // ================= IMAGES =================
-            'images_order' => ['nullable', 'string'],
-
-            // ================= REVIEWS =================
-            'reviews' => ['nullable', 'array'],
-            'reviews.*.reviewer_name' => ['required', 'string', 'max:255'],
-            'reviews.*.comment' => ['required', 'string'],
-            'reviews.*.stars' => ['required', 'integer', 'min:1', 'max:5'],
-            'reviews.*.reviewer_image' => ['nullable', 'image', 'max:2048'],
-
-            // ================= UPSELL PRODUCTS =================
-            'upsell_products' => ['nullable', 'array'],
-            // 'upsell_products.*' => ['exists:products,id'],
-
-            'moving_banner_text' => ['nullable', 'array'],
-            'top_feature_text' => ['nullable', 'array'],
-
-            'features' => 'sometimes|array',
-            'whatsapp_phone' => ['nullable', 'string', 'max:32'],
-            'whatsapp_label' => ['nullable', 'string'],
-            'pixels' => ['nullable', 'array'],
-            'pixels.*' => ['required', 'integer', 'exists:pixels,id'],
-            'meta_pixel' => ['nullable', 'string'],
-            'tiktok_pixel' => ['nullable', 'string'],
-            'snapchat_pixel' => ['nullable', 'string'],
-            'twitter_pixel' => ['nullable', 'string'],
-            'google_analytics' => ['nullable', 'string'],
-            'google_ads_pixel' => ['nullable', 'string'],
-        ]);
-
-        if ($request->hasFile('images')) {
-            $rules['images'] = ['array'];
-            $rules['images.*'] = [
-                'file',
-                'mimes:jpg,jpeg,png,webp,gif,avif,jfif,bmp,tiff,tif',
-                'max:5120',
-            ];
-        }
-
-        return $rules;
-    }
-
 }

@@ -468,7 +468,7 @@
             @php $firstImage = $page->images[0]; @endphp
 
             <button type="button" onclick="openImageModal('{{ asset($firstImage) }}')" class="focus:outline-none">
-                <img src="{{ asset($firstImage) }}" class="w-full object-cover rounded-lg shadow">
+                <img src="{{ asset($firstImage) }}" class="w-full object-cover shadow">
             </button>
         @endif
 
@@ -485,6 +485,31 @@
                 <p id="topFeatureText" class="top-text transition-all duration-500"></p>
             </div>
         @endif
+
+        @php
+            function darkenColor($hex, $percent = 25)
+            {
+                $hex = str_replace('#', '', $hex);
+
+                if (strlen($hex) == 3) {
+                    $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+                }
+
+                $r = hexdec(substr($hex, 0, 2));
+                $g = hexdec(substr($hex, 2, 2));
+                $b = hexdec(substr($hex, 4, 2));
+
+                $r = max(0, min(255, $r - ($r * $percent) / 100));
+                $g = max(0, min(255, $g - ($g * $percent) / 100));
+                $b = max(0, min(255, $b - ($b * $percent) / 100));
+
+                return sprintf('#%02x%02x%02x', $r, $g, $b);
+            }
+
+            $darkerColor = isLightColor($page->theme_color)
+                ? darkenColor($page->theme_color, 35) // darker if light
+                : $page->theme_color;
+        @endphp
 
         {{-- HERO --}}
         <section class="bg-white px-4 pt-6 pb-4 border-b">
@@ -557,28 +582,28 @@
 
                             <div class="text-center">
                                 <div class="count-box" data-days>00</div>
-                                <span class="label">يوم</span>
+                                <span class="label text-[{{ $darkerColor }}]">يوم</span>
                             </div>
 
                             <span class="colon">:</span>
 
                             <div class="text-center">
                                 <div class="count-box" data-hours>00</div>
-                                <span class="label">ساعة</span>
+                                <span class="label text-[{{ $darkerColor }}]">ساعة</span>
                             </div>
 
                             <span class="colon">:</span>
 
                             <div class="text-center">
                                 <div class="count-box" data-minutes>00</div>
-                                <span class="label">دقائق</span>
+                                <span class="label text-[{{ $darkerColor }}]">دقائق</span>
                             </div>
 
                             <span class="colon">:</span>
 
                             <div class="text-center">
                                 <div class="count-box" data-seconds>00</div>
-                                <span class="label">ثواني</span>
+                                <span class="label text-[{{ $darkerColor }}]">ثواني</span>
                             </div>
 
                         </div>
@@ -598,62 +623,46 @@
         </section>
 
         {{-- ORDER MODAL --}}
-        <div class="bg-white w-full max-w-sm sm:max-w-md md:max-w-lg relative my-8" id="orderForm">
-            <div class="p-4 sm:p-6 space-y-5">
-                <h2 class="text-2xl font-bold text-center">اطلب الأن</h2>
+        <div class="p-4 sm:p-6 space-y-5">
+            <h2 class="text-2xl font-bold text-center">اطلب الأن</h2>
+            {{-- @dd($page->offers) --}}
+            @if (!empty($page->offers))
+                <div class="space-y-3" id="offersContainer">
+                    @foreach ($page->offers as $offer)
+                        <div class="offer-item flex items-center gap-3 border rounded-lg p-3 cursor-pointer hover:border-[{{ $darkerColor }}]"
+                            data-quantity="{{ $offer['quantity'] }}" data-price="{{ $offer['price'] }}">
 
-                @php
-                    function darkenColor($hex, $percent = 25)
-                    {
-                        $hex = str_replace('#', '', $hex);
-
-                        if (strlen($hex) == 3) {
-                            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
-                        }
-
-                        $r = hexdec(substr($hex, 0, 2));
-                        $g = hexdec(substr($hex, 2, 2));
-                        $b = hexdec(substr($hex, 4, 2));
-
-                        $r = max(0, min(255, $r - ($r * $percent) / 100));
-                        $g = max(0, min(255, $g - ($g * $percent) / 100));
-                        $b = max(0, min(255, $b - ($b * $percent) / 100));
-
-                        return sprintf('#%02x%02x%02x', $r, $g, $b);
-                    }
-
-                    $offerColor = isLightColor($page->theme_color)
-                        ? darkenColor($page->theme_color, 35) // darker if light
-                        : $page->theme_color;
-                @endphp
-                @if (!empty($page->offers))
-                    <div class="space-y-3" id="offersContainer">
-                        @foreach ($page->offers as $offer)
-                            <div class="offer-item flex items-center gap-3 border rounded-lg p-3 cursor-pointer hover:border-[{{ $offerColor }}]"
-                                data-quantity="{{ $offer['quantity'] }}" data-price="{{ $offer['price'] }}">
-
-                                <div class="flex justify-between w-full">
-
-                                    <div class="font-bold">
-                                        اشتري
-                                        <span class="text-[{{ $offerColor }}]">{{ $offer['quantity'] }}</span>
-                                        ب
-                                        <span class="text-[{{ $offerColor }}]">{{ $offer['price'] }} د.إ</span>
-                                    </div>
-
-                                    @if ($offer['label'])
-                                        <div
-                                            class="bg-[{{ $offerColor }}] text-[{{ isLightColor($offerColor) ? '#000' : '#fff' }}] px-2 py-1 text-xs rounded-full">
-                                            {{ $offer['label'] }}
+                            <div class="flex justify-between w-full">
+                                <div class="font-bold flex justify-center items-center gap-4">
+                                    @if ($offer['image'])
+                                        <div class="w-20 rounded-lg shadow">
+                                            <img class="object-contain" src="{{ asset($offer['image']) }}"
+                                                alt="{{ $offer['price'] }}">
                                         </div>
                                     @endif
 
+                                    <div>
+                                        اشتري
+                                        <span class="text-[{{ $darkerColor }}]">{{ $offer['quantity'] }}</span>
+                                        ب
+                                        <span class="text-[{{ $darkerColor }}]">{{ $offer['price'] }} د.إ</span>
+                                    </div>
                                 </div>
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
 
+                                @if ($offer['label'])
+                                    <div
+                                        class="bg-[{{ $darkerColor }}] text-[{{ isLightColor($darkerColor) ? '#000' : '#fff' }}] p-2 text-xs rounded-full">
+                                        {{ $offer['label'] }}
+                                    </div>
+                                @endif
+
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
+            <div id="orderForm">
                 <form id="formSubmit" method="POST" action="{{ route('pages.submitOrder', $page->slug) }}"
                     class="space-y-3">
                     @csrf
@@ -661,7 +670,7 @@
                     <input type="hidden" name="offer_price" id="offer_price"
                         value="{{ $page->sale_price ?? $page->original_price }}" />
                     <input name="full_name" placeholder="الاسم بالكامل" required
-                        class="w-full px-4 py-3 border rounded-lg">
+                        class="w-full px-4 py-3 border rounded-lg" id="orderName">
                     <div class="space-y-1" dir="rtl">
                         <input name="phone" id="phoneInput" dir="rtl"
                             placeholder="رقم الهاتف (مثال: 0501234567)" required
@@ -690,6 +699,7 @@
                     </button>
                 </form>
             </div>
+
         </div>
 
         {{-- ALL IMAGES --}}
@@ -702,6 +712,9 @@
 
                 <div class="grid grid-cols-1 gap-3">
                     @foreach ($page->images as $order => $path)
+                        @if ($loop->first)
+                            @continue
+                        @endif
                         <button type="button" onclick="openImageModal('{{ asset($path) }}')"
                             class="focus:outline-none">
                             <img src="{{ asset($path) }}" class="w-full object-cover rounded-lg shadow">
@@ -827,11 +840,11 @@
         {{-- STICKY ORDER BUTTON --}}
         <div id="sticky-order"
             class="fixed bottom-0 inset-x-0 z-40 bg-white border-t shadow-lg p-3 transition-transform duration-300 ease-in-out">
-            <button class="w-full max-w-md mx-auto block font-bold py-4 rounded-xl text-xl"
+
+            <button type="button" onclick="scrollToOrderForm()"
+                class="w-full max-w-md mx-auto block font-bold py-4 rounded-xl text-xl"
                 style="background-color: {{ $page->theme_color }}; color: {{ $contrastColor }};">
-                <a href="#orderForm">
-                    اطلب الأن
-                </a>
+                اطلب الأن
             </button>
         </div>
     </div>
@@ -908,6 +921,18 @@
         }
     </script>
 @endif
+
+<script>
+    function scrollToOrderForm() {
+        const form = document.getElementById('orderForm');
+        if (!form) return;
+
+        form.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
+</script>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
