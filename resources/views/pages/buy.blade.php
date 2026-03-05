@@ -42,6 +42,7 @@
             }(window,
                 document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
             fbq('init', '{{ $pixel->pixel_id }}');
+            fbq('track', 'PageView');
             fbq('track', 'ViewContent', {
                 content_name: '{{ $page->title }}',
                 content_ids: ['{{ $product->id }}'],
@@ -65,6 +66,7 @@
             }
             gtag('js', new Date());
             gtag('config', '{{ $pixel->pixel_id }}');
+            gtag('event', 'page_view');
         </script>
     @endforeach
 
@@ -165,6 +167,7 @@
                             a))
                 }(window, document, 'script');
                 twq('config', '{{ $pixel->pixel_id }}');
+                twq('event', 'tw-PageView', {});
             </script>
         @endif
     @endforeach
