@@ -69,12 +69,61 @@
                     <input type="date" name="date_to" value="{{ request('date_to') }}" class="input input-sm w-36">
                 </div>
 
+                {{-- Filter Actions --}}
                 <div class="flex gap-2">
-                    <button type="submit" class="btn btn-sm btn-primary">تصفية</button>
-                    <a href="{{ route('cart_users.index') }}" class="btn btn-sm btn-light">إعادة تعيين</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ki-filled ki-filter"></i>
+                        بحث
+                    </button>
+
+                    @if (request()->hasAny(['search', 'page_id', 'government', 'date_from', 'date_to']))
+                        <a href="{{ route('cart_users.index') }}" class="btn btn-light">
+                            <i class="ki-filled ki-cross"></i>
+                            مسح
+                        </a>
+                    @endif
                 </div>
             </form>
         </div>
+        {{-- Active Filters Summary --}}
+        @if (request()->hasAny(['search', 'page_id', 'government', 'date_from', 'date_to']))
+            <div class="px-5 py-2 bg-blue-50 border-b flex items-center gap-2 flex-wrap text-sm text-blue-700">
+                <i class="ki-filled ki-filter text-blue-500"></i>
+                <span>فلاتر نشطة:</span>
+
+                @if (request('search'))
+                    <span class="bg-white border border-blue-200 rounded-full px-3 py-0.5">
+                        بحث: {{ request('search') }}
+                    </span>
+                @endif
+
+                @if (request('page_id'))
+                    <span class="bg-white border border-blue-200 rounded-full px-3 py-0.5">
+                        الصفحة: {{ $pages->firstWhere('id', request('page_id'))?->title }}
+                    </span>
+                @endif
+
+                @if (request('government'))
+                    <span class="bg-white border border-blue-200 rounded-full px-3 py-0.5">
+                        المدينة: {{ request('government') }}
+                    </span>
+                @endif
+
+                @if (request('date_from'))
+                    <span class="bg-white border border-blue-200 rounded-full px-3 py-0.5">
+                        من: {{ request('date_from') }}
+                    </span>
+                @endif
+
+                @if (request('date_to'))
+                    <span class="bg-white border border-blue-200 rounded-full px-3 py-0.5">
+                        إلى: {{ request('date_to') }}
+                    </span>
+                @endif
+
+                <span class="text-gray-500 mr-auto">{{ $cartUsers->total() }} نتيجة</span>
+            </div>
+        @endif
 
         @if ($cartUsers->count() > 0)
             <div class="card-table scrollable-x-auto">
