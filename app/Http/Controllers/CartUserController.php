@@ -18,9 +18,9 @@ class CartUserController extends Controller
         $this->cartUserService = $cartUserService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return $this->cartUserService->index();
+        return $this->cartUserService->index($request);
     }
 
     public function store(Request $request)

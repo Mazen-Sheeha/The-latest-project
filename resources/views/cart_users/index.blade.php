@@ -11,17 +11,69 @@
 @section('content')
     <div class="card min-w-full mb-4">
         <div class="card-header">
-            <h3 class="card-title"> عملاء لم يكملوا الطلب</h3>
+            <h3 class="card-title">عملاء لم يكملوا الطلب</h3>
             @if ($cartUsers->count() > 0)
                 <form method="POST" action="{{ route('cart-users.destroyAll') }}"
                     onsubmit="return confirm('هل أنت متأكد من حذف جميع السجلات؟')">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-sm btn-danger">
-                        حذف الكل
-                    </button>
+                    <button type="submit" class="btn btn-sm btn-danger">حذف الكل</button>
                 </form>
             @endif
+        </div>
+
+        {{-- ===== FILTERS ===== --}}
+        <div class="card-body border-b pb-4">
+            <form method="GET" action="{{ route('cart_users.index') }}" class="flex flex-wrap gap-3 items-end">
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs text-gray-500 font-medium">بحث</label>
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="اسم أو هاتف..."
+                        class="input input-sm w-48">
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs text-gray-500 font-medium">صفحة المنتج</label>
+                    <select name="page_id" class="input input-sm w-48">
+                        <option value="">كل الصفحات</option>
+                        @foreach ($pages as $page)
+                            <option value="{{ $page->id }}" {{ request('page_id') == $page->id ? 'selected' : '' }}>
+                                {{ $page->title }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs text-gray-500 font-medium">المدينة</label>
+                    <select name="government" class="input input-sm w-40">
+                        <option value="">اختر مدينة</option>
+                        <option value="Abu Dhabi">Abu Dhabi / أبو ظبي</option>
+                        <option value="Dubai">Dubai / دبي</option>
+                        <option value="Sharjah">Sharjah / الشارقة</option>
+                        <option value="Ajman">Ajman / عجمان</option>
+                        <option value="Al Ain">Al Ain / العين</option>
+                        <option value="Fujairah">Fujairah / الفجيرة</option>
+                        <option value="Umm Al-Quwain">Umm Al-Quwain / أم القيوين</option>
+                        <option value="Ras Al Khaimah">Ras Al Khaimah / رأس الخيمة</option>
+                    </select>
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs text-gray-500 font-medium">من تاريخ</label>
+                    <input type="date" name="date_from" value="{{ request('date_from') }}" class="input input-sm w-36">
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs text-gray-500 font-medium">إلى تاريخ</label>
+                    <input type="date" name="date_to" value="{{ request('date_to') }}" class="input input-sm w-36">
+                </div>
+
+                <div class="flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-primary">تصفية</button>
+                    <a href="{{ route('cart_users.index') }}" class="btn btn-sm btn-light">إعادة تعيين</a>
+                </div>
+            </form>
         </div>
 
         @if ($cartUsers->count() > 0)
@@ -35,8 +87,8 @@
                             <th class="text-start font-medium">المدينة</th>
                             <th class="text-start font-medium">العنوان</th>
                             <th class="text-start font-medium">صفحة المنتج</th>
-                            {{-- <th class="text-start font-medium">Offer Price</th>
-                            <th class="text-start font-medium">Quantity</th> --}}
+                            <th class="text-start font-medium">utm_source</th>
+                            <th class="text-start font-medium">utm_campaign</th>
                             <th class="text-start font-medium">اخر تحديث</th>
                             <th class="text-start font-medium">التحكم</th>
                         </tr>
@@ -48,29 +100,22 @@
                                 <td>{{ $cartUser->government ?: '-' }}</td>
                                 <td>{{ $cartUser->address ?: '-' }}</td>
                                 <td>{{ $cartUser->page?->title ?: '-' }}</td>
-                                {{-- <td>{{ is_null($cartUser->offer_price) ? '-' : number_format((float) $cartUser->offer_price, 2) }}
-                                </td>
-                                <td>{{ $cartUser->quantity ?: '-' }}</td> --}}
+                                <td>{{ $cartUser->utm_source ?: '-' }}</td>
+                                <td>{{ $cartUser->utm_campaign ?: '-' }}</td>
                                 <td>{{ $cartUser->updated_at?->format('Y-m-d H:i') ?: '-' }}</td>
                                 <td>
                                     <div class="flex gap-2">
-                                        {{-- Complete Order --}}
-                                        <form method="POST" action="{{ route('cart-users.completeOrder', $cartUser->id) }}"
+                                        <form method="POST"
+                                            action="{{ route('cart-users.completeOrder', $cartUser->id) }}"
                                             onsubmit="return confirm('هل أنت متأكد من إكمال الطلب؟')">
                                             @csrf
-                                            <button type="submit" class="btn btn-sm btn-success">
-                                                إكمال الطلب
-                                            </button>
+                                            <button type="submit" class="btn btn-sm btn-success">إكمال الطلب</button>
                                         </form>
-
-                                        {{-- Delete --}}
                                         <form method="POST" action="{{ route('cart-users.destroy', $cartUser->id) }}"
                                             onsubmit="return confirm('هل أنت متأكد من الحذف؟')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger">
-                                                حذف
-                                            </button>
+                                            <button type="submit" class="btn btn-sm btn-danger">حذف</button>
                                         </form>
                                     </div>
                                 </td>
@@ -81,7 +126,7 @@
             </div>
 
             <div class="card-footer">
-                {{ $cartUsers->links() }}
+                {{ $cartUsers->appends(request()->query())->links() }}
             </div>
         @else
             <div class="card-body py-10 text-center text-gray-500">

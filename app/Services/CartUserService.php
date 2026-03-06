@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\CartUser;
+use App\Models\Page;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -16,10 +17,37 @@ class CartUserService
         $this->easyOrderService = $easyOrderService;
     }
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $cartUsers = CartUser::with('page')->orderBy('id', 'DESC')->paginate(100);
-        return view('cart_users.index', compact('cartUsers'));
+        $query = CartUser::with('page')->latest();
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('full_name', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('page_id')) {
+            $query->where('page_id', $request->page_id);
+        }
+
+        if ($request->filled('government')) {
+            $query->where('government', $request->government);
+        }
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $cartUsers = $query->paginate(20);
+        $pages = Page::orderBy('title')->get(['id', 'title']);
+
+        return view('cart_users.index', compact('cartUsers', 'pages'));
     }
 
     public function store(array $data): CartUser
