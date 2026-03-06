@@ -64,7 +64,7 @@ class PageController extends Controller
     // -----------------------------------
     // Display Upsell Page
     // -----------------------------------
-    public function showUpsellPage(string $slug, int $orderId = 0): View
+    public function showUpsellPage(string $slug, int $orderId): View
     {
         $domain = request()->currentDomain();
 
@@ -85,28 +85,11 @@ class PageController extends Controller
             return view('pages.inactive_page');
         }
 
-        // If orderId is 0, it means we're coming from buy page (no order created yet)
-        $order = null;
-        $orderData = null;
-
-        $orderIndexString = null;
-        if ($orderId > 0) {
-            $order = Order::findOrFail($orderId);
-        } else {
-            // Get order data from session (from buy page form)
-            $orderData = session('order_data');
-            $orderOfferPrice = session('offer_price');
-            if (isset($orderData['order_index_string'])) {
-                $orderIndexString = $orderData['order_index_string'];
-            }
-        }
+        $order = Order::findOrFail($orderId);
 
         return view('pages.upsell', [
             'page' => $page,
             'order' => $order,
-            'orderData' => $orderData,
-            'offerPrice' => $orderOfferPrice ?? null,
-            'orderIndexString' => $orderIndexString,
         ]);
     }
 
@@ -130,12 +113,12 @@ class PageController extends Controller
         $domain = request()->currentDomain();
 
         if ($domain === null) {
-            $page = Page::with('product', 'reviews')
+            $page = Page::with('product', 'reviews', 'upsellProducts')
                 ->where('slug', $slug)
                 ->where('is_active', true)
                 ->firstOrFail();
         } else {
-            $page = Page::with('product', 'reviews')
+            $page = Page::with('product', 'reviews', 'upsellProducts')
                 ->where('slug', $slug)
                 ->where('domain_id', $domain->id)
                 ->where('is_active', true)
@@ -147,25 +130,31 @@ class PageController extends Controller
             $cartUser = $this->cartUserService->findByOrderIndex($request->input('order_index_string'));
         }
 
+        $quantity = (int) $request->input('quantity', 1);
+        $sellPrice = $request->input('offer_price', null) ?? $page->sale_price ?? $page->original_price;
+        $order = $easyOrderService->createFromPage(
+            $request,
+            $page->product,
+            $sellPrice,
+            $quantity,
+            $page->slug ? route('pages.buy', $page->slug) : null
+        );
+
+        Log::info('Order created', ['order_id' => $order->id, 'sell_price' => $sellPrice]);
+
+        if ($cartUser) {
+            $this->cartUserService->deleteAfterPurchase($cartUser->order_index_string);
+        }
+
+        // Redirect to upsell if upsell products exist
         if ($page->upsellProducts->count() > 0) {
-            session([
-                'order_data' => $request->only('full_name', 'phone', 'government', 'address', 'quantity', 'order_index_string'),
-                'page_id' => $page->id,
-                'offer_price' => $request->input('offer_price', null) ?? $page->sale_price ?? $page->original_price,
-                'orderIndexString' => $request->input('order_index_string'),
-            ]);
+            $upsellParams = ['slug' => $page->slug, 'orderId' => $order->id];
 
-            $utmSource = $request->input('utm_source');
-            $utmCampaign = $request->input('utm_campaign');
-
-            $upsellParams = ['slug' => $page->slug, 'orderId' => 0];
-
-            if ($utmSource) {
-                $upsellParams['utm_source'] = $utmSource;
+            if ($request->input('utm_source')) {
+                $upsellParams['utm_source'] = $request->input('utm_source');
             }
-
-            if ($utmCampaign) {
-                $upsellParams['utm_campaign'] = $utmCampaign;
+            if ($request->input('utm_campaign')) {
+                $upsellParams['utm_campaign'] = $request->input('utm_campaign');
             }
 
             Log::info('Redirecting to upsell page', ['upsellParams' => $upsellParams]);
@@ -173,15 +162,6 @@ class PageController extends Controller
             return redirect()->route('pages.showUpsellPage', $upsellParams);
         }
 
-        $quantity = (int) $request->input('quantity', 1);
-        $sellPrice = $request->input('offer_price', null) ?? $page->sale_price ?? $page->original_price;
-        $order = $easyOrderService->createFromPage($request, $page->product, $sellPrice, $quantity);
-
-        if ($cartUser) {
-            $this->cartUserService->deleteAfterPurchase($cartUser->order_index_string);
-        }
-
-        Log::info('Order created successfully', ['final_price' => $sellPrice, 'order_id' => $order->id]);
         return redirect()->route('pages.buy', [
             'page' => $page,
             'success' => 1,
@@ -195,36 +175,21 @@ class PageController extends Controller
     // -----------------------------------
     public function submitOrderFromUpsellPage(
         Request $request,
-        EasyOrderService $easyOrderService
     ): RedirectResponse {
-        // dd($request->all());
-        $request->validate([
-            'full_name' => 'required|string',
-            'phone' => 'required|string',
-            'government' => 'required|string',
-            'address' => 'required|string',
-        ]);
-
-        Log::info('Submitting order from upsell page', $request->all());
+        Log::info('Submitting upsell products', $request->all());
 
         $page = Page::findOrFail($request->page_id);
+        $order = Order::findOrFail($request->order_id);
 
-        // Get the selected upsell product IDs from the form
         $upsellProductIds = $request->input('selected_upsell_products', []);
 
-        // Create order with main product
-        $mainProduct = $page->product;
-        $quantity = (int) $request->input('quantity', 1);
-        $sellPrice = $request->input('offer_price', null) ?? $page->sale_price ?? $page->original_price;
-        $order = $easyOrderService->createFromPage($request, $mainProduct, $sellPrice, $quantity, $page->slug ? route('pages.buy', $page->slug) : null);
+        $upsellTotal = 0;
 
-        // Add selected upsell products to the same order
         if (!empty($upsellProductIds)) {
             foreach ($upsellProductIds as $productId) {
-                $upsellProduct = $page->upsellProducts()->where('product_id', $productId)->first();
+                $upsellProduct = $page->upsellProducts()->where('products.id', $productId)->first();
 
                 if ($upsellProduct) {
-                    // Add the upsell product to the order with custom price if set
                     $price = $upsellProduct->pivot->price ?? $upsellProduct->price;
 
                     $order->products()->attach($productId, [
@@ -232,24 +197,20 @@ class PageController extends Controller
                         'quantity' => 1,
                         'real_price' => $price,
                     ]);
+
                     $upsellProduct->increment('sales_number');
+                    $upsellTotal += $price;
                 }
             }
         }
 
-        $upsellTotal = $page->upsellProducts()
-            ->whereIn('product_id', $upsellProductIds)
-            ->get()
-            ->sum(function ($product) {
-                return $product->pivot->price ?? $product->price;
-            });
+        $finalPrice = $order->products->sum(fn($p) => $p->pivot->price * $p->pivot->quantity);
 
-        $finalPrice = $sellPrice + $upsellTotal;
-
-        Log::info('Order created successfully from Upesll', ['final_price' => $finalPrice, 'order_id' => $order->id]);
-
-
-        $this->cartUserService->deleteAfterPurchase($request->input('order_index_string'));
+        Log::info('Upsell products added', [
+            'order_id' => $order->id,
+            'upsell_total' => $upsellTotal,
+            'final_price' => $finalPrice,
+        ]);
 
         return redirect()->route('pages.buy', [
             'page' => $page,
