@@ -53,14 +53,26 @@
                                 <td>{{ $cartUser->quantity ?: '-' }}</td> --}}
                                 <td>{{ $cartUser->updated_at?->format('Y-m-d H:i') ?: '-' }}</td>
                                 <td>
-                                    <form method="POST" action="{{ route('cart-users.destroy', $cartUser->id) }}"
-                                        onsubmit="return confirm('هل أنت متأكد من الحذف؟')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger">
-                                            حذف
-                                        </button>
-                                    </form>
+                                    <div class="flex gap-2">
+                                        {{-- Complete Order --}}
+                                        <form method="POST" action="{{ route('cart-users.completeOrder', $cartUser->id) }}"
+                                            onsubmit="return confirm('هل أنت متأكد من إكمال الطلب؟')">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                إكمال الطلب
+                                            </button>
+                                        </form>
+
+                                        {{-- Delete --}}
+                                        <form method="POST" action="{{ route('cart-users.destroy', $cartUser->id) }}"
+                                            onsubmit="return confirm('هل أنت متأكد من الحذف؟')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                حذف
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach

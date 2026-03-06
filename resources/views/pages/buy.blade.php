@@ -669,6 +669,8 @@
                 <form id="formSubmit" method="POST" action="{{ route('pages.submitOrder', $page->slug) }}"
                     class="space-y-3">
                     @csrf
+                    <input type="hidden" name="utm_source" id="utm_source" value="">
+                    <input type="hidden" name="utm_campaign" id="utm_campaign" value="">
                     <input type="hidden" name="quantity" id="orderQuantity" value="1">
                     <input type="hidden" name="offer_price" id="offer_price"
                         value="{{ $page->sale_price ?? $page->original_price }}" />
@@ -950,6 +952,8 @@
         const btn = document.getElementById('submitBtn');
         let orderIndexString = null;
 
+        const urlParams = new URLSearchParams(window.location.search);
+
         const uaePattern = /^(?:\+971|00971|0)?(?:5[024568])\d{7}$/;
 
         const isPhoneValid = () => uaePattern.test(phoneInput.value.replace(/\s+/g, ''));
@@ -980,7 +984,6 @@
                 phone: phoneInput.value,
                 full_name: fullNameInput.value,
             });
-
             const data = {
                 phone: phoneInput.value,
                 full_name: fullNameInput.value,
@@ -989,6 +992,8 @@
                 quantity: quantityInput.value,
                 offer_price: offerPriceInput.value,
                 order_index_string: orderIndexString,
+                utm_source: urlParams.get('utm_source') ?? null,
+                utm_campaign: urlParams.get('utm_campaign') ?? null,
                 _token: form.querySelector('input[name="_token"]').value
             };
 
@@ -1050,6 +1055,8 @@
                 form.appendChild(hiddenIndex);
             }
             hiddenIndex.value = orderIndexString ?? '';
+            document.getElementById('utm_source').value = urlParams.get('utm_source') ?? null;
+            document.getElementById('utm_campaign').value = urlParams.get('utm_campaign') ?? null;
 
             btn.disabled = true;
             btn.innerHTML = 'جاري تأكيد الطلب...';

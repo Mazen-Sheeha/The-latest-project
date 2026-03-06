@@ -15,7 +15,9 @@ class CartUser extends Model
         'page_id',
         'offer_price',
         'quantity',
-        'order_index_string'
+        'order_index_string',
+        'utm_source',
+        'utm_campaign',
     ];
 
     protected $hidden = ['order_index_string'];

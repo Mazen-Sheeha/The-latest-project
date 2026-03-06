@@ -120,7 +120,7 @@ class EasyOrderService
         return $storesList[$storeId] ?? null;
     }
 
-    public function createFromPage(Request $request, Product $product, ?float $sellPrice = null, int $quantity = 1): Order
+    public function createFromPage(Request $request, Product $product, ?float $sellPrice = null, int $quantity = 1, ?string $pageUrl = null): Order
     {
         DB::beginTransaction();
 
@@ -148,7 +148,7 @@ class EasyOrderService
                 'address' => $request->address,
                 'order_status' => 'waiting_for_confirmation',
                 'shipping_price' => $shippingPrice,
-                'url' => url()->full(),
+                'url' => $pageUrl ?? url()->full(),
                 'campaign_id' => $campaign?->id,
             ]);
             // Determine the sale price and quantity for the main product

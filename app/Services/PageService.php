@@ -299,10 +299,11 @@ class PageService
 
         // ================= UPSELL PRODUCTS =================
         if (isset($validatedData['upsell_products']) && is_array($validatedData['upsell_products'])) {
+            Log::info('Processing upsell products: ', $validatedData['upsell_products']);
             $upsellData = [];
 
             foreach ($validatedData['upsell_products'] as $product) {
-                $productId = $product['product_id'] ?? null;
+                $productId = (int) ($product['product_id'] ?? null);
                 if (!$productId)
                     continue;
 
@@ -315,7 +316,7 @@ class PageService
                     if ($imagePath && Storage::disk('direct_public')->exists($imagePath)) {
                         Storage::disk('direct_public')->delete($imagePath);
                     }
-                    $filename = time() . '_' . Str::random(8) . '.' . $product['image']->getClientOriginalExtension();
+                    $filename = time() . '_' . Str::random(12) . '.' . $product['image']->getClientOriginalExtension();
                     $imagePath = $product['image']->storeAs('upsell_products', $filename, 'direct_public');
                 }
 

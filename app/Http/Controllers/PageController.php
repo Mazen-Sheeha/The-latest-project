@@ -155,10 +155,22 @@ class PageController extends Controller
                 'orderIndexString' => $request->input('order_index_string'),
             ]);
 
-            return redirect()->route('pages.showUpsellPage', [
-                'slug' => $page->slug,
-                'orderId' => 0,
-            ]);
+            $utmSource = $request->input('utm_source');
+            $utmCampaign = $request->input('utm_campaign');
+
+            $upsellParams = ['slug' => $page->slug, 'orderId' => 0];
+
+            if ($utmSource) {
+                $upsellParams['utm_source'] = $utmSource;
+            }
+
+            if ($utmCampaign) {
+                $upsellParams['utm_campaign'] = $utmCampaign;
+            }
+
+            Log::info('Redirecting to upsell page', ['upsellParams' => $upsellParams]);
+
+            return redirect()->route('pages.showUpsellPage', $upsellParams);
         }
 
         $quantity = (int) $request->input('quantity', 1);
@@ -204,7 +216,7 @@ class PageController extends Controller
         $mainProduct = $page->product;
         $quantity = (int) $request->input('quantity', 1);
         $sellPrice = $request->input('offer_price', null) ?? $page->sale_price ?? $page->original_price;
-        $order = $easyOrderService->createFromPage($request, $mainProduct, $sellPrice, $quantity);
+        $order = $easyOrderService->createFromPage($request, $mainProduct, $sellPrice, $quantity, $page->slug ? route('pages.buy', $page->slug) : null);
 
         // Add selected upsell products to the same order
         if (!empty($upsellProductIds)) {

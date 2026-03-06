@@ -28,6 +28,11 @@ class CartUserController extends Controller
         return $this->cartUserService->store($request->all());
     }
 
+    public function completeOrder(int $id)
+    {
+        return $this->cartUserService->completeOrder($id);
+    }
+
 
     public function trackCartUser(Request $request, string $slug): JsonResponse
     {
@@ -39,6 +44,8 @@ class CartUserController extends Controller
             'address' => 'nullable|string',
             'quantity' => 'nullable|integer|min:1',
             'offer_price' => 'nullable|numeric|min:0',
+            'utm_source' => 'nullable|string',
+            'utm_campaign' => 'nullable|string',
         ]);
 
         $domain = request()->currentDomain();
@@ -66,10 +73,12 @@ class CartUserController extends Controller
                 'page_id' => $page->id,
                 'offer_price' => $request->input('offer_price', $page->sale_price ?? $page->original_price),
                 'quantity' => $request->input('quantity', 1),
+                'utm_source' => $request->input('utm_source'),
+                'utm_campaign' => $request->input('utm_campaign'),
             ]
         );
 
-        Log::info('Cart user tracked', ['cart_user_id' => $cartUser->id, 'phone' => $cartUser->phone, 'order_index_string' => $cartUser->order_index_string]);
+        Log::info('Cart user tracked', ['cart_user_id' => $cartUser->id, 'phone' => $cartUser->phone, 'order_index_string' => $cartUser->order_index_string, 'page_id' => $cartUser->page_id, 'utm_source' => $cartUser->utm_source, 'utm_campaign' => $cartUser->utm_campaign]);
 
         return response()->json([
             'success' => true,

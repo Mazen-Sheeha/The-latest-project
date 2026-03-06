@@ -257,7 +257,13 @@
                 <input type="hidden" name="phone" value="{{ $order->phone }}">
                 <input type="hidden" name="government" value="{{ $order->city }}">
                 <input type="hidden" name="address" value="{{ $order->address }}">
+                <input type="hidden" name="utm_source" id="utm_source" value="{{ request()->query('utm_source') }}">
+                <input type="hidden" name="utm_campaign" id="utm_campaign"
+                    value="{{ request()->query('utm_campaign') }}">
             @else
+                <input type="hidden" name="utm_source" id="utm_source" value="{{ request()->query('utm_source') }}">
+                <input type="hidden" name="utm_campaign" id="utm_campaign"
+                    value="{{ request()->query('utm_campaign') }}">
                 <input type="hidden" name="full_name" value="{{ $orderData['full_name'] ?? '' }}">
                 <input type="hidden" name="phone" value="{{ $orderData['phone'] ?? '' }}">
                 <input type="hidden" name="government" value="{{ $orderData['government'] ?? '' }}">
