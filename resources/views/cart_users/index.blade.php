@@ -214,8 +214,10 @@
                                                 action="{{ route('cart-users.cancelOrder', $cartUser->id) }}"
                                                 onsubmit="return confirm('هل تريد إلغاء الطلب؟')">
                                                 @csrf
-                                                <button type="submit" class="btn btn-sm btn-danger"
-                                                    style="background-color: #f1416c !important; color: #fff !important;">إلغاء</button>
+                                                <button type="submit" class="btn btn-sm"
+                                                    style="background-color: #f6c000 !important; color: #000 !important;">
+                                                    إلغاء الطلب
+                                                </button>
                                             </form>
                                         @endif
 
@@ -224,7 +226,9 @@
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-danger"
-                                                style="background-color: #f1416c !important; color: #fff !important;">حذف</button>
+                                                style="background-color: #f1416c !important; color: #fff !important;">
+                                                <i class="ki-filled ki-trash"></i>
+                                            </button>
                                         </form>
                                     </div>
                                 </td>
