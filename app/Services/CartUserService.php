@@ -141,10 +141,10 @@ class CartUserService
         ]);
 
         $syntheticRequest = Request::create('', 'POST', [
-            'full_name' => $cartUser->full_name,
-            'phone' => $cartUser->phone,
+            'full_name' => $cartUser->full_name ?? "",
+            'phone' => $cartUser->phone ?? "",
             'government' => $cartUser->government,
-            'address' => $cartUser->address,
+            'address' => $cartUser->address ?? "",
             'quantity' => $quantity,
             'offer_price' => $sellPrice,
             'order_index_string' => $cartUser->order_index_string,
