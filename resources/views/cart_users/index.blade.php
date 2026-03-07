@@ -8,6 +8,14 @@
     <span class="text-gray-700">السلة المتروكة</span>
 @endsection
 
+@php
+    use App\Enums\CartUserStatusEnum;
+
+    $pending = CartUserStatusEnum::PENDING->value;
+    $completed = CartUserStatusEnum::COMPLETED->value;
+    $canceled = CartUserStatusEnum::CANCELED->value;
+@endphp
+
 @section('content')
     <div class="card min-w-full mb-4">
         <div class="card-header">
@@ -61,12 +69,15 @@
 
                 <div class="flex flex-col gap-1">
                     <label class="text-xs text-gray-500 font-medium">الحالة</label>
-                    <select name="is_completed" class="input input-sm w-40">
+                    <select name="status" class="input input-sm w-40">
                         <option value="">الكل</option>
-                        <option value="1" {{ request('is_completed') === '1' ? 'selected' : '' }}>
+                        <option value="{{ $completed }}" {{ request('status') === $completed ? 'selected' : '' }}>
                             تم الطلب
                         </option>
-                        <option value="0" {{ request('is_completed') === '0' ? 'selected' : '' }}>
+                        <option value="{{ $canceled }}" {{ request('status') === $canceled ? 'selected' : '' }}>
+                            ملغي
+                        </option>
+                        <option value="{{ $pending }}" {{ request('status') === $pending ? 'selected' : '' }}>
                             سلة متروكة
                         </option>
                     </select>
@@ -160,8 +171,9 @@
                             <th class="text-start font-medium">التحكم</th>
                         </tr>
                         @foreach ($cartUsers as $cartUser)
+                            {{-- @dd($cartUser->status, $completed) --}}
                             <tr class="text-nowrap"
-                                style="background-color: {{ $cartUser->is_completed ? '#39BF52' : '#BF3939' }}; color:white">
+                                style="background-color: {{ $cartUser->row_color }}; color: {{ $cartUser->status === 'pending' ? '#000000' : '#FFFFFF' }};">
                                 <td>{{ $cartUser->id }}</td>
                                 <td>{{ $cartUser->full_name ?: '-' }}</td>
                                 <td>{{ $cartUser->phone ?: '-' }}</td>
@@ -170,26 +182,40 @@
                                 <td>{{ $cartUser->page?->title ?: '-' }}</td>
                                 <td>{{ $cartUser->updated_at?->format('Y-m-d H:i') ?: '-' }}</td>
                                 <td>
-                                    <div class="flex gap-2">
-
-                                        @if ($cartUser->is_completed)
+                                    <div class="flex gap-2" style="color: initial; background-color: transparent;">
+                                        @if ($cartUser->status === $completed)
                                             <form method="POST"
                                                 action="{{ route('cart-users.cancelOrder', $cartUser->id) }}"
-                                                onsubmit="return confirm('هل تريد إلغاء إكمال الطلب؟')">
+                                                onsubmit="return confirm('هل تريد إلغاء الطلب؟')">
                                                 @csrf
                                                 <button type="submit" class="btn btn-sm btn-warning"
-                                                    style="background-color:#f59e0b !important; color:white !important;">
-                                                    إلغاء الطلب
-                                                </button>
+                                                    style="background-color: #f6c000 !important; color: #000 !important;">إلغاء
+                                                    الطلب</button>
+                                            </form>
+                                        @elseif ($cartUser->status === $canceled)
+                                            <form method="POST"
+                                                action="{{ route('cart-users.completeOrder', $cartUser->id) }}"
+                                                onsubmit="return confirm('هل تريد إعادة إكمال الطلب؟')">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-success"
+                                                    style="background-color: #17c653 !important; color: #fff !important;">إكمال
+                                                    الطلب</button>
                                             </form>
                                         @else
                                             <form method="POST"
                                                 action="{{ route('cart-users.completeOrder', $cartUser->id) }}"
                                                 onsubmit="return confirm('هل أنت متأكد من إكمال الطلب؟')">
                                                 @csrf
-                                                <button type="submit" class="btn btn-sm btn-success">
-                                                    إكمال الطلب
-                                                </button>
+                                                <button type="submit" class="btn btn-sm btn-success"
+                                                    style="background-color: #17c653 !important; color: #fff !important;">إكمال
+                                                    الطلب</button>
+                                            </form>
+                                            <form method="POST"
+                                                action="{{ route('cart-users.cancelOrder', $cartUser->id) }}"
+                                                onsubmit="return confirm('هل تريد إلغاء الطلب؟')">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-danger"
+                                                    style="background-color: #f1416c !important; color: #fff !important;">إلغاء</button>
                                             </form>
                                         @endif
 
@@ -197,9 +223,9 @@
                                             onsubmit="return confirm('هل أنت متأكد من الحذف؟')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger">حذف</button>
+                                            <button type="submit" class="btn btn-sm btn-danger"
+                                                style="background-color: #f1416c !important; color: #fff !important;">حذف</button>
                                         </form>
-
                                     </div>
                                 </td>
                             </tr>

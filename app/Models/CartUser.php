@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\CartUserStatusEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -18,8 +19,8 @@ class CartUser extends Model
         'order_index_string',
         'utm_source',
         'utm_campaign',
-        'is_completed',
         'order_id',
+        'status',
     ];
 
     protected $hidden = ['order_index_string'];
@@ -32,5 +33,14 @@ class CartUser extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function getRowColorAttribute(): string
+    {
+        return match ($this->status) {
+            CartUserStatusEnum::COMPLETED->value => '#39BF52',
+            CartUserStatusEnum::CANCELED->value => '#BF3939',
+            default => '#FFFFFF',
+        };
     }
 }

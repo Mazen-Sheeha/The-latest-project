@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\CartUserStatusEnum;
 use App\Models\CartUser;
 use App\Models\Order;
 use App\Models\Page;
@@ -38,8 +39,8 @@ class CartUserService
             $query->where('government', $request->government);
         }
 
-        if ($request->filled('is_completed')) {
-            $query->where('is_completed', $request->is_completed);
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
         }
 
         if ($request->filled('date_from')) {
@@ -171,7 +172,7 @@ class CartUserService
 
         if ($cartUser) {
             $cartUser->update([
-                'is_completed' => true,
+                'status' => CartUserStatusEnum::COMPLETED->value,
                 'order_id' => $order->id
             ]);
             $cartUser->save();
@@ -199,7 +200,7 @@ class CartUserService
 
         if ($cartUser) {
             $cartUser->update([
-                'is_completed' => false,
+                'status' => CartUserStatusEnum::CANCELED->value,
                 'order_id' => null
             ]);
             $cartUser->save();
