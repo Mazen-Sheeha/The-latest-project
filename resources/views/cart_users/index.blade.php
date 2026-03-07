@@ -136,36 +136,50 @@
                             <th class="text-start font-medium">المدينة</th>
                             <th class="text-start font-medium">العنوان</th>
                             <th class="text-start font-medium">صفحة المنتج</th>
-                            <th class="text-start font-medium">utm_source</th>
-                            <th class="text-start font-medium">utm_campaign</th>
                             <th class="text-start font-medium">اخر تحديث</th>
                             <th class="text-start font-medium">التحكم</th>
                         </tr>
                         @foreach ($cartUsers as $cartUser)
-                            <tr class="text-nowrap">
+                            <tr class="text-nowrap"
+                                style="background-color: {{ $cartUser->is_completed ? '#39BF52' : '#BF3939' }}; color:white">
                                 <td>{{ $cartUser->id }}</td>
                                 <td>{{ $cartUser->full_name ?: '-' }}</td>
                                 <td>{{ $cartUser->phone ?: '-' }}</td>
                                 <td>{{ $cartUser->government ?: '-' }}</td>
                                 <td>{{ $cartUser->address ?: '-' }}</td>
                                 <td>{{ $cartUser->page?->title ?: '-' }}</td>
-                                <td>{{ $cartUser->utm_source ?: '-' }}</td>
-                                <td>{{ $cartUser->utm_campaign ?: '-' }}</td>
                                 <td>{{ $cartUser->updated_at?->format('Y-m-d H:i') ?: '-' }}</td>
                                 <td>
                                     <div class="flex gap-2">
-                                        <form method="POST"
-                                            action="{{ route('cart-users.completeOrder', $cartUser->id) }}"
-                                            onsubmit="return confirm('هل أنت متأكد من إكمال الطلب؟')">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-success">إكمال الطلب</button>
-                                        </form>
+
+                                        @if ($cartUser->is_completed)
+                                            <form method="POST"
+                                                action="{{ route('cart-users.cancelOrder', $cartUser->id) }}"
+                                                onsubmit="return confirm('هل تريد إلغاء إكمال الطلب؟')">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-warning"
+                                                    style="background-color:#f59e0b !important; color:white !important;">
+                                                    إلغاء الطلب
+                                                </button>
+                                            </form>
+                                        @else
+                                            <form method="POST"
+                                                action="{{ route('cart-users.completeOrder', $cartUser->id) }}"
+                                                onsubmit="return confirm('هل أنت متأكد من إكمال الطلب؟')">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-success">
+                                                    إكمال الطلب
+                                                </button>
+                                            </form>
+                                        @endif
+
                                         <form method="POST" action="{{ route('cart-users.destroy', $cartUser->id) }}"
                                             onsubmit="return confirm('هل أنت متأكد من الحذف؟')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-danger">حذف</button>
                                         </form>
+
                                     </div>
                                 </td>
                             </tr>

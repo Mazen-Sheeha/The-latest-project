@@ -632,34 +632,38 @@
             @if (!empty($page->offers))
                 <div class="space-y-3" id="offersContainer">
                     @foreach ($page->offers as $offer)
-                        <div class="offer-item flex items-center gap-3 border rounded-lg p-3 cursor-pointer hover:border-[{{ $darkerColor }}]"
+                        <div class="offer-item flex items-center justify-between gap-3 border rounded-lg p-3 cursor-pointer hover:border-[{{ $darkerColor }}]"
                             data-quantity="{{ $offer['quantity'] }}" data-price="{{ $offer['price'] }}">
 
-                            <div class="flex justify-between w-full">
-                                <div class="font-bold flex justify-center items-center gap-4">
-                                    @if ($offer['image'])
-                                        <div class="w-20 rounded-lg shadow">
-                                            <img class="object-contain" src="{{ asset($offer['image']) }}"
-                                                alt="{{ $offer['price'] }}">
-                                        </div>
-                                    @endif
+                            {{-- Left content --}}
+                            <div class="flex items-center gap-3">
 
-                                    <div>
-                                        اشتري
-                                        <span class="text-[{{ $darkerColor }}]">{{ $offer['quantity'] }}</span>
-                                        ب
-                                        <span class="text-[{{ $darkerColor }}]">{{ $offer['price'] }} د.إ</span>
-                                    </div>
-                                </div>
-
-                                @if ($offer['label'])
-                                    <div
-                                        class="bg-[{{ $darkerColor }}] text-[{{ isLightColor($darkerColor) ? '#000' : '#fff' }}] p-2 text-xs rounded-full">
-                                        {{ $offer['label'] }}
+                                @if ($offer['image'])
+                                    <div class="w-14 h-14 rounded-lg overflow-hidden border shrink-0">
+                                        <img src="{{ asset($offer['image']) }}" alt="{{ $offer['price'] }}"
+                                            class="w-full h-full object-cover">
                                     </div>
                                 @endif
 
+                                <div class="font-bold text-sm leading-tight">
+                                    اشتري
+                                    <span class="text-[{{ $darkerColor }}]">{{ $offer['quantity'] }}</span>
+                                    ب
+                                    <span class="text-[{{ $darkerColor }}]">{{ $offer['price'] }} د.إ</span>
+                                </div>
+
                             </div>
+
+                            {{-- Label --}}
+                            @if ($offer['label'])
+                                <span
+                                    class="px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap
+            bg-[{{ $darkerColor }}]
+            text-[{{ isLightColor($darkerColor) ? '#000' : '#fff' }}]">
+                                    {{ $offer['label'] }}
+                                </span>
+                            @endif
+
                         </div>
                     @endforeach
                 </div>

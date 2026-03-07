@@ -33,6 +33,11 @@ class CartUserController extends Controller
         return $this->cartUserService->completeOrder($id);
     }
 
+    public function cancelOrder(int $id)
+    {
+        return $this->cartUserService->cancelOrder($id);
+    }
+
 
     public function trackCartUser(Request $request, string $slug): JsonResponse
     {

@@ -58,6 +58,8 @@ Route::middleware("auth")->group(function () {
         Route::delete('cart-users/{cartUser}', [CartUserController::class, 'destroy'])->name('cart-users.destroy');
         Route::delete('cart-users', [CartUserController::class, 'destroyAll'])->name('cart-users.destroyAll');
         Route::post('cart-users/{id}/complete-order', [CartUserController::class, 'completeOrder'])->name('cart-users.completeOrder');
+        Route::post('cart-users/{id}/cancel-order', [CartUserController::class, 'cancelOrder'])
+            ->name('cart-users.cancelOrder');
 
         Route::get('/notifications/fetch', [NotificationController::class, 'fetch'])->name('notifications.fetch');
         Route::controller(OrderController::class)->group(function () {

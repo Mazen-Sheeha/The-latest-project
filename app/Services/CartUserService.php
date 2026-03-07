@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\CartUser;
+use App\Models\Order;
 use App\Models\Page;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -163,12 +164,43 @@ class CartUserService
             throw $e;
         }
 
-        $cartUser->delete();
+        if ($cartUser) {
+            $cartUser->update([
+                'is_completed' => true,
+                'order_id' => $order->id
+            ]);
+            $cartUser->save();
+        }
 
-        Log::info('[CompleteOrder] CartUser deleted', ['cart_user_id' => $id]);
+        Log::info('[CompleteOrder] CartUser Updated', ['cart_user_id' => $id, 'order_id' => $order->id]);
 
 
         return to_route('cart_users.index')
-            ->with(['success' => 'تم إكمال الطلب وحذف العميل بنجاح']);
+            ->with(['success' => 'تم إكمال الطلب بنجاح']);
+    }
+
+    public function cancelOrder(int $id)
+    {
+        $cartUser = CartUser::findOrFail($id);
+
+        if ($cartUser->order_id) {
+            $order = Order::find($cartUser->order_id);
+
+            if ($order) {
+                $order->products()->detach();
+                $order->delete();
+            }
+        }
+
+        if ($cartUser) {
+            $cartUser->update([
+                'is_completed' => false,
+                'order_id' => null
+            ]);
+            $cartUser->save();
+        }
+
+        return redirect()->route('cart_users.index')
+            ->with('success', 'تم إلغاء الطلب بنجاح');
     }
 }
