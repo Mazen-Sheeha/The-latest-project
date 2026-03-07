@@ -60,6 +60,19 @@
                 </div>
 
                 <div class="flex flex-col gap-1">
+                    <label class="text-xs text-gray-500 font-medium">الحالة</label>
+                    <select name="is_completed" class="input input-sm w-40">
+                        <option value="">الكل</option>
+                        <option value="1" {{ request('is_completed') === '1' ? 'selected' : '' }}>
+                            تم الطلب
+                        </option>
+                        <option value="0" {{ request('is_completed') === '0' ? 'selected' : '' }}>
+                            سلة متروكة
+                        </option>
+                    </select>
+                </div>
+
+                <div class="flex flex-col gap-1">
                     <label class="text-xs text-gray-500 font-medium">من تاريخ</label>
                     <input type="date" name="date_from" value="{{ request('date_from') }}" class="input input-sm w-36">
                 </div>
@@ -106,6 +119,13 @@
                 @if (request('government'))
                     <span class="bg-white border border-blue-200 rounded-full px-3 py-0.5">
                         المدينة: {{ request('government') }}
+                    </span>
+                @endif
+
+                @if (request('is_completed') !== null && request('is_completed') !== '')
+                    <span class="bg-white border border-blue-200 rounded-full px-3 py-0.5">
+                        الحالة:
+                        {{ request('is_completed') == '1' ? 'تم الطلب' : 'سلة متروكة' }}
                     </span>
                 @endif
 

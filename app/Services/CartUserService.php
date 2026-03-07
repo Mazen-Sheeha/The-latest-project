@@ -37,6 +37,11 @@ class CartUserService
         if ($request->filled('government')) {
             $query->where('government', $request->government);
         }
+
+        if ($request->filled('is_completed')) {
+            $query->where('is_completed', $request->is_completed);
+        }
+
         if ($request->filled('date_from')) {
             $query->whereDate('created_at', '>=', $request->date_from);
         }
