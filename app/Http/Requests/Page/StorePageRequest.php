@@ -19,7 +19,7 @@ class StorePageRequest extends FormRequest
             'slug' => ['required', 'string', 'max:255', 'unique:pages,slug'],
             'title' => ['required', 'string', 'max:255'],
             'domain_id' => ['required', 'exists:domains,id'],
-            'description' => ['required', 'string'],
+            'description' => ['nullable', 'string'],
             'is_active' => ['nullable', 'boolean'],
             'theme_color' => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'product_id' => ['nullable', 'exists:products,id'],

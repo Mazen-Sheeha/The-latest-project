@@ -912,7 +912,7 @@
                        class="input w-full offer-image-input" accept="image/*">
                 <img class="offer-image-preview w-20 h-20 rounded border object-cover"
                      src="https://via.placeholder.com/80" alt="Offer Image">
-            </div>
+            </div>ن
         </div>
         </div>
     `;

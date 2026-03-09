@@ -632,14 +632,16 @@
         </section>
 
         {{-- IMPORTANT INFO --}}
-        <section class="bg-white px-4 py-8">
-            <div class="max-w-[420px] mx-auto space-y-4 text-right">
-                <h2 class="text-2xl font-bold text-gray-900">معلومات مهمة</h2>
-                <p class="text-gray-700 leading-relaxed text-base overflow-text">
-                    {{ $page->description }}
-                </p>
-            </div>
-        </section>
+        @if ($page->description)
+            <section class="bg-white px-4 py-8">
+                <div class="max-w-[420px] mx-auto space-y-4 text-right">
+                    <h2 class="text-2xl font-bold text-gray-900">معلومات مهمة</h2>
+                    <p class="text-gray-700 leading-relaxed text-base overflow-text">
+                        {{ $page->description }}
+                    </p>
+                </div>
+            </section>
+        @endif
 
         {{-- OUTER FRAME CONTAINER --}}
         <div class="max-w-2xl mx-4 my-8 overflow-hidden bg-white border-4 border-double rounded-3xl shadow-2xl"
