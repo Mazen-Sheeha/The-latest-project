@@ -93,6 +93,7 @@ class PageService
                         'price' => (float) $offer['price'],
                         'label' => $offer['label'] ?? null,
                         'image' => $imagePath,
+                        'selected' => !empty($offer['selected']),
                     ];
                 }
             }
@@ -223,6 +224,7 @@ class PageService
                     'price' => (float) $offer['price'],
                     'label' => $offer['label'] ?? null,
                     'image' => $imagePath,
+                    'selected' => !empty($offer['selected']),
                 ];
             }
 

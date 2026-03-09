@@ -57,6 +57,7 @@ class UpdatePageRequest extends FormRequest
             'offers.*.price' => ['nullable', 'numeric', 'min:0'],
             'offers.*.label' => ['nullable', 'string', 'max:255'],
             'offers.*.image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,gif,avif,jfif,bmp,tiff,tif', 'max:5120'],
+            'offers.*.selected' => ['nullable', 'boolean'],
 
             // ================= UPSELL PRODUCTS =================
             'upsell_products' => ['nullable', 'array'],

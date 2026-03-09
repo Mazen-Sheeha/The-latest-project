@@ -308,7 +308,17 @@
                                     @foreach ($page->offers as $index => $offer)
                                         <div class="border rounded p-4 space-y-3 bg-gray-50">
                                             <div class="flex justify-between items-center mb-2">
-                                                <strong>عرض #{{ $index + 1 }}</strong>
+                                                <div class="flex items-center gap-4">
+                                                    <strong>عرض #{{ $index + 1 }}</strong>
+                                                    <label
+                                                        class="flex items-center gap-2 cursor-pointer bg-white px-3 py-1 rounded-full border text-xs font-bold shadow-sm">
+                                                        <input type="checkbox"
+                                                            name="offers[{{ $index }}][selected]" value="1"
+                                                            class="offer-selected-checkbox"
+                                                            {{ isset($offer['selected']) && $offer['selected'] ? 'checked' : '' }}>
+                                                        تفعيل كخيار افتراضي
+                                                    </label>
+                                                </div>
                                                 <button type="button"
                                                     class="text-red-600 remove-offer-btn text-sm font-bold">حذف</button>
                                             </div>
@@ -862,7 +872,17 @@
 
             offerDiv.innerHTML = `
         <div class="flex justify-between items-center mb-2">
-            <strong>عرض #${offerIndex + 1}</strong>
+            <div class="flex items-center gap-4">
+                    <strong>عرض #${offerIndex + 1}</strong>
+                    <label class="flex items-center gap-2 cursor-pointer bg-white px-3 py-1 rounded-full border text-xs font-bold shadow-sm">
+                        <input type="checkbox"
+                               name="offers[${offerIndex}][selected]"
+                               value="1"
+                               class="offer-selected-checkbox"
+                               ${offerIndex === 0 ? 'checked' : ''}>
+                        تفعيل كخيار افتراضي
+                    </label>
+                </div>
             <button type="button" class="text-red-600 remove-offer-btn text-sm font-bold">حذف</button>
         </div>
 
@@ -918,6 +938,17 @@
 
             container.appendChild(offerDiv);
             offerIndex++;
+        });
+
+        // Handle "Select Only One" logic (Delegated)
+        document.addEventListener('change', function(e) {
+            if (e.target && e.target.classList.contains('offer-selected-checkbox')) {
+                if (e.target.checked) {
+                    document.querySelectorAll('.offer-selected-checkbox').forEach(cb => {
+                        if (cb !== e.target) cb.checked = false;
+                    });
+                }
+            }
         });
 
         // Handle existing offer image previews
@@ -1053,13 +1084,13 @@
             <select name="upsell_products[${upsellIndex}][product_id]" class="input w-full product-select" required>
                 <option value="">اختر المنتج</option>
                 ${allProducts.map(p => `
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <option value="${p.id}"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            data-name="${p.name}"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            data-price="${p.price}"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            data-image="${p.image ? '{{ asset('') }}' + p.image : '{{ asset('images/productDefault.webp') }}'}">
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        ${p.name}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    </option>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                `).join('')}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            <option value="${p.id}"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    data-name="${p.name}"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    data-price="${p.price}"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    data-image="${p.image ? '{{ asset('') }}' + p.image : '{{ asset('images/productDefault.webp') }}'}">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ${p.name}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </option>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        `).join('')}
             </select>
         </div>
 

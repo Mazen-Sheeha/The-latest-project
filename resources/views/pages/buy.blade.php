@@ -409,6 +409,22 @@
         #phoneInput.border-green-500 {
             border-color: #22c55e !important;
         }
+
+        @keyframes bounce-x {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            50% {
+                transform: translateX(-5px);
+            }
+        }
+
+        .animate-bounce-x {
+            animation: bounce-x 1s infinite;
+        }
     </style>
 </head>
 
@@ -625,90 +641,192 @@
             </div>
         </section>
 
-        {{-- ORDER MODAL --}}
-        <div class="p-4 sm:p-6 space-y-5">
-            <h2 class="text-2xl font-bold text-center">اطلب الأن</h2>
-            {{-- @dd($page->offers) --}}
-            @if (!empty($page->offers))
-                <div class="space-y-3" id="offersContainer">
-                    @foreach ($page->offers as $offer)
-                        <div class="offer-item flex items-center justify-between gap-3 border rounded-lg p-3 cursor-pointer hover:border-[{{ $darkerColor }}]"
-                            data-quantity="{{ $offer['quantity'] }}" data-price="{{ $offer['price'] }}">
+        {{-- OUTER FRAME CONTAINER --}}
+        <div class="max-w-2xl mx-4 my-8 overflow-hidden bg-white border-4 border-double rounded-3xl shadow-2xl"
+            style="border-color: {{ $page->theme_color }}44;"> {{-- 44 adds transparency to the hex --}}
 
-                            {{-- Left content --}}
-                            <div class="flex items-center gap-3">
+            <div class="p-1 sm:p-2"> {{-- Subtle inner spacing for the frame --}}
+                <div class="p-6 sm:p-10 space-y-8 bg-white rounded-2xl border border-gray-100">
 
-                                @if ($offer['image'])
-                                    <div class="w-14 h-14 rounded-lg overflow-hidden border shrink-0">
-                                        <img src="{{ asset($offer['image']) }}" alt="{{ $offer['price'] }}"
-                                            class="w-full h-full object-cover">
-                                    </div>
-                                @endif
+                    {{-- Header --}}
+                    <div class="text-center space-y-3">
+                        <div class="inline-block px-4 py-1 rounded-full text-xs font-bold tracking-widest uppercase mb-2"
+                            style="background-color: {{ $page->theme_color }}22; color: {{ $darkerColor }};">
+                            وفر اكثر
+                        </div>
+                        <h2 class="text-3xl font-black text-gray-900 leading-tight">اختر العرض المناسب</h2>
+                        <p class="text-gray-500 text-sm">وفر اكثر عند شرائك مع العروض</p>
+                    </div>
 
-                                <div class="font-bold text-sm leading-tight">
-                                    اشتري
-                                    <span class="text-[{{ $darkerColor }}]">{{ $offer['quantity'] }}</span>
-                                    ب
-                                    <span class="text-[{{ $darkerColor }}]">{{ $offer['price'] }} د.إ</span>
-                                </div>
-
+                    {{-- Offers Section --}}
+                    @if (!empty($page->offers))
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-bold text-gray-800 flex items-center gap-2 text-lg">
+                                    <span class="w-2 h-6 rounded-full"
+                                        style="background-color: {{ $page->theme_color }};"></span>
+                                    1. اختر باقتك المفضلة
+                                </h3>
                             </div>
 
-                            {{-- Label --}}
-                            @if ($offer['label'])
-                                <span
-                                    class="px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap
-            bg-[{{ $darkerColor }}]
-            text-[{{ isLightColor($darkerColor) ? '#000' : '#fff' }}]">
-                                    {{ $offer['label'] }}
-                                </span>
-                            @endif
+                            <div class="grid gap-8" id="offersContainer">
+                                @foreach ($page->offers as $index => $offer)
+                                    @php
+                                        $anySelected = collect($page->offers)->contains(function ($o) {
+                                            return isset($o['selected']) &&
+                                                ($o['selected'] == true || $o['selected'] == '1');
+                                        });
+                                        $isActive =
+                                            (isset($offer['selected']) &&
+                                                ($offer['selected'] == true || $offer['selected'] == '1')) ||
+                                            ($index === 0 && !$anySelected);
+                                    @endphp
 
+                                    <div class="offer-item {{ $isActive ? 'selected-offer shadow-md' : '' }} group relative flex items-center justify-between p-5 border-2 rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.01]"
+                                        onclick="selectOffer(this, {{ $index }})"
+                                        data-quantity="{{ $offer['quantity'] }}" data-price="{{ $offer['price'] }}"
+                                        style="border-color: {{ $isActive ? $darkerColor : '#f3f4f6' }}; background-color: #fafafa;">
+
+
+                                        {{-- Selection Indicator --}}
+                                        <div
+                                            class="absolute -top-3 -right-3 bg-white rounded-full shadow-lg {{ $isActive ? '' : 'hidden' }} selection-check z-10">
+                                            <svg class="w-8 h-8" style="color: {{ $darkerColor }};"
+                                                fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd"
+                                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                    clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+
+                                        <div class="flex items-center gap-5">
+                                            @if ($offer['image'])
+                                                <div
+                                                    class="w-20 h-20 rounded-xl overflow-hidden border-2 border-white shadow-sm shrink-0">
+                                                    <img src="{{ asset($offer['image']) }}" alt="offer"
+                                                        class="w-full h-full object-cover">
+                                                </div>
+                                            @endif
+
+                                            <div class="flex flex-col gap-1">
+                                                <div class="text-xl font-black text-gray-800">
+                                                    عدد <span
+                                                        style="color: {{ $darkerColor }};">{{ $offer['quantity'] }}</span>
+                                                    قطعة
+                                                </div>
+                                                <div class="text-lg font-bold" style="color: {{ $darkerColor }};">
+                                                    {{ $offer['price'] }} د.إ
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        @if ($offer['label'])
+                                            <div class="absolute -top-3 left-4 px-3 py-1 text-[10px] font-black rounded-md shadow-sm transform -rotate-2"
+                                                style="background-color: {{ $darkerColor }}; color: {{ isLightColor($darkerColor) ? '#000' : '#fff' }};">
+                                                {{ $offer['label'] }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
-                    @endforeach
-                </div>
-            @endif
+                    @endif
 
-            <div id="orderForm">
-                <form id="formSubmit" method="POST" action="{{ route('pages.submitOrder', $page->slug) }}"
-                    class="space-y-3">
-                    @csrf
-                    <input type="hidden" name="utm_source" id="utm_source" value="">
-                    <input type="hidden" name="utm_campaign" id="utm_campaign" value="">
-                    <input type="hidden" name="quantity" id="orderQuantity" value="1">
-                    <input type="hidden" name="offer_price" id="offer_price"
-                        value="{{ $page->sale_price ?? $page->original_price }}" />
-                    <input name="full_name" placeholder="الاسم بالكامل" required
-                        class="w-full px-4 py-3 border rounded-lg" id="orderName">
-                    <div class="space-y-1" dir="rtl">
-                        <input name="phone" id="phoneInput" dir="rtl"
-                            placeholder="رقم الهاتف (مثال: 0501234567)" required
-                            class="w-full px-4 py-3 border rounded-lg transition-colors duration-300 outline-none"
-                            type="tel">
-                        <p id="phoneError" class="text-red-500 text-xs hidden">يرجى إدخال رقم هاتف إماراتي صحيح
-                            (05xxxxxxxx)</p>
+                    {{-- Form Section --}}
+                    <div id="orderForm" class="p-6 rounded-2xl border-2 border-dashed"
+                        style="border-color: {{ $page->theme_color }}33; background-color: #fdfdfd;">
+                        <h3 class="font-bold text-gray-800 flex items-center gap-2 mb-6 text-lg">
+                            <span class="w-2 h-6 rounded-full"
+                                style="background-color: {{ $page->theme_color }};"></span>
+                            2. بيانات التوصيل
+                        </h3>
+
+                        <form id="formSubmit" method="POST" action="{{ route('pages.submitOrder', $page->slug) }}"
+                            class="space-y-5">
+                            @csrf
+                            <input type="hidden" name="quantity" id="orderQuantity" value="1">
+                            <input type="hidden" name="offer_price" id="offer_price"
+                                value="{{ $page->sale_price ?? $page->original_price }}" />
+                            <input type="hidden" name="order_index_string" id="orderIndexString" value="">
+
+                            <div class="space-y-1">
+                                <label class="text-sm font-bold text-gray-700 mr-1">الاسم بالكامل</label>
+                                <input name="full_name" placeholder="ادخل اسمك هنا" required
+                                    class="w-full px-4 py-4 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-opacity-10 transition-all outline-none"
+                                    style="--tw-focus-ring-color: {{ $page->theme_color }};">
+                            </div>
+
+                            <div class="space-y-1" dir="rtl">
+                                <label class="text-sm font-bold text-gray-700 mr-1">رقم الهاتف</label>
+                                <input name="phone" id="phoneInput" dir="rtl" placeholder="05xxxxxxxx"
+                                    required
+                                    class="w-full px-4 py-4 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-opacity-10 transition-all outline-none"
+                                    type="tel">
+                                <p id="phoneError" class="text-red-500 text-xs hidden">يرجى إدخال رقم هاتف إماراتي
+                                    صحيح
+                                    (05xxxxxxxx)</p>
+                            </div>
+
+
+                            <div class="space-y-1">
+                                <label class="text-sm font-bold text-gray-700 mr-1">الإمارة</label>
+                                <select name="government" required
+                                    class="w-full px-4 py-4 bg-white border border-gray-200 rounded-xl focus:ring-4 outline-none appearance-none">
+                                    <option value="Abu Dhabi" selected>Abu Dhabi / أبو ظبي</option>
+                                    <option value="Dubai">Dubai / دبي</option>
+                                    <option value="Sharjah">Sharjah / الشارقة</option>
+                                    <option value="Ajman">Ajman / عجمان</option>
+                                    <option value="Al Ain">Al Ain / العين</option>
+                                    <option value="Fujairah">Fujairah / الفجيرة</option>
+                                    <option value="Umm Al-Quwain">Umm Al-Quwain / أم القيوين</option>
+                                    <option value="Ras Al Khaimah">Ras Al Khaimah / رأس الخيمة</option>
+                                </select>
+                            </div>
+
+                            <div class="space-y-1">
+                                <label class="text-sm font-bold text-gray-700 mr-1">العنوان</label>
+                                <textarea name="address" placeholder="يرجى كتابة العنوان بالتفصيل..." required rows="2"
+                                    class="w-full px-4 py-4 bg-white border border-gray-200 rounded-xl resize-none outline-none focus:ring-4"></textarea>
+                            </div>
+
+                            <button type="submit" id="submitBtn"
+                                class="w-full font-black py-5 rounded-2xl text-2xl shadow-xl transform transition hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3"
+                                style="background-color: {{ $page->theme_color }}; color: {{ $contrastColor }};">
+                                <span>تأكيد الطلب الآن</span>
+                                <svg class="w-6 h-6 animate-bounce-x" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                        d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                </svg>
+                            </button>
+                        </form>
                     </div>
-                    <select name="government" required class="w-full px-4 py-3 border rounded-lg bg-white">
-                        <option value="Abu Dhabi" selected>Abu Dhabi / أبو ظبي</option>
-                        <option value="Dubai">Dubai / دبي</option>
-                        <option value="Sharjah">Sharjah / الشارقة</option>
-                        <option value="Ajman">Ajman / عجمان</option>
-                        <option value="Al Ain">Al Ain / العين</option>
-                        <option value="Fujairah">Fujairah / الفجيرة</option>
-                        <option value="Umm Al-Quwain">Umm Al-Quwain / أم القيوين</option>
-                        <option value="Ras Al Khaimah">Ras Al Khaimah / رأس الخيمة</option>
-                    </select>
-                    <input type="hidden" name="order_index_string" id="orderIndexString" value="">
 
-                    <textarea name="address" placeholder="العنوان بالتفصيل" required rows="3"
-                        class="w-full px-4 py-3 border rounded-lg resize-none"></textarea>
-                    <button type="submit" id="submitBtn" class="w-full font-bold py-3 rounded-lg text-lg"
-                        style="background-color: {{ $page->theme_color }}; color: {{ $contrastColor }};">
-                        تأكيد الطلب
-                    </button>
-                </form>
+                    {{-- Trust Badges --}}
+                    {{-- <div class="flex justify-center gap-6 text-gray-400 opacity-70">
+                        <div class="flex flex-col items-center gap-1">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                                    stroke-width="2" />
+                            </svg>
+                            <span class="text-[10px] font-bold">ضمان أصلي</span>
+                        </div>
+                        <div class="flex flex-col items-center gap-1">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M20 12H4M10 18l-6-6 6-6" stroke-width="2" />
+                            </svg>
+                            <span class="text-[10px] font-bold">دفع عند الاستلام</span>
+                        </div>
+                        <div class="flex flex-col items-center gap-1">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M5 13l4 4L19 7" stroke-width="2" />
+                            </svg>
+                            <span class="text-[10px] font-bold">فحص قبل الدفع</span>
+                        </div>
+                    </div> --}}
+                </div>
             </div>
-
         </div>
 
         {{-- ALL IMAGES --}}
@@ -719,19 +837,57 @@
                     صور المنتج
                 </h2> --}}
 
-                <div class="grid grid-cols-1 gap-3">
+                <div class="grid grid-cols-1">
                     @foreach ($page->images as $order => $path)
                         @if ($loop->first)
                             @continue
                         @endif
                         <button type="button" onclick="openImageModal('{{ asset($path) }}')"
                             class="focus:outline-none">
-                            <img src="{{ asset($path) }}" class="w-full object-cover rounded-lg shadow">
+                            <img src="{{ asset($path) }}" class="w-full object-cover shadow">
                         </button>
                     @endforeach
                 </div>
             </div>
         </section>
+
+        {{-- REVIEWS --}}
+        @if ($page->reviews->count())
+            <section class="bg-white rounded-lg shadow p-6 space-y-6">
+                <h2 class="text-xl font-bold text-gray-800">
+                    آراء العملاء
+                    <span class="text-sm text-gray-500">({{ $page->reviews->count() }} تقييم)</span>
+                </h2>
+                <div class="space-y-5">
+                    @foreach ($page->reviews as $review)
+                        <div class="flex gap-4 border-b pb-5 last:border-b-0">
+                            <div class="shrink-0">
+                                @if ($review->reviewer_image)
+                                    <img src="{{ asset($review->reviewer_image) }}"
+                                        class="w-12 h-12 rounded-full object-cover border">
+                                @else
+                                    <div
+                                        class="w-12 h-12 rounded-full flex items-center justify-center bg-gray-200 text-gray-600 font-bold border">
+                                        {{ mb_substr($review->reviewer_name, 0, 1) }}
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="flex-1 space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <strong class="text-gray-800">{{ $review->reviewer_name }}</strong>
+                                    <div class="flex text-yellow-400 text-sm">
+                                        @for ($i = 1; $i <= 5; $i++)
+                                            {{ $i <= $review->stars ? '★' : '☆' }}
+                                        @endfor
+                                    </div>
+                                </div>
+                                <p class="text-gray-600 text-sm leading-relaxed">{{ $review->comment }}</p>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </section>
+        @endif
 
         @if (!empty($page->features))
             <div class="card border-b">
@@ -807,45 +963,6 @@
             </div>
         @endif
 
-        {{-- REVIEWS --}}
-        @if ($page->reviews->count())
-            <section class="bg-white rounded-lg shadow p-6 space-y-6">
-                <h2 class="text-xl font-bold text-gray-800">
-                    آراء العملاء
-                    <span class="text-sm text-gray-500">({{ $page->reviews->count() }} تقييم)</span>
-                </h2>
-                <div class="space-y-5">
-                    @foreach ($page->reviews as $review)
-                        <div class="flex gap-4 border-b pb-5 last:border-b-0">
-                            <div class="shrink-0">
-                                @if ($review->reviewer_image)
-                                    <img src="{{ asset($review->reviewer_image) }}"
-                                        class="w-12 h-12 rounded-full object-cover border">
-                                @else
-                                    <div
-                                        class="w-12 h-12 rounded-full flex items-center justify-center bg-gray-200 text-gray-600 font-bold border">
-                                        {{ mb_substr($review->reviewer_name, 0, 1) }}
-                                    </div>
-                                @endif
-                            </div>
-                            <div class="flex-1 space-y-1">
-                                <div class="flex items-center justify-between">
-                                    <strong class="text-gray-800">{{ $review->reviewer_name }}</strong>
-                                    <div class="flex text-yellow-400 text-sm">
-                                        @for ($i = 1; $i <= 5; $i++)
-                                            {{ $i <= $review->stars ? '★' : '☆' }}
-                                        @endfor
-                                    </div>
-                                </div>
-                                <p class="text-gray-600 text-sm leading-relaxed">{{ $review->comment }}</p>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </section>
-        @endif
-
-
         {{-- STICKY ORDER BUTTON --}}
         <div id="sticky-order"
             class="fixed bottom-0 inset-x-0 z-40 bg-white border-t shadow-lg p-3 transition-transform duration-300 ease-in-out">
@@ -859,7 +976,7 @@
     </div>
 
     @if (request()->query('success'))
-        <div id="successOverlay" class="fixed inset-0 bg-black/80 z-[999] flex items-center justify-center">
+        <div id="successOverlay" class="fixed inset-0 bg-black/80 z-999 flex items-center justify-center">
             <div class="bg-white rounded-2xl p-8 text-center max-w-sm w-full mx-4 animate-scale-in">
                 <div class="mx-auto mb-4 w-20 h-20 rounded-full bg-green-100 flex items-center justify-center">
                     <svg class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" stroke-width="3"
@@ -941,6 +1058,37 @@
             block: 'start'
         });
     }
+
+    function selectOffer(element, index) {
+        if (!element) return;
+
+        document.querySelectorAll('.offer-item').forEach(item => {
+            item.style.borderColor = '#f3f4f6';
+            item.classList.remove('shadow-md', 'selected-offer');
+            item.querySelector('.selection-check').classList.add('hidden');
+        });
+
+        element.style.borderColor = "{{ $darkerColor }}";
+        element.classList.add('shadow-md', 'selected-offer');
+        element.querySelector('.selection-check').classList.remove('hidden');
+
+        document.getElementById('orderQuantity').value = element.dataset.quantity;
+        document.getElementById('offer_price').value = element.dataset.price;
+        document.getElementById('orderIndexString').value = index;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const activeOffer = document.querySelector('.offer-item.selected-offer');
+
+        console.log(activeOffer)
+
+        if (activeOffer) {
+            const allOffers = Array.from(document.querySelectorAll('.offer-item'));
+            const activeIndex = allOffers.indexOf(activeOffer);
+
+            selectOffer(activeOffer, activeIndex);
+        }
+    });
 </script>
 
 <script>
@@ -1095,58 +1243,6 @@
         };
         tick();
         setInterval(tick, 1000);
-    });
-</script>
-
-<script>
-    const offers = document.querySelectorAll('#offersContainer .offer-item');
-    const quantityInput = document.getElementById('orderQuantity');
-    const offerPriceInput = document.getElementById('offer_price');
-
-    let selectedOffer = null;
-
-    // default values
-    quantityInput.value = 1;
-
-    offers.forEach(offer => {
-        offer.addEventListener('click', () => {
-
-            // unselect if clicked again
-            if (selectedOffer === offer) {
-                offer.classList.remove(
-                    'border-[{{ $page->theme_color }}]',
-                    'shadow-xl',
-                    'border-2'
-                );
-
-                selectedOffer = null;
-                quantityInput.value = 1;
-
-                // back to normal price
-                offerPriceInput.value = "{{ $page->sale_price ?? $page->product->price }}";
-                return;
-            }
-
-            // remove all selection
-            offers.forEach(o => o.classList.remove(
-                'border-[{{ $page->theme_color }}]',
-                'shadow-xl',
-                'border-2'
-            ));
-
-            // select current
-            offer.classList.add(
-                'border-[{{ $page->theme_color }}]',
-                'shadow-xl',
-                'border-2'
-            );
-
-            selectedOffer = offer;
-
-            quantityInput.value = offer.dataset.quantity;
-
-            offerPriceInput.value = offer.dataset.price;
-        });
     });
 </script>
 
