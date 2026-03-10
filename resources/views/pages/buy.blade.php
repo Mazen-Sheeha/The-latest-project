@@ -685,7 +685,7 @@
                                     @endphp
 
                                     <div class="offer-item {{ $isActive ? 'selected-offer shadow-md' : '' }} group relative flex items-center justify-between p-5 border-2 rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.01]"
-                                        onclick="selectOffer(this, {{ $index }})"
+                                        onclick="selectOffer(this, {{ $index }}, true)"
                                         data-quantity="{{ $offer['quantity'] }}" data-price="{{ $offer['price'] }}"
                                         style="border-color: {{ $isActive ? $darkerColor : '#f3f4f6' }}; background-color: #fafafa;">
 
@@ -1061,14 +1061,28 @@
         });
     }
 
-    function selectOffer(element, index) {
+    function selectOffer(element, index, undoInit) {
         if (!element) return;
+
+        const isAlreadySelected = element.classList.contains('selected-offer');
 
         document.querySelectorAll('.offer-item').forEach(item => {
             item.style.borderColor = '#f3f4f6';
             item.classList.remove('shadow-md', 'selected-offer');
             item.querySelector('.selection-check').classList.add('hidden');
         });
+
+        if (isAlreadySelected && undoInit) {
+            element.style.borderColor = '#f3f4f6';
+            element.classList.remove('shadow-md', 'selected-offer');
+            element.querySelector('.selection-check').classList.add('hidden');
+
+            document.getElementById('orderQuantity').value = "1";
+            document.getElementById('offer_price').value =
+                "{{ $page->pageSaleActive() ? $page->sale_price : $page->original_price }}";
+            document.getElementById('orderIndexString').value = "";
+            return
+        }
 
         element.style.borderColor = "{{ $darkerColor }}";
         element.classList.add('shadow-md', 'selected-offer');
@@ -1082,13 +1096,15 @@
     document.addEventListener('DOMContentLoaded', () => {
         const activeOffer = document.querySelector('.offer-item.selected-offer');
 
-        console.log(activeOffer)
-
         if (activeOffer) {
             const allOffers = Array.from(document.querySelectorAll('.offer-item'));
             const activeIndex = allOffers.indexOf(activeOffer);
 
-            selectOffer(activeOffer, activeIndex);
+            selectOffer(activeOffer, activeIndex, false);
+        } else {
+            document.getElementById('orderQuantity').value = "";
+            document.getElementById('offer_price').value = "";
+            document.getElementById('orderIndexString').value = "";
         }
     });
 </script>
