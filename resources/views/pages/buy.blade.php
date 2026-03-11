@@ -711,11 +711,17 @@
                                             @endif
                                             <div class="flex flex-col justify-between items-center gap-5">
                                                 @php
-                                                    $defaultSentence =
-                                                        'اشتري ' .
-                                                        $offer['quantity'] .
-                                                        ' ' .
-                                                        ($offer['quantity'] == 1 ? 'قطعة' : 'قطع');
+                                                    $qty = $offer['quantity'];
+                                                    $price = $offer['price'];
+
+                                                    $defaultSentence = match (true) {
+                                                        $qty == 1 => "قطعة واحدة بـ {$price} د.إ فقط",
+                                                        $qty == 2 => "قطعتين بـ {$price} د.إ فقط",
+                                                        $qty == 3 => "ثلاث قطع بـ {$price} د.إ فقط",
+                                                        $qty == 4 => "أربع قطع بـ {$price} د.إ فقط",
+                                                        $qty == 5 => "خمس قطع بـ {$price} د.إ فقط",
+                                                        default => "{$qty} قطع بـ {$price} د.إ فقط",
+                                                    };
 
                                                     $lineThroughPrice = null;
                                                     if ($page->pageSaleActive()) {
@@ -724,7 +730,6 @@
                                                         $lineThroughPrice = $page->original_price;
                                                     }
                                                 @endphp
-
                                                 <div
                                                     class="text-xl font-black text-gray-800 self-start max-w-fit min-w-32">
                                                     {{ !empty($offer['sentence']) ? $offer['sentence'] : $defaultSentence }}
