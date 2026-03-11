@@ -100,6 +100,17 @@ class PageService
             $validatedData['offers'] = $offers;
         }
 
+        $activeFeatures = $validatedData['features_active'] ?? [];
+        $featureLabels = $validatedData['features_labels'] ?? [];
+
+        $features = [];
+        foreach ($activeFeatures as $value) {
+            $features[$value] = $featureLabels[$value] ?? $value;
+        }
+
+        $validatedData['features'] = $features;
+        unset($validatedData['features_active'], $validatedData['features_labels']);
+
         $page = Page::create($validatedData);
 
         if (isset($validatedData['reviews']) && is_array($validatedData['reviews'])) {
@@ -187,6 +198,17 @@ class PageService
             // Keep existing images untouched
             $finalImages = $oldImages;
         }
+
+        $activeFeatures = $validatedData['features_active'] ?? [];
+        $featureLabels = $validatedData['features_labels'] ?? [];
+
+        $features = [];
+        foreach ($activeFeatures as $value) {
+            $features[$value] = $featureLabels[$value] ?? $value;
+        }
+
+        $validatedData['features'] = $features;
+        unset($validatedData['features_active'], $validatedData['features_labels']);
 
         $validatedData['images'] = $finalImages;
 

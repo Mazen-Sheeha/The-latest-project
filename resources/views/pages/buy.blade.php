@@ -891,12 +891,11 @@
             </section>
         @endif
 
-        @if (!empty($page->features))
+        {{-- @if (!empty($page->features))
             <div class="card border-b">
                 <div class="p-4 grid grid-cols-2 gap-3 features-grid">
 
                     @if (in_array('cod', $page->features ?? []))
-                        {{-- الدفع عند الاستلام --}}
                         <label class="border p-3 rounded flex items-center gap-4">
                             <i class="fa-regular fa-credit-card text-[{{ $page->theme_color }}] text-3xl"></i>
                             <div>
@@ -907,7 +906,6 @@
                     @endif
 
                     @if (in_array('free_shipping', $page->features ?? []))
-                        {{-- شحن مجاني --}}
                         <label class="border p-3 rounded flex items-center gap-4">
                             <i class="fa-regular fa-truck text-[{{ $page->theme_color }}] text-3xl"></i>
                             <div>
@@ -918,7 +916,6 @@
                     @endif
 
                     @if (in_array('replace', $page->features ?? []))
-                        {{-- استبدال خلال 7 أيام --}}
                         <label class="border p-3 rounded flex items-center gap-4">
                             <i class="fa-solid fa-arrows-rotate text-[{{ $page->theme_color }}] text-3xl"></i>
                             <div>
@@ -930,7 +927,6 @@
 
 
                     @if (in_array('support', $page->features ?? []))
-                        {{-- خدمة 7\24 --}}
                         <label class="border p-3 rounded flex items-center gap-4">
                             <i class="fa-solid fa-headset text-[{{ $page->theme_color }}] text-3xl"></i>
                             <div>
@@ -941,7 +937,6 @@
                     @endif
 
                     @if (in_array('warranty', $page->features ?? []))
-                        {{-- ضمان لمدة سنة --}}
                         <label class="border p-3 rounded flex items-center gap-4">
                             <i class="fa-solid fa-shield text-[{{ $page->theme_color }}] text-3xl"></i>
                             <div>
@@ -952,7 +947,6 @@
                     @endif
 
                     @if (in_array('same_day', $page->features ?? []))
-                        {{-- التوصيل نفس اليوم --}}
                         <label class="border p-3 rounded flex items-center gap-4">
                             <i class="fa-solid fa-hourglass text-[{{ $page->theme_color }}] text-3xl"></i>
                             <div>
@@ -961,6 +955,33 @@
                             </div>
                         </label>
                     @endif
+                </div>
+            </div>
+        @endif --}}
+
+        @if (!empty($page->features))
+            <div class="card border-b">
+                <div class="p-4 grid grid-cols-2 gap-3 features-grid">
+                    @php
+                        $featureIcons = [
+                            'cod' => 'fa-regular fa-credit-card',
+                            'free_shipping' => 'fa-regular fa-truck',
+                            'replace' => 'fa-solid fa-arrows-rotate',
+                            'support' => 'fa-solid fa-headset',
+                            'warranty' => 'fa-solid fa-shield',
+                            'same_day' => 'fa-solid fa-hourglass',
+                        ];
+                    @endphp
+
+                    @foreach ($page->features as $value => $label)
+                        <label class="border p-3 rounded flex items-center gap-4">
+                            @if (isset($featureIcons[$value]))
+                                <i class="{{ $featureIcons[$value] }} text-[{{ $page->theme_color }}] text-3xl"></i>
+                            @endif
+                            <p>{{ $label }}</p>
+                        </label>
+                    @endforeach
+
                 </div>
             </div>
         @endif

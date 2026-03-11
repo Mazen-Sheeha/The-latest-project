@@ -73,8 +73,11 @@ class UpdatePageRequest extends FormRequest
             'top_feature_text.*' => ['nullable', 'string', 'max:255'],
 
             // ================= MISC =================
-            'features' => ['sometimes', 'array'],
-            'features.*' => ['string'],
+            'features_active' => ['nullable', 'array'],
+            'features_active.*' => ['string'],
+            'features_labels' => ['nullable', 'array'],
+            'features_labels.*' => ['nullable', 'string', 'max:255'],
+
             'whatsapp_phone' => ['nullable', 'string', 'max:32'],
             'whatsapp_label' => ['nullable', 'string', 'max:255'],
 

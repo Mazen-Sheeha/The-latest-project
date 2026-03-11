@@ -374,38 +374,28 @@
                             <h3>المميزات</h3>
                         </div>
 
-                        <div class="p-4 grid grid-cols-2 gap-3">
+                        <div class="card-body p-6 space-y-3">
+                            @php
+                                $featureDefaults = [
+                                    'cod' => 'الدفع عند الاستلام',
+                                    'free_shipping' => 'شحن مجاني',
+                                    'replace' => 'استبدال خلال 7 ايام',
+                                    'support' => 'خدمة 24/7',
+                                    'warranty' => 'ضمان سنة',
+                                    'same_day' => 'التوصيل نفس اليوم',
+                                ];
+                            @endphp
 
-                            <label class="border p-3 rounded cursor-pointer">
-                                <input type="checkbox" name="features[]" value="cod">
-                                الدفع عند الاستلام
-                            </label>
+                            @foreach ($featureDefaults as $value => $defaultLabel)
+                                <div class="flex items-center gap-3 border rounded-lg p-3">
+                                    <input type="checkbox" name="features_active[]" value="{{ $value }}"
+                                        class="w-5 h-5 cursor-pointer accent-indigo-600 shrink-0">
 
-                            <label class="border p-3 rounded cursor-pointer">
-                                <input type="checkbox" name="features[]" value="free_shipping">
-                                شحن مجاني
-                            </label>
-
-                            <label class="border p-3 rounded cursor-pointer">
-                                <input type="checkbox" name="features[]" value="replace">
-                                استبدال خلال 7 ايام
-                            </label>
-
-                            <label class="border p-3 rounded cursor-pointer">
-                                <input type="checkbox" name="features[]" value="support">
-                                خدمة 24/7
-                            </label>
-
-                            <label class="border p-3 rounded cursor-pointer">
-                                <input type="checkbox" name="features[]" value="warranty">
-                                ضمان سنة
-                            </label>
-
-                            <label class="border p-3 rounded cursor-pointer">
-                                <input type="checkbox" name="features[]" value="same_day">
-                                التوصيل نفس اليوم
-                            </label>
-
+                                    <input type="text" name="features_labels[{{ $value }}]"
+                                        class="input flex-1" value="{{ $defaultLabel }}"
+                                        placeholder="{{ $defaultLabel }}">
+                                </div>
+                            @endforeach
                         </div>
                     </div>
 
@@ -831,13 +821,13 @@
             <select name="upsell_products[${upsellIndex}][product_id]" class="input w-full product-select" required>
                 <option value="">اختر المنتج</option>
                 ${allProducts.map(p => `
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                            <option value="${p.id}"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    data-name="${p.name}"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    data-price="${p.price}"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    data-image="${p.image ? '{{ asset('') }}' + p.image : '{{ asset('images/productDefault.webp') }}'}">
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ${p.name}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </option>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                        `).join('')}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                <option value="${p.id}"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        data-name="${p.name}"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        data-price="${p.price}"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        data-image="${p.image ? '{{ asset('') }}' + p.image : '{{ asset('images/productDefault.webp') }}'}">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ${p.name}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </option>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            `).join('')}
             </select>
         </div>
 
