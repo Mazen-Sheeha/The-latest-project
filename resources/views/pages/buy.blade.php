@@ -651,14 +651,21 @@
                 <div class="p-6 sm:p-10 space-y-8 bg-white rounded-2xl border border-gray-100">
 
                     {{-- Header --}}
-                    <div class="text-center space-y-3">
-                        <div class="inline-block px-4 py-1 rounded-full text-xs font-bold tracking-widest uppercase mb-2"
-                            style="background-color: {{ $page->theme_color }}22; color: {{ $darkerColor }};">
-                            وفر اكثر
+                    @if (!empty($page->offers) && count($page->offers) > 0)
+                        <div class="text-center space-y-3">
+                            <div class="inline-block px-4 py-1 rounded-full text-xs font-bold tracking-widest uppercase mb-2"
+                                style="background-color: {{ $page->theme_color }}22; color: {{ $darkerColor }};">
+                                وفر اكثر
+                            </div>
+                            <h2 class="text-3xl font-black text-gray-900 leading-tight">اختر العرض المناسب</h2>
+                            <p class="text-gray-500 text-sm">وفر اكثر عند شرائك مع العروض</p>
                         </div>
-                        <h2 class="text-3xl font-black text-gray-900 leading-tight">اختر العرض المناسب</h2>
-                        <p class="text-gray-500 text-sm">وفر اكثر عند شرائك مع العروض</p>
-                    </div>
+                    @else
+                        <div class="text-center space-y-3">
+                            <h2 class="text-3xl font-black text-gray-900 leading-tight">اطلب الآن</h2>
+                            <p class="text-gray-500 text-sm">أدخل بياناتك وسنوصلها إليك</p>
+                        </div>
+                    @endif
 
                     {{-- Offers Section --}}
                     @if (!empty($page->offers))
