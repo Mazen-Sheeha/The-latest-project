@@ -94,6 +94,7 @@ class PageService
                         'label' => $offer['label'] ?? null,
                         'image' => $imagePath,
                         'selected' => !empty($offer['selected']),
+                        'sentence' => $offer['sentence'] ?? null
                     ];
                 }
             }
@@ -247,6 +248,7 @@ class PageService
                     'label' => $offer['label'] ?? null,
                     'image' => $imagePath,
                     'selected' => !empty($offer['selected']),
+                    'sentence' => $offer['sentence'] ?? null
                 ];
             }
 

@@ -701,7 +701,7 @@
                                             </svg>
                                         </div>
 
-                                        <div class="flex items-center gap-5">
+                                        <div class="flex justify-between items-center gap-5">
                                             @if ($offer['image'])
                                                 <div
                                                     class="w-20 h-20 rounded-xl overflow-hidden border-2 border-white shadow-sm shrink-0">
@@ -709,17 +709,41 @@
                                                         class="w-full h-full object-cover">
                                                 </div>
                                             @endif
+                                            <div class="flex flex-col justify-between items-center gap-5">
+                                                @php
+                                                    $defaultSentence =
+                                                        'اشتري ' .
+                                                        $offer['quantity'] .
+                                                        ' ' .
+                                                        ($offer['quantity'] == 1 ? 'قطعة' : 'قطع');
 
-                                            <div class="flex flex-col gap-1">
-                                                <div class="text-xl font-black text-gray-800">
-                                                    عدد <span
-                                                        style="color: {{ $darkerColor }};">{{ $offer['quantity'] }}</span>
-                                                    قطعة
+                                                    $lineThroughPrice = null;
+                                                    if ($page->pageSaleActive()) {
+                                                        $lineThroughPrice = $page->sale_price;
+                                                    } elseif ($page->original_price) {
+                                                        $lineThroughPrice = $page->original_price;
+                                                    }
+                                                @endphp
+
+                                                <div
+                                                    class="text-xl font-black text-gray-800 self-start max-w-fit min-w-32">
+                                                    {{ !empty($offer['sentence']) ? $offer['sentence'] : $defaultSentence }}
                                                 </div>
-                                                <div class="text-lg font-bold" style="color: {{ $darkerColor }};">
-                                                    {{ $offer['price'] }} د.إ
+
+                                                <div class="flex items-baseline gap-4 self-start">
+                                                    <div class="text-lg font-bold"
+                                                        style="color: {{ $darkerColor }};">
+                                                        {{ $offer['price'] }} د.إ
+                                                    </div>
+
+                                                    @if ($lineThroughPrice)
+                                                        <div class="text-sm text-gray-400 line-through">
+                                                            {{ $lineThroughPrice }} د.إ
+                                                        </div>
+                                                    @endif
                                                 </div>
                                             </div>
+
                                         </div>
 
                                         @if ($offer['label'])
