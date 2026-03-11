@@ -180,13 +180,49 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <form action="{{ route('pages.toggleActive', $page) }}" method="POST">
+                                    {{-- <form action="{{ route('pages.toggleActive', $page) }}" method="POST">
                                         @csrf
                                         @method('PATCH')
                                         <button type="submit"
                                             class="badge cursor-pointer {{ $page->is_active ? 'badge-success' : 'badge-danger' }}">
                                             {{ $page->is_active ? 'منشورة' : 'غير منشورة' }}
                                         </button>
+                                    </form> --}}
+                                    <form action="{{ route('pages.toggleActive', $page) }}" method="POST">
+                                        @csrf
+                                        @method('PATCH')
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <div style="position:relative; width:44px; height:24px;">
+                                                <input type="checkbox"
+                                                    style="opacity:0; width:0; height:0; position:absolute;"
+                                                    onchange="this.closest('form').submit()"
+                                                    {{ $page->is_active ? 'checked' : '' }} class="toggle-peer">
+                                                <div
+                                                    style="
+                position: absolute;
+                inset: 0;
+                background-color: {{ $page->is_active ? '#22c55e' : '#d1d5db' }};
+                border-radius: 9999px;
+                transition: background-color 0.2s;
+            ">
+                                                    <div
+                                                        style="
+                    position: absolute;
+                    top: 2px;
+                    {{ $page->is_active ? 'left: 22px;' : 'left: 2px;' }}
+                    width: 20px;
+                    height: 20px;
+                    background: white;
+                    border-radius: 50%;
+                    transition: left 0.2s;
+                ">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <span class="text-xs text-gray-500">
+                                                {{ $page->is_active ? 'منشورة' : 'غير منشورة' }}
+                                            </span>
+                                        </label>
                                     </form>
                                 </td>
                                 <td>

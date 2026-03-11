@@ -41,13 +41,13 @@ class PageController extends Controller
             $page = Page::with('product', 'reviews', 'pixels')
                 ->where('slug', $slug)
                 ->where('is_active', true)
-                ->firstOrFail();
+                ->first();
         } else {
             $page = Page::with('product', 'reviews', 'pixels')
                 ->where('slug', $slug)
                 ->where('domain_id', $domain->id)
                 ->where('is_active', true)
-                ->firstOrFail();
+                ->first();
         }
 
         if (!$page) {
@@ -72,13 +72,13 @@ class PageController extends Controller
             $page = Page::with('product', 'reviews', 'pixels')
                 ->where('slug', $slug)
                 ->where('is_active', true)
-                ->firstOrFail();
+                ->first();
         } else {
             $page = Page::with('product', 'reviews', 'pixels')
                 ->where('slug', $slug)
                 ->where('domain_id', $domain->id)
                 ->where('is_active', true)
-                ->firstOrFail();
+                ->first();
         }
 
         if (!$page) {
