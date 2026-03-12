@@ -54,13 +54,6 @@ Route::middleware("auth")->group(function () {
     Route::middleware("RedirectIfCannot:access-orders")->group(function () {
         Route::resource("/orders", OrderController::class)
             ->only(['index', 'show', 'edit', 'update', 'create', 'store', 'destroy']);
-        Route::get('/cart-users', [CartUserController::class, 'index'])->name('cart_users.index');
-        Route::delete('cart-users/{cartUser}', [CartUserController::class, 'destroy'])->name('cart-users.destroy');
-        Route::delete('cart-users', [CartUserController::class, 'destroyAll'])->name('cart-users.destroyAll');
-        Route::post('cart-users/{id}/complete-order', [CartUserController::class, 'completeOrder'])->name('cart-users.completeOrder');
-        Route::post('cart-users/{id}/cancel-order', [CartUserController::class, 'cancelOrder'])
-            ->name('cart-users.cancelOrder');
-
         Route::get('/notifications/fetch', [NotificationController::class, 'fetch'])->name('notifications.fetch');
         Route::controller(OrderController::class)->group(function () {
             Route::get('/orders/export/excel', 'export')->name('orders.export');
@@ -73,6 +66,16 @@ Route::middleware("auth")->group(function () {
             Route::post('/blocked_numbers', 'store')->name('blocked_numbers.store');
         });
     });
+
+    Route::middleware("RedirectIfCannot:access-cart-users")->group(function () {
+        Route::get('/cart-users', [CartUserController::class, 'index'])->name('cart_users.index');
+        Route::delete('cart-users/{cartUser}', [CartUserController::class, 'destroy'])->name('cart-users.destroy');
+        Route::delete('cart-users', [CartUserController::class, 'destroyAll'])->name('cart-users.destroyAll');
+        Route::post('cart-users/{id}/complete-order', [CartUserController::class, 'completeOrder'])->name('cart-users.completeOrder');
+        Route::post('cart-users/{id}/cancel-order', [CartUserController::class, 'cancelOrder'])
+            ->name('cart-users.cancelOrder');
+    });
+
     Route::middleware("RedirectIfCannot:access-ads")->group(function () {
         Route::resource('/adsets', AdsetController::class)
             ->only(['index', 'store', 'edit', 'update', 'destroy']);

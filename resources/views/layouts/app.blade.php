@@ -104,6 +104,8 @@
                                         </a>
                                     </div>
                                 </div>
+                            @endcan
+                            @can('access-cart-users')
                                 <div class="menu-item @if (request()->is('cart-users*')) active @endif">
                                     <div class="menu-link flex items-center grow cursor-pointer border border-transparent gap-[10px] ps-[10px] pe-[10px] py-[6px]"
                                         tabindex="0">
@@ -208,41 +210,67 @@
                                 </div>
                             @endcan
 
-                            @can('access-pages')
-                                <div class="menu-item @if (request()->is('pages*')) active @endif">
+                            @canany(['access-pages', 'access-pixels', 'access-domains'])
+                                <div class="menu-item @if (request()->is('pages*') || request()->is('domains*') || request()->is('pixels*')) show @endif"
+                                    data-menu-item-toggle="accordion" data-menu-item-trigger="click">
                                     <div class="menu-link flex items-center grow cursor-pointer border border-transparent gap-[10px] ps-[10px] pe-[10px] py-[6px]"
                                         tabindex="0">
-                                        <a href="{{ route('pages.index') }}"
+                                        <span
                                             class="menu-title text-sm font-medium text-gray-800 menu-item-active:text-primary menu-link-hover:!text-primary">
-                                            الصفحات
-                                        </a>
+                                            Landing pages
+                                        </span>
+                                        <span class="menu-arrow text-gray-400 w-[20px] shrink-0 justify-end ms-1 me-[-10px]">
+                                            <i class="ki-filled ki-plus text-2xs menu-item-show:hidden"></i>
+                                            <i class="ki-filled ki-minus text-2xs hidden menu-item-show:inline-flex"></i>
+                                        </span>
                                     </div>
-                                </div>
-                            @endcan
+                                    <div
+                                        class="menu-accordion gap-0.5 ps-[10px] relative before:absolute before:start-[20px] before:top-0 before:bottom-0 before:border-s before:border-gray-200">
 
-                            @can('access-domains')
-                                <div class="menu-item @if (request()->is('domains*')) active @endif">
-                                    <div class="menu-link flex items-center grow cursor-pointer border border-transparent gap-[10px] ps-[10px] pe-[10px] py-[6px]"
-                                        tabindex="0">
-                                        <a href="{{ route('domains.index') }}"
-                                            class="menu-title text-sm font-medium text-gray-800 menu-item-active:text-primary menu-link-hover:!text-primary">
-                                            دومينات الصفحات
-                                        </a>
-                                    </div>
-                                </div>
-                            @endcan
+                                        @can('access-pages')
+                                            <div class="menu-item @if (request()->is('pages*')) active @endif">
+                                                <a class="menu-link border border-transparent items-center grow menu-item-active:bg-secondary-active menu-item-active:rounded-lg hover:bg-secondary-active hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]"
+                                                    href="{{ route('pages.index') }}" tabindex="0">
+                                                    <span
+                                                        class="menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full rtl:before:translate-x-1/2 before:-translate-y-1/2 menu-item-active:before:bg-primary menu-item-hover:before:bg-primary"></span>
+                                                    <span
+                                                        class="menu-title text-2sm font-normal text-gray-800 menu-item-active:text-primary menu-item-active:font-semibold menu-link-hover:!text-primary">
+                                                        صفحات البيع
+                                                    </span>
+                                                </a>
+                                            </div>
+                                        @endcan
 
-                            @can('access-pages')
-                                <div class="menu-item @if (request()->is('pixels*')) active @endif">
-                                    <div class="menu-link flex items-center grow cursor-pointer border border-transparent gap-[10px] ps-[10px] pe-[10px] py-[6px]"
-                                        tabindex="0">
-                                        <a href="{{ route('pixels.index') }}"
-                                            class="menu-title text-sm font-medium text-gray-800 menu-item-active:text-primary menu-link-hover:!text-primary">
-                                            البكسلات
-                                        </a>
+                                        @can('access-pixels')
+                                            <div class="menu-item @if (request()->is('pixels*')) active @endif">
+                                                <a class="menu-link border border-transparent items-center grow menu-item-active:bg-secondary-active menu-item-active:rounded-lg hover:bg-secondary-active hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]"
+                                                    href="{{ route('pixels.index') }}" tabindex="0">
+                                                    <span
+                                                        class="menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full rtl:before:translate-x-1/2 before:-translate-y-1/2 menu-item-active:before:bg-primary menu-item-hover:before:bg-primary"></span>
+                                                    <span
+                                                        class="menu-title text-2sm font-normal text-gray-800 menu-item-active:text-primary menu-item-active:font-semibold menu-link-hover:!text-primary">
+                                                        البكسلات
+                                                    </span>
+                                                </a>
+                                            </div>
+                                        @endcan
+
+                                        @can('access-domains')
+                                            <div class="menu-item @if (request()->is('domains*')) active @endif">
+                                                <a class="menu-link border border-transparent items-center grow menu-item-active:bg-secondary-active menu-item-active:rounded-lg hover:bg-secondary-active hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]"
+                                                    href="{{ route('domains.index') }}" tabindex="0">
+                                                    <span
+                                                        class="menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full rtl:before:translate-x-1/2 before:-translate-y-1/2 menu-item-active:before:bg-primary menu-item-hover:before:bg-primary"></span>
+                                                    <span
+                                                        class="menu-title text-2sm font-normal text-gray-800 menu-item-active:text-primary menu-item-active:font-semibold menu-link-hover:!text-primary">
+                                                        الدومينات
+                                                    </span>
+                                                </a>
+                                            </div>
+                                        @endcan
                                     </div>
                                 </div>
-                            @endcan
+                            @endcanany
                         </div>
                         <!-- End of Sidebar Menu -->
                     </div>

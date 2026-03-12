@@ -62,5 +62,12 @@ class AppServiceProvider extends ServiceProvider
         Gate::define("access-domains", function () {
             return Auth::id() === 1 || Auth::user()->hasPermission("صلاحية دومينات الصفحات");
         });
+
+        Gate::define("access-pixels", function () {
+            return Auth::id() === 1 || Auth::user()->hasPermission("صلاحية البكسلات");
+        });
+        Gate::define("access-cart-users", function () {
+            return Auth::id() === 1 || Auth::user()->hasPermission("صلاحية السلة المتروكة");
+        });
     }
 }
