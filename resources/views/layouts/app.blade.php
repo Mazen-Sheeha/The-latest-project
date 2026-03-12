@@ -198,20 +198,9 @@
                                     </div>
                                 </div>
                             @endcan
-                            @can('access-websites')
-                                <div class="menu-item @if (request()->is('websites*')) active @endif">
-                                    <div class="menu-link flex items-center grow cursor-pointer border border-transparent gap-[10px] ps-[10px] pe-[10px] py-[6px]"
-                                        tabindex="0">
-                                        <a href="{{ route('websites.index') }}"
-                                            class="menu-title text-sm font-medium text-gray-800 menu-item-active:text-primary menu-link-hover:!text-primary">
-                                            الدومينات
-                                        </a>
-                                    </div>
-                                </div>
-                            @endcan
 
-                            @canany(['access-pages', 'access-pixels', 'access-domains'])
-                                <div class="menu-item @if (request()->is('pages*') || request()->is('domains*') || request()->is('pixels*')) show @endif"
+                            @canany(['access-pages', 'access-pixels', 'access-domains', 'access-websites'])
+                                <div class="menu-item @if (request()->is('pages*') || request()->is('domains*') || request()->is('pixels*') || request()->is('websites*')) show @endif"
                                     data-menu-item-toggle="accordion" data-menu-item-trigger="click">
                                     <div class="menu-link flex items-center grow cursor-pointer border border-transparent gap-[10px] ps-[10px] pe-[10px] py-[6px]"
                                         tabindex="0">
@@ -263,11 +252,26 @@
                                                         class="menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full rtl:before:translate-x-1/2 before:-translate-y-1/2 menu-item-active:before:bg-primary menu-item-hover:before:bg-primary"></span>
                                                     <span
                                                         class="menu-title text-2sm font-normal text-gray-800 menu-item-active:text-primary menu-item-active:font-semibold menu-link-hover:!text-primary">
+                                                        دومينات الصفحات
+                                                    </span>
+                                                </a>
+                                            </div>
+                                        @endcan
+
+                                        @can('access-websites')
+                                            <div class="menu-item @if (request()->is('websites*')) active @endif">
+                                                <a class="menu-link border border-transparent items-center grow menu-item-active:bg-secondary-active menu-item-active:rounded-lg hover:bg-secondary-active hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]"
+                                                    href="{{ route('websites.index') }}" tabindex="0">
+                                                    <span
+                                                        class="menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full rtl:before:translate-x-1/2 before:-translate-y-1/2 menu-item-active:before:bg-primary menu-item-hover:before:bg-primary"></span>
+                                                    <span
+                                                        class="menu-title text-2sm font-normal text-gray-800 menu-item-active:text-primary menu-item-active:font-semibold menu-link-hover:!text-primary">
                                                         الدومينات
                                                     </span>
                                                 </a>
                                             </div>
                                         @endcan
+
                                     </div>
                                 </div>
                             @endcanany
