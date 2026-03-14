@@ -310,9 +310,9 @@
 
                             @php
                                 $imgSrc = $product->pivot->image
-                                    ? asset($product->pivot->image)
+                                    ? asset('public/' . ltrim($product->pivot->image, '/'))
                                     : ($product->image
-                                        ? asset($product->image)
+                                        ? asset('public/' . ltrim($product->image, '/'))
                                         : asset('images/productDefault.webp'));
                             @endphp
                             <img src="{{ $imgSrc }}"

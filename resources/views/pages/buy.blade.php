@@ -486,8 +486,9 @@
         @if (!empty($page->images) && count($page->images))
             @php $firstImage = $page->images[0]; @endphp
 
-            <button type="button" onclick="openImageModal('{{ asset($firstImage) }}')" class="focus:outline-none">
-                <img src="{{ asset($firstImage) }}" class="w-full object-cover shadow">
+            <button type="button" onclick="openImageModal('{{ asset('public/' . $firstImage) }}')"
+                class="focus:outline-none">
+                <img src="{{ asset('public/' . $firstImage) }}" class="w-full object-cover shadow">
             </button>
         @endif
 
@@ -712,8 +713,8 @@
                                             @if ($offer['image'])
                                                 <div
                                                     class="w-20 h-20 rounded-xl overflow-hidden border-2 border-white shadow-sm shrink-0">
-                                                    <img src="{{ asset($offer['image']) }}" alt="offer"
-                                                        class="w-full h-full object-cover">
+                                                    <img src="{{ asset('public/' . $offer['image']) }}"
+                                                        alt="offer" class="w-full h-full object-cover">
                                                 </div>
                                             @endif
                                             <div class="flex flex-col justify-between items-center gap-5">
@@ -882,7 +883,7 @@
                         @endif
                         <button type="button" onclick="openImageModal('{{ asset($path) }}')"
                             class="focus:outline-none">
-                            <img src="{{ asset($path) }}" class="w-full object-cover shadow">
+                            <img src="{{ asset('public/' . $path) }}" class="w-full object-cover shadow">
                         </button>
                     @endforeach
                 </div>
@@ -901,7 +902,7 @@
                         <div class="flex gap-4 border-b pb-5 last:border-b-0">
                             <div class="shrink-0">
                                 @if ($review->reviewer_image)
-                                    <img src="{{ asset($review->reviewer_image) }}"
+                                    <img src="{{ asset('public/' . $review->reviewer_image) }}"
                                         class="w-12 h-12 rounded-full object-cover border">
                                 @else
                                     <div
