@@ -359,7 +359,7 @@
             position: fixed;
             /* This formula keeps it on the edge of your 520px container */
             right: calc(50% - 260px + 10px);
-            bottom: 120px;
+            bottom: 150px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -699,7 +699,7 @@
 
                                         {{-- Selection Indicator --}}
                                         <div
-                                            class="absolute -top-3 -right-3 bg-white rounded-full shadow-lg {{ $isActive ? '' : 'hidden' }} selection-check z-10">
+                                            class="absolute -top-3 -right-3 bg-white rounded-full shadow-lg {{ $isActive ? '' : 'hidden' }} selection-check z-30">
                                             <svg class="w-8 h-8" style="color: {{ $darkerColor }};"
                                                 fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd"
@@ -995,6 +995,7 @@
             </div>
         @endif --}}
 
+        {{-- FEATURES --}}
         @if (!empty($page->features))
             <div class="card border-b">
                 <div class="p-4 grid grid-cols-2 gap-3 features-grid">
@@ -1022,6 +1023,9 @@
             </div>
         @endif
 
+        {{-- POLICES MODELS --}}
+        @include('partials._policy-modals')
+
         {{-- STICKY ORDER BUTTON --}}
         <div id="sticky-order"
             class="fixed bottom-0 inset-x-0 z-40 bg-white border-t shadow-lg p-3 transition-transform duration-300 ease-in-out">
@@ -1035,7 +1039,7 @@
     </div>
 
     @if (request()->query('success'))
-        <div id="successOverlay" class="fixed inset-0 bg-black/80 z-999 flex items-center justify-center">
+        <div id="successOverlay" class="fixed inset-0 bg-black/80 z-[99999] flex items-center justify-center">
             <div class="bg-white rounded-2xl p-8 text-center max-w-sm w-full mx-4 animate-scale-in">
                 <div class="mx-auto mb-4 w-20 h-20 rounded-full bg-green-100 flex items-center justify-center">
                     <svg class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" stroke-width="3"
