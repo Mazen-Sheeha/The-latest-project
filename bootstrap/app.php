@@ -2,7 +2,9 @@
 
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Middleware\RedirectIfCannot;
+use App\Http\Middleware\RedirectIfCustomDomain;
 use App\Http\Middleware\ResolveDomain;
+use App\Http\Middleware\RestrictCustomDomains;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -18,7 +20,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'RedirectIfAuthenticated' => RedirectIfAuthenticated::class,
             'RedirectIfCannot' => RedirectIfCannot::class,
-            'resolveDomain' => ResolveDomain::class
+            'resolveDomain' => ResolveDomain::class,
+            'restrictCustomDomains' => RestrictCustomDomains::class,
+            'redirectIfCustomDomain' => RedirectIfCustomDomain::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

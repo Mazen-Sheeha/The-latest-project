@@ -22,21 +22,23 @@ use App\Models\User; // For Migrations To Add First Admin
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-Route::fallback(function () {
-    if (Auth::check())
-        return to_route("home");
-    return to_route("login");
+Route::middleware('redirectIfCustomDomain')->group(function () {
+    Route::fallback(function () {
+        if (Auth::check())
+            return to_route("home");
+        return to_route("login");
+    });
 });
 
 Route::controller(AuthController::class)->group(function () {
-    Route::middleware("RedirectIfAuthenticated")->group(function () {
+    Route::middleware(["RedirectIfAuthenticated", 'redirectIfCustomDomain'])->group(function () {
         Route::get("/login", 'showLogin')->name('showLogin');
         Route::post('/login', 'login')->name('login');
     });
-    Route::post('/logout', 'logout')->name('logout');
+    Route::post('/logout', 'logout')->name('logout')->middleware('redirectIfCustomDomain');
 });
 
-Route::middleware("auth")->group(function () {
+Route::middleware(['auth', 'redirectIfCustomDomain'])->group(function () {
     Route::get("/home", [HomeController::class, 'home'])->name('home');
     Route::get('/statistics', [StatisticController::class, 'statistics'])->name('statistics')->middleware("RedirectIfCannot:access-statistics");
     Route::resource('/admins', UserController::class)
@@ -113,17 +115,13 @@ Route::middleware("auth")->group(function () {
 
 });
 
-Route::get('/test-domain', function () {
-    return request()->getHost();
+Route::middleware('restrictCustomDomains')->group(function () {
+    Route::get('buy/{page:slug}', [PageController::class, 'showBuyPage'])->name('pages.buy');
+    Route::get('buy/upsell/{slug}/{orderId?}', [PageController::class, 'showUpsellPage'])->name('pages.showUpsellPage');
+    Route::post('buy/{page:slug}', [PageController::class, 'submitOrder'])->name('pages.submitOrder');
+    Route::post('buy/{page:slug}/track-cart-user', [CartUserController::class, 'trackCartUser'])->name('pages.trackCartUser');
+    Route::post('buy/upsell/submit', [PageController::class, 'submitOrderFromUpsellPage'])->name('pages.submitOrderFromUpsellPage');
 });
-
-// Route::middleware('resolveDomain')->group(function () {
-Route::get('buy/{page:slug}', [PageController::class, 'showBuyPage'])->name('pages.buy');
-Route::get('buy/upsell/{slug}/{orderId?}', [PageController::class, 'showUpsellPage'])->name('pages.showUpsellPage');
-Route::post('buy/{page:slug}', [PageController::class, 'submitOrder'])->name('pages.submitOrder');
-Route::post('buy/{page:slug}/track-cart-user', [CartUserController::class, 'trackCartUser'])->name('pages.trackCartUser');
-Route::post('buy/upsell/submit', [PageController::class, 'submitOrderFromUpsellPage'])->name('pages.submitOrderFromUpsellPage');
-// });
 
 // Necessary Data To Migrate
 // User::create(['id' => 1, 'name' => "admin", 'email' => "admin@admin.com", 'password' => bcrypt("123456")]);
